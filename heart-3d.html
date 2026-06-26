@@ -11,10 +11,25 @@
     background: radial-gradient(ellipse at 50% 42%, #3a0f2c 0%, #1b0717 38%, #070309 100%);
     font-family: "Georgia", "Songti SC", "STSong", serif;
     cursor: grab;
+    overscroll-behavior: none;        /* 禁止下拉刷新干扰触摸 */
+    -webkit-tap-highlight-color: transparent;
   }
   body:active { cursor: grabbing; }
 
-  #scene { position: fixed; inset: 0; display: block; }
+  #scene {
+    position: fixed; inset: 0; display: block;
+    touch-action: none;               /* 拖拽旋转不被浏览器手势抢走 */
+  }
+
+  /* —— 小屏微调 —— */
+  @media (max-width: 640px) {
+    .overlay { padding-bottom: 9vh; }
+    .hint   { top: 3.2vh; font-size: .68rem; letter-spacing: .2em; }
+    .subtitle { letter-spacing: .25em; margin-top: .6rem; }
+  }
+  @media (max-width: 640px) and (orientation: landscape) {
+    .overlay { padding-bottom: 4vh; }
+  }
 
   /* —— 文字叠层 —— */
   .overlay {
@@ -45,6 +60,7 @@
     position: fixed; top: 4.5vh; left: 50%; transform: translateX(-50%);
     font-size: .8rem; letter-spacing: .25em; color: rgba(255, 190, 210, .5);
     animation: fadeIn 2s ease both 1.4s, pulseHint 3s ease-in-out 2.4s infinite;
+    pointer-events: none;
   }
   @keyframes fadeUp { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: translateY(0); } }
   @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -89,24 +105,42 @@
     import * as THREE from 'three';
 
     /* =========================================================
-       1. 基础场景
+       1. 基础场景（含移动端适配）
        ========================================================= */
+    // 设备识别：UA 或窄屏均视为移动端，按需降低粒子上限与像素比
+    const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+                  || Math.min(window.innerWidth, window.innerHeight) < 768;
+    const DPR_CAP = isMobile ? 1.5 : 2;
+
     const canvas = document.getElementById('scene');
-    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: !isMobile, alpha: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, DPR_CAP));
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setClearColor(0x000000, 0);
 
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 200);
-    camera.position.set(0, 0.5, 30);
+    const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 300);
+
+    // 让心形在任何宽高比下都完整入镜：按较窄的那条轴反推相机距离
+    const HEART_HALF = 10; // 含脉动与留白的等效半宽
+    function fitHeartToView() {
+      const aspect  = window.innerWidth / window.innerHeight;
+      const halfFov = Math.tan((camera.fov * Math.PI) / 180 / 2);
+      const distV = HEART_HALF / halfFov;            // 竖向能容纳
+      const distH = HEART_HALF / (halfFov * aspect);  // 横向能容纳
+      camera.position.z = Math.max(distV, distH);
+      camera.position.y = 0.5;
+      camera.aspect = aspect;
+      camera.updateProjectionMatrix();
+    }
+    fitHeartToView();
 
     /* =========================================================
        2. 用 Taubin 心形隐式方程做「拒绝采样」生成 3D 实体心形点云
           F(x,y,z) = (x² + 9y²/4 + z² - 1)³ - x²z³ - 9y²z³/200
           其中 z 是心形上下轴 → 映射到世界 Y，使其正立
        ========================================================= */
-    const HEART_COUNT = 12000;
+    const HEART_COUNT = isMobile ? 5500 : 12000;
     const SCALE = 7.2;
 
     const palette = [
@@ -234,7 +268,7 @@
     /* =========================================================
        3. 背景星空
        ========================================================= */
-    const STAR_COUNT = 1800;
+    const STAR_COUNT = isMobile ? 800 : 1800;
     const sPos = new Float32Array(STAR_COUNT * 3);
     const sSize = new Float32Array(STAR_COUNT);
     const sPhase = new Float32Array(STAR_COUNT);
@@ -351,9 +385,8 @@
        6. 自适应
        ========================================================= */
     window.addEventListener('resize', () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
+      fitHeartToView();   // 旋转屏幕/尺寸变化时重新让心形完整入镜
       heartMat.uniforms.uPixelRatio.value = renderer.getPixelRatio();
       starMat.uniforms.uPixelRatio.value = renderer.getPixelRatio();
     });
@@ -381,7 +414,7 @@
         document.body.appendChild(el);
       }
     }
-    spawnPetals(26);
+    spawnPetals(isMobile ? 12 : 26);
   </script>
 </body>
 </html>
