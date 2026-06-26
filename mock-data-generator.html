@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>测试数据生成器</title>
+  <title>测试数据生成器 - 仅供开发学习使用</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html, body { height: 100%; overflow: hidden; }
@@ -25,6 +25,7 @@
     .checkbox-group { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
     .checkbox-group label { display: flex; align-items: center; gap: 4px; font-size: 13px; cursor: pointer; user-select: none; }
     .checkbox-group input[type="checkbox"] { width: 16px; height: 16px; accent-color: #4f46e5; }
+    .field-group-label { width: 100%; font-size: 12px; color: #999; margin: 8px 0 -4px; padding-top: 6px; border-top: 1px dashed #eee; }
 
     .btn { padding: 8px 20px; border: none; border-radius: 6px; font-size: 14px; cursor: pointer; transition: .15s; }
     .btn-primary { background: #4f46e5; color: #fff; }
@@ -70,12 +71,16 @@
 </head>
 <body>
 <div class="container">
-  <h1>测试数据生成器</h1>
+  <h1>测试数据生成器 - 仅供开发学习使用</h1>
 
   <div class="main-layout">
     <div class="left-panel">
       <div class="card">
         <div class="card-title">生成选项</div>
+        <div class="batch-row">
+          <label>国家/地区</label>
+          <select id="countrySelect"></select>
+        </div>
         <div class="batch-row">
           <label>数量</label>
           <select id="batchCount">
@@ -122,23 +127,23 @@
         </div>
         <div class="settings-row">
           <div class="setting-item">
-            <label>省份</label>
+            <label id="lblL1">省份</label>
             <div class="ss" id="ssProvince"></div>
           </div>
           <div class="setting-item">
-            <label>城市</label>
+            <label id="lblL2">城市</label>
             <div class="ss" id="ssCity"></div>
           </div>
           <div class="setting-item">
-            <label>区县</label>
+            <label id="lblL3">区县</label>
             <div class="ss" id="ssDistrict"></div>
           </div>
           <div class="setting-item">
-            <label>邮政编码</label>
-            <input type="text" id="customPostcode" placeholder="留空随机" maxlength="6" inputmode="numeric" style="min-width:120px">
+            <label id="lblPostcode">邮政编码</label>
+            <input type="text" id="customPostcode" placeholder="留空随机" style="min-width:120px">
           </div>
         </div>
-        <div class="settings-row">
+        <div class="settings-row" id="locateWrap">
           <div class="setting-item">
             <label>按区划码定位</label>
             <input type="text" id="locateCode" placeholder="输入6位码，如 320211" maxlength="6" inputmode="numeric" style="min-width:160px">
@@ -160,23 +165,162 @@
 <div class="toast" id="toast"></div>
 
 <script>
-// ─── 字段定义 ───
-const FIELDS = [
-  { key: 'name',       label: '姓名' },
-  { key: 'gender',     label: '性别' },
-  { key: 'birthday',   label: '生日' },
-  { key: 'ethnicity',  label: '民族' },
-  { key: 'phone',      label: '手机号' },
-  { key: 'landline',   label: '固定电话' },
-  { key: 'postcode',   label: '邮政编码' },
-  { key: 'idCard',     label: '身份证号' },
-  { key: 'bankName',   label: '银行名称' },
-  { key: 'bankCard',   label: '银行卡号' },
-  { key: 'creditCode', label: '统一信用代码' },
-  { key: 'company',    label: '单位名称' },
-  { key: 'email',      label: '邮箱' },
-  { key: 'address',    label: '详细地址' },
+// ─── 字段定义（共性字段；证件列由 computeFields 按国家动态追加）───
+const BASE_FIELDS = [
+  { key: 'name',         label: '姓名' },
+  { key: 'gender',       label: '性别' },
+  { key: 'birthday',     label: '生日' },
+  { key: 'ethnicity',    label: '民族' },
+  { key: 'phone',        label: '手机号' },
+  { key: 'landline',     label: '固定电话' },
+  { key: 'postcode',     label: '邮政编码' },
+  { key: 'provinceCode', label: '省/州码' },
+  { key: 'cityCode',     label: '市/区码' },
+  { key: 'bankName',     label: '银行名称' },
+  { key: 'bankCard',     label: '银行卡号' },
+  { key: 'creditCode',   label: '统一信用代码' },
+  { key: 'company',      label: '单位名称' },
+  { key: 'email',        label: '邮箱' },
+  { key: 'address',      label: '详细地址' },
 ];
+
+// ─── 国外地区数据（ISO 3166-2 + 城市 + 邮编前缀 zip + 电话区号 area）───
+const FOREIGN_REGIONS = {
+  US: [
+    {name:'加利福尼亚',iso:'US-CA',cities:[{name:'洛杉矶',zip:'900',area:'213'},{name:'旧金山',zip:'941',area:'415'},{name:'圣地亚哥',zip:'921',area:'619'},{name:'圣何塞',zip:'951',area:'408'}]},
+    {name:'纽约',iso:'US-NY',cities:[{name:'纽约市',zip:'100',area:'212'},{name:'布法罗',zip:'142',area:'716'},{name:'罗切斯特',zip:'146',area:'585'}]},
+    {name:'得克萨斯',iso:'US-TX',cities:[{name:'休斯顿',zip:'770',area:'713'},{name:'达拉斯',zip:'752',area:'214'},{name:'奥斯汀',zip:'787',area:'512'}]},
+    {name:'伊利诺伊',iso:'US-IL',cities:[{name:'芝加哥',zip:'606',area:'312'},{name:'奥罗拉',zip:'605',area:'630'}]},
+    {name:'佛罗里达',iso:'US-FL',cities:[{name:'迈阿密',zip:'331',area:'305'},{name:'奥兰多',zip:'328',area:'407'}]},
+    {name:'华盛顿',iso:'US-WA',cities:[{name:'西雅图',zip:'981',area:'206'},{name:'斯波坎',zip:'992',area:'509'}]},
+    {name:'马萨诸塞',iso:'US-MA',cities:[{name:'波士顿',zip:'021',area:'617'},{name:'剑桥',zip:'021',area:'617'}]},
+  ],
+  GB: [
+    {name:'英格兰',iso:'GB-ENG',cities:[{name:'伦敦',zip:'SW',area:'020'},{name:'曼彻斯特',zip:'M',area:'0161'},{name:'伯明翰',zip:'B',area:'0121'},{name:'利物浦',zip:'L',area:'0151'},{name:'利兹',zip:'LS',area:'0113'}]},
+    {name:'苏格兰',iso:'GB-SCT',cities:[{name:'爱丁堡',zip:'EH',area:'0131'},{name:'格拉斯哥',zip:'G',area:'0141'}]},
+    {name:'威尔士',iso:'GB-WLS',cities:[{name:'加的夫',zip:'CF',area:'029'},{name:'斯旺西',zip:'SA',area:'1792'}]},
+    {name:'北爱尔兰',iso:'GB-NIR',cities:[{name:'贝尔法斯特',zip:'BT',area:'028'}]},
+  ],
+  JP: [
+    {name:'東京都',iso:'JP-13',cities:[{name:'千代田区',zip:'100',area:'03'},{name:'新宿区',zip:'160',area:'03'},{name:'渋谷区',zip:'150',area:'03'}]},
+    {name:'大阪府',iso:'JP-27',cities:[{name:'大阪市',zip:'530',area:'06'},{name:'堺市',zip:'590',area:'072'}]},
+    {name:'神奈川県',iso:'JP-14',cities:[{name:'横浜市',zip:'220',area:'045'},{name:'川崎市',zip:'210',area:'044'}]},
+    {name:'愛知県',iso:'JP-23',cities:[{name:'名古屋市',zip:'460',area:'052'}]},
+    {name:'北海道',iso:'JP-01',cities:[{name:'札幌市',zip:'060',area:'011'}]},
+    {name:'京都府',iso:'JP-26',cities:[{name:'京都市',zip:'600',area:'075'}]},
+  ],
+  KR: [
+    {name:'首尔特别市',iso:'KR-11',cities:[{name:'江南区',zip:'062',area:'02'},{name:'中区',zip:'045',area:'02'},{name:'松坡区',zip:'055',area:'02'}]},
+    {name:'釜山广域市',iso:'KR-26',cities:[{name:'海云台区',zip:'480',area:'051'}]},
+    {name:'京畿道',iso:'KR-41',cities:[{name:'水原市',zip:'164',area:'031'},{name:'高阳市',zip:'104',area:'031'}]},
+    {name:'仁川广域市',iso:'KR-28',cities:[{name:'延寿区',zip:'220',area:'032'}]},
+    {name:'大邱广域市',iso:'KR-27',cities:[{name:'寿城区',zip:'421',area:'053'}]},
+  ],
+  CA: [
+    {name:'安大略',iso:'CA-ON',cities:[{name:'多伦多',zip:'M',area:'416'},{name:'渥太华',zip:'K',area:'613'},{name:'密西沙加',zip:'L',area:'905'}]},
+    {name:'魁北克',iso:'CA-QC',cities:[{name:'蒙特利尔',zip:'H',area:'514'},{name:'魁北克市',zip:'G',area:'418'}]},
+    {name:'不列颠哥伦比亚',iso:'CA-BC',cities:[{name:'温哥华',zip:'V',area:'604'},{name:'维多利亚',zip:'V',area:'250'}]},
+    {name:'阿尔伯塔',iso:'CA-AB',cities:[{name:'卡尔加里',zip:'T',area:'403'},{name:'埃德蒙顿',zip:'T',area:'780'}]},
+  ],
+  AU: [
+    {name:'新南威尔士',iso:'AU-NSW',cities:[{name:'悉尼',zip:'200',area:'02'},{name:'纽卡斯尔',zip:'230',area:'02'}]},
+    {name:'维多利亚',iso:'AU-VIC',cities:[{name:'墨尔本',zip:'300',area:'03'},{name:'吉朗',zip:'322',area:'03'}]},
+    {name:'昆士兰',iso:'AU-QLD',cities:[{name:'布里斯班',zip:'400',area:'07'},{name:'黄金海岸',zip:'421',area:'07'}]},
+    {name:'西澳大利亚',iso:'AU-WA',cities:[{name:'珀斯',zip:'600',area:'08'}]},
+    {name:'南澳大利亚',iso:'AU-SA',cities:[{name:'阿德莱德',zip:'500',area:'08'}]},
+  ],
+  DE: [
+    {name:'柏林',iso:'DE-BE',cities:[{name:'柏林',zip:'101',area:'030'}]},
+    {name:'拜仁',iso:'DE-BY',cities:[{name:'慕尼黑',zip:'803',area:'089'},{name:'纽伦堡',zip:'904',area:'0911'}]},
+    {name:'黑森',iso:'DE-HE',cities:[{name:'法兰克福',zip:'603',area:'069'}]},
+    {name:'汉堡',iso:'DE-HH',cities:[{name:'汉堡',zip:'200',area:'040'}]},
+    {name:'北莱茵-威斯特法伦',iso:'DE-NW',cities:[{name:'科隆',zip:'506',area:'0221'},{name:'杜塞尔多夫',zip:'402',area:'0211'}]},
+  ],
+  FR: [
+    {name:'法兰西岛',iso:'FR-IDF',cities:[{name:'巴黎',zip:'750',area:'1'},{name:'凡尔赛',zip:'780',area:'1'}]},
+    {name:'普罗旺斯-蓝色海岸',iso:'FR-PAC',cities:[{name:'马赛',zip:'130',area:'4'},{name:'尼斯',zip:'060',area:'4'}]},
+    {name:'奥弗涅-罗讷-阿尔卑斯',iso:'FR-ARA',cities:[{name:'里昂',zip:'690',area:'4'},{name:'格勒诺布尔',zip:'380',area:'4'}]},
+    {name:'新阿基坦',iso:'FR-NAQ',cities:[{name:'波尔多',zip:'330',area:'5'}]},
+  ],
+  SG: [
+    {name:'中央区',iso:'SG-01',cities:[{name:'滨海湾',zip:'018',area:''},{name:'乌节路',zip:'228',area:''}]},
+    {name:'东陵区',iso:'SG-02',cities:[{name:'荷兰村',zip:'278',area:''}]},
+    {name:'西北区',iso:'SG-03',cities:[{name:'兀兰',zip:'730',area:''}]},
+    {name:'东北区',iso:'SG-04',cities:[{name:'实里达',zip:'790',area:''}]},
+    {name:'东南区',iso:'SG-05',cities:[{name:'马林百列',zip:'449',area:''}]},
+  ],
+  MY: [
+    {name:'吉隆坡',iso:'MY-14',cities:[{name:'武吉免登',zip:'55',area:'03'},{name:'蒂蒂旺沙',zip:'50',area:'03'}]},
+    {name:'槟城',iso:'MY-09',cities:[{name:'乔治市',zip:'10',area:'04'},{name:'北海',zip:'12',area:'04'}]},
+    {name:'柔佛',iso:'MY-01',cities:[{name:'新山',zip:'80',area:'07'},{name:'峇株巴辖',zip:'83',area:'07'}]},
+    {name:'雪兰莪',iso:'MY-12',cities:[{name:'莎阿南',zip:'40',area:'03'},{name:'八打灵再也',zip:'46',area:'03'}]},
+    {name:'沙巴',iso:'MY-16',cities:[{name:'亚庇',zip:'88',area:'088'}]},
+    {name:'砂拉越',iso:'MY-13',cities:[{name:'古晋',zip:'93',area:'082'}]},
+  ],
+  TH: [
+    {name:'曼谷',iso:'TH-10',cities:[{name:'挽凯',zip:'10',area:'02'},{name:'汇狂',zip:'10',area:'02'}]},
+    {name:'清迈',iso:'TH-50',cities:[{name:'清迈市',zip:'50',area:'053'}]},
+    {name:'普吉',iso:'TH-83',cities:[{name:'普吉市',zip:'83',area:'076'}]},
+    {name:'春武里',iso:'TH-20',cities:[{name:'芭提雅',zip:'20',area:'038'}]},
+  ],
+  RU: [
+    {name:'莫斯科市',iso:'RU-MOW',cities:[{name:'莫斯科',zip:'101',area:'495'},{name:'泽列诺格勒',zip:'124',area:'495'}]},
+    {name:'圣彼得堡市',iso:'RU-SPE',cities:[{name:'圣彼得堡',zip:'190',area:'812'}]},
+    {name:'莫斯科州',iso:'RU-MOS',cities:[{name:'巴拉希哈',zip:'143',area:'496'}]},
+    {name:'列宁格勒州',iso:'RU-LEN',cities:[{name:'加特契纳',zip:'188',area:'813'}]},
+    {name:'克拉斯诺达尔边疆区',iso:'RU-KDA',cities:[{name:'克拉斯诺达尔',zip:'350',area:'861'}]},
+  ],
+};
+
+// ─── 各国姓名库（罗马音/拉丁字母）───
+const NAME_POOLS = {
+  en: {
+    first:['James','John','Robert','Michael','William','David','Richard','Joseph','Thomas','Charles','Christopher','Daniel','Matthew','Anthony','Mark','Steven','Andrew','Joshua','Kevin','Brian','Mary','Patricia','Jennifer','Linda','Elizabeth','Barbara','Susan','Jessica','Sarah','Karen','Nancy','Lisa','Helen','Sandra','Donna','Carol','Ruth','Sharon','Michelle','Laura','Emily','Kimberly','Emma','Olivia','Sophia','Ava','Isabella','Mia','Charlotte','Amelia','Harper'],
+    last:['Smith','Johnson','Williams','Brown','Jones','Garcia','Miller','Davis','Rodriguez','Martinez','Hernandez','Lopez','Gonzalez','Wilson','Anderson','Thomas','Taylor','Moore','Jackson','Martin','Lee','Perez','Thompson','White','Harris','Sanchez','Clark','Ramirez','Lewis','Robinson','Walker','Young','Allen','King','Wright','Scott','Torres','Nguyen','Hill','Flores','Green','Adams','Nelson','Baker','Hall','Rivera','Campbell','Mitchell','Carter','Roberts'],
+  },
+  fr: {
+    first:['Jean','Pierre','Michel','André','Philippe','Louis','Nicolas','Antoine','Julien','Thomas','Lucas','Hugo','Nathan','Marie','Camille','Julie','Sophie','Emma','Chloé','Léa','Manon','Inès'],
+    last:['Martin','Bernard','Dubois','Thomas','Robert','Richard','Petit','Durand','Leroy','Moreau','Simon','Laurent','Lefebvre','Michel','Garcia','David','Bertrand','Roux','Vincent','Fournier','Girard','Bonnet'],
+  },
+  de: {
+    first:['Lukas','Ben','Jonas','Paul','Leon','Felix','Maximilian','Finn','Elias','Niklas','Tim','Fritz','Hannah','Mia','Emma','Sofia','Lena','Lea','Lina','Marie','Anna','Laura'],
+    last:['Müller','Schmidt','Schneider','Fischer','Weber','Meyer','Wagner','Becker','Schulz','Hoffmann','Schäfer','Koch','Bauer','Richter','Klein','Wolf','Schröder','Neumann','Schwarz','Zimmermann','Braun','Hofmann'],
+  },
+  jp: {
+    first:['Haruto','Yuto','Sota','Yuki','Hiroto','Riku','Ren','Aoi','Yamato','Kaito','Ryosuke','Yui','Hina','Yua','Sara','Yuna','Tsubasa','Hinata','Sakura','Sora'],
+    last:['Sato','Suzuki','Takahashi','Tanaka','Watanabe','Ito','Yamamoto','Nakamura','Kobayashi','Saito','Kato','Yoshida','Yamada','Sasaki','Yamaguchi','Matsumoto','Inoue','Kimura','Hayashi','Shimizu'],
+  },
+  kr: {
+    first:['Minjun','Seojun','Doyun','Hajun','Siyun','Jiho','Junyoung','Seoyeon','Seoyun','Jiwoo','Sooa','Hayoon','Yuna','Minji','Jiyeon','Eunji'],
+    last:['Kim','Lee','Park','Choi','Jung','Kang','Cho','Yoon','Jang','Lim','Han','Oh','Seo','Shin','Baek','Yoo'],
+  },
+  ru: {
+    first:['Ivan','Pavel','Dmitri','Alexei','Sergei','Mikhail','Andrei','Vladimir','Nikolai','Yuri','Anastasia','Maria','Olga','Ekaterina','Natalia','Tatiana','Svetlana','Anna','Daria','Polina'],
+    last:['Ivanov','Petrov','Sidorov','Kuznetsov','Smirnov','Popov','Vasiliev','Mikhailov','Sokolov','Novikov','Fedorov','Morozov','Volkov','Alekseev','Lebedev','Semyonov','Egorov','Pavlov'],
+  },
+  my: {
+    first:['Ahmad','Muhammad','Siti','Nurul','Aishah','Hafiz','Khairul','Fatimah','Rahman','Abdul','Nur','Aminah','Mohd','Rosli','Zainab','Faridah'],
+    last:['bin Abdullah','binti Abdul','bin Rahman','binti Hassan','bin Omar','binti Salleh','bin Ibrahim','binti Amin','bin Yusof','binti Ismail','bin Ali','binti Wahab'],
+  },
+  th: {
+    first:['Somchai','Apichat','Anucha','Prasit','Chai','Anong','Som','Mali','Ploy','Niran','Suda','Pim','Wichai','Boonsong','Malee','Nattaya'],
+    last:['Suwannakiat','Phakdee','Boonmee','Charoenporn','Saetang','Tansakul','Phromma','Rattanakorn','Srikam','Chaisri'],
+  },
+};
+
+// ─── 各国街道词库 ───
+const STREET_POOLS = {
+  en: { streets:['Main','Oak','Pine','Maple','Cedar','Elm','Park','Washington','Lincoln','Jefferson','Madison','Highland','Sunset','Lake','Hill','Spring','River','Church','Broadway','Market'], suffixes:['St','Ave','Rd','Blvd','Dr','Ln','Way'] },
+  gb: { streets:['High','King','Queen','Victoria','Park','Church','Mill','Station','Bridge','Manor','Abbey','Castle','Grove','Churchill'], suffixes:['Street','Road','Lane','Close','Avenue','Way','Grove','Terrace'] },
+  jp: { streets:['Sakura-dori','Chuo-dori','Honmachi','Aoba','Matsu','Take','Momiji','Ginza','Asakusa','Marunouchi'], suffixes:[''] },
+  kr: { streets:['Sejong-daero','Teheran-ro','Gangnam-daero','Itaewon','Myeongdong','Chungmuro','Euljiro','Jongno'], suffixes:[''] },
+  de: { streets:['Hauptstraße','Schlossstraße','Bahnhofstraße','Kirchstraße','Gartenstraße','Lindenstraße','Berliner','Münchner'], suffixes:[''] },
+  fr: { streets:['Rue de la Paix','Avenue des Champs','Rue du Faubourg','Boulevard Saint','Rue de Rivoli','Avenue Montaigne','Rue Saint-Honoré'], suffixes:[''] },
+  sg: { streets:['Raffles Place','Orchard Road','Marina Bay','Shenton Way','Sentosa','Holland Village','Bugis','Chinatown'], suffixes:[''] },
+  my: { streets:['Jalan Bukit Bintang','Jalan Sultan','Jalan Imbi','Jalan Ampang','Jalan Tuanku','Jalan Bangsar','Jalan Klang Lama'], suffixes:[''] },
+  th: { streets:['Sukhumvit Road','Silom Road','Sathon Road','Rama IX','Siam','Phayathai','Phetchaburi','Wireless Road'], suffixes:[''] },
+  ru: { streets:['Tverskaya Street','Arbat Street','Nevsky Prospect','Leninsky Avenue','Kutuzovsky Prospekt','Bolshaya','Myasnitskaya'], suffixes:[''] },
+};
 
 // ─── 数据源 ───
 const SURNAMES = '王李张刘陈杨赵黄周吴徐孙胡朱高林何郭马罗梁宋郑谢韩唐冯于董萧程曹袁邓许傅沈曾彭吕苏卢蒋蔡贾丁魏薛叶阎余潘杜戴夏钟汪田任姜范方石姚谭廖邹熊金陆郝孔白崔康毛邱秦江史顾侯邵孟龙万段雷钱汤尹黎易常武乔贺赖龚文温康施牛樊胡葛邢安齐尹伍余元卜覃岳章潘惠'.split('');
@@ -439,9 +583,216 @@ const pick = arr => arr[Math.floor(Math.random() * arr.length)];
 const randInt = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a;
 const pad2 = n => String(n).padStart(2, '0');
 
+// ─── 校验位辅助（Luhn / Mod-11 加权）───
+// 生成 totalLen 位的 Luhn 合法数字串（末位为校验位）
+function luhnComplete(prefix, totalLen) {
+  let body = prefix;
+  while (body.length < totalLen - 1) body += randInt(0, 9);
+  const rev = body.split('').reverse();
+  let sum = 0;
+  for (let i = 0; i < rev.length; i++) {
+    let d = parseInt(rev[i]);
+    if (i % 2 === 0) { d *= 2; if (d > 9) d -= 9; }
+    sum += d;
+  }
+  return body + String((10 - (sum % 10)) % 10);
+}
+// Mod-11 加权校验位：返回使 Σ digit*weight 成立的字符；返回 null 表示需重试
+function mod11Check(prefixDigits, weights) {
+  let sum = 0;
+  for (let i = 0; i < prefixDigits.length; i++) sum += parseInt(prefixDigits[i]) * weights[i];
+  return (11 - (sum % 11)) % 11;
+}
+function randDigits(n) { let s = ''; for (let i = 0; i < n; i++) s += randInt(0, 9); return s; }
+function randUpper(n) { const A = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'; let s = ''; for (let i = 0; i < n; i++) s += A[randInt(0, 25)]; return s; }
+
+// ─── 国家配置（生成策略 + 证件清单 + 字段开关）───
+// gen 策略对象按 country 派发；namePool/streetPool 指向 NAME_POOLS/STREET_POOLS 的 key，'cn' 表示用中文池
+const COUNTRIES = {
+  CN: {
+    name:'中国', callingCode:'86', regionSystem:'cn-gbt2260', regions: ADDR_DATA,
+    locale:{ l1:'省份', l2:'城市', l3:'区县', postcode:'邮政编码' },
+    postcodeStyle:'numeric', postcodeLen:6,
+    fields:{ ethnicity:true, landline:true, bank:true, creditCode:true },
+    namePool:'cn', streetPool:'cn',
+    idTypes:['cn_resident','cn_passport','hk_permit','tw_permit','hk_mainland','tw_mainland'],
+    defaultIds:['cn_resident','cn_passport'],
+    gen:{ name:genNameCN, phone:genPhoneCN, postcode:genPostcodeCN, address:genAddressCN, company:genCompanyCN, email:genEmailCN },
+  },
+  US: {
+    name:'美国', callingCode:'1', regionSystem:'iso3166-2', regions: FOREIGN_REGIONS.US,
+    locale:{ l1:'州', l2:'城市', l3:null, postcode:'ZIP' },
+    postcodeStyle:'numeric', postcodeLen:5,
+    fields:{ ethnicity:false, landline:false, bank:false, creditCode:false },
+    namePool:'en', streetPool:'en',
+    idTypes:['us_passport','us_ssn'], defaultIds:['us_passport','us_ssn'],
+    emailDomains:['gmail.com','hotmail.com','yahoo.com','icloud.com','outlook.com'],
+    companySuffix:['Inc','LLC','Corp','Co'],
+    gen:{ name:genNameEN, phone:genPhoneNANP, postcode:genPostcodeNumeric, address:genAddressEN, company:genCompanyForeign, email:genEmailForeign },
+  },
+  GB: {
+    name:'英国', callingCode:'44', regionSystem:'iso3166-2', regions: FOREIGN_REGIONS.GB,
+    locale:{ l1:'构成国', l2:'城市', l3:null, postcode:'Postcode' },
+    postcodeStyle:'alpha', postcodeLen:8,
+    fields:{ ethnicity:false, landline:false, bank:false, creditCode:false },
+    namePool:'en', streetPool:'gb',
+    idTypes:['gb_passport','gb_nino'], defaultIds:['gb_passport','gb_nino'],
+    emailDomains:['gmail.com','hotmail.com','yahoo.co.uk','outlook.com','btinternet.com'],
+    companySuffix:['Ltd','Plc','LLP'],
+    gen:{ name:genNameEN, phone:genPhoneGB, postcode:genPostcodeGB, address:genAddressGB, company:genCompanyForeign, email:genEmailForeign },
+  },
+  JP: {
+    name:'日本', callingCode:'81', regionSystem:'iso3166-2', regions: FOREIGN_REGIONS.JP,
+    locale:{ l1:'都道府县', l2:'市区', l3:null, postcode:'邮编' },
+    postcodeStyle:'numeric', postcodeLen:7,
+    fields:{ ethnicity:false, landline:false, bank:false, creditCode:false },
+    namePool:'jp', streetPool:'jp',
+    idTypes:['jp_passport','jp_mynumber'], defaultIds:['jp_passport','jp_mynumber'],
+    emailDomains:['gmail.com','yahoo.co.jp','docomo.ne.jp','ezweb.ne.jp','i.softbank.jp'],
+    companySuffix:['Inc','Corp','K.K.'],
+    gen:{ name:genNameJP, phone:genPhoneJP, postcode:genPostcodeJP, address:genAddressJP, company:genCompanyForeign, email:genEmailForeign },
+  },
+  KR: {
+    name:'韩国', callingCode:'82', regionSystem:'iso3166-2', regions: FOREIGN_REGIONS.KR,
+    locale:{ l1:'广域市/道', l2:'区/市', l3:null, postcode:'邮编' },
+    postcodeStyle:'numeric', postcodeLen:5,
+    fields:{ ethnicity:false, landline:false, bank:false, creditCode:false },
+    namePool:'kr', streetPool:'kr',
+    idTypes:['kr_passport','kr_rrn'], defaultIds:['kr_passport','kr_rrn'],
+    emailDomains:['gmail.com','naver.com','daum.net','hanmail.net'],
+    companySuffix:['Inc','Corp'],
+    gen:{ name:genNameKR, phone:genPhoneKR, postcode:genPostcodeNumeric, address:genAddressKR, company:genCompanyForeign, email:genEmailForeign },
+  },
+  CA: {
+    name:'加拿大', callingCode:'1', regionSystem:'iso3166-2', regions: FOREIGN_REGIONS.CA,
+    locale:{ l1:'省', l2:'城市', l3:null, postcode:'Postcode' },
+    postcodeStyle:'alpha', postcodeLen:7,
+    fields:{ ethnicity:false, landline:false, bank:false, creditCode:false },
+    namePool:'en', streetPool:'en',
+    idTypes:['ca_passport','ca_sin'], defaultIds:['ca_passport','ca_sin'],
+    emailDomains:['gmail.com','hotmail.com','yahoo.ca','rogers.com','bell.net'],
+    companySuffix:['Inc','Ltd','Corp'],
+    gen:{ name:genNameEN, phone:genPhoneNANP, postcode:genPostcodeCA, address:genAddressEN, company:genCompanyForeign, email:genEmailForeign },
+  },
+  AU: {
+    name:'澳大利亚', callingCode:'61', regionSystem:'iso3166-2', regions: FOREIGN_REGIONS.AU,
+    locale:{ l1:'州', l2:'城市', l3:null, postcode:'Postcode' },
+    postcodeStyle:'numeric', postcodeLen:4,
+    fields:{ ethnicity:false, landline:false, bank:false, creditCode:false },
+    namePool:'en', streetPool:'en',
+    idTypes:['au_passport'], defaultIds:['au_passport'],
+    emailDomains:['gmail.com','hotmail.com','yahoo.com.au','bigpond.com','optusnet.com.au'],
+    companySuffix:['Pty Ltd','Ltd'],
+    gen:{ name:genNameEN, phone:genPhoneAU, postcode:genPostcodeNumeric, address:genAddressEN, company:genCompanyForeign, email:genEmailForeign },
+  },
+  DE: {
+    name:'德国', callingCode:'49', regionSystem:'iso3166-2', regions: FOREIGN_REGIONS.DE,
+    locale:{ l1:'联邦州', l2:'城市', l3:null, postcode:'PLZ' },
+    postcodeStyle:'numeric', postcodeLen:5,
+    fields:{ ethnicity:false, landline:false, bank:false, creditCode:false },
+    namePool:'de', streetPool:'de',
+    idTypes:['de_passport'], defaultIds:['de_passport'],
+    emailDomains:['gmail.com','web.de','gmx.de','t-online.de'],
+    companySuffix:['GmbH','AG'],
+    gen:{ name:genNameDE, phone:genPhoneDE, postcode:genPostcodeNumeric, address:genAddressDE, company:genCompanyForeign, email:genEmailForeign },
+  },
+  FR: {
+    name:'法国', callingCode:'33', regionSystem:'iso3166-2', regions: FOREIGN_REGIONS.FR,
+    locale:{ l1:'大区', l2:'城市', l3:null, postcode:'Code postal' },
+    postcodeStyle:'numeric', postcodeLen:5,
+    fields:{ ethnicity:false, landline:false, bank:false, creditCode:false },
+    namePool:'fr', streetPool:'fr',
+    idTypes:['fr_passport','fr_insee'], defaultIds:['fr_passport','fr_insee'],
+    emailDomains:['gmail.com','orange.fr','free.fr','laposte.net','wanadoo.fr'],
+    companySuffix:['SA','SARL','SAS'],
+    gen:{ name:genNameFR, phone:genPhoneFR, postcode:genPostcodeNumeric, address:genAddressFR, company:genCompanyForeign, email:genEmailForeign },
+  },
+  SG: {
+    name:'新加坡', callingCode:'65', regionSystem:'iso3166-2', regions: FOREIGN_REGIONS.SG,
+    locale:{ l1:'地区', l2:'街区', l3:null, postcode:'Postcode' },
+    postcodeStyle:'numeric', postcodeLen:6,
+    fields:{ ethnicity:false, landline:false, bank:false, creditCode:false },
+    namePool:'en', streetPool:'sg',
+    idTypes:['sg_nric','sg_passport'], defaultIds:['sg_nric','sg_passport'],
+    emailDomains:['gmail.com','yahoo.com.sg','singnet.com.sg','starhub.net.sg'],
+    companySuffix:['Pte Ltd'],
+    gen:{ name:genNameEN, phone:genPhoneSG, postcode:genPostcodeNumeric, address:genAddressSG, company:genCompanyForeign, email:genEmailForeign },
+  },
+  MY: {
+    name:'马来西亚', callingCode:'60', regionSystem:'iso3166-2', regions: FOREIGN_REGIONS.MY,
+    locale:{ l1:'州/直辖区', l2:'城市', l3:null, postcode:'Postcode' },
+    postcodeStyle:'numeric', postcodeLen:5,
+    fields:{ ethnicity:false, landline:false, bank:false, creditCode:false },
+    namePool:'my', streetPool:'my',
+    idTypes:['my_mykad','my_passport'], defaultIds:['my_mykad','my_passport'],
+    emailDomains:['gmail.com','yahoo.com','hotmail.com','tm.net.my'],
+    companySuffix:['Sdn Bhd'],
+    gen:{ name:genNameMY, phone:genPhoneMY, postcode:genPostcodeNumeric, address:genAddressMY, company:genCompanyForeign, email:genEmailForeign },
+  },
+  TH: {
+    name:'泰国', callingCode:'66', regionSystem:'iso3166-2', regions: FOREIGN_REGIONS.TH,
+    locale:{ l1:'府', l2:'县/区', l3:null, postcode:'Postcode' },
+    postcodeStyle:'numeric', postcodeLen:5,
+    fields:{ ethnicity:false, landline:false, bank:false, creditCode:false },
+    namePool:'th', streetPool:'th',
+    idTypes:['th_id','th_passport'], defaultIds:['th_id','th_passport'],
+    emailDomains:['gmail.com','hotmail.com','yahoo.com','truemail.com'],
+    companySuffix:['Co Ltd'],
+    gen:{ name:genNameTH, phone:genPhoneTH, postcode:genPostcodeNumeric, address:genAddressTH, company:genCompanyForeign, email:genEmailForeign },
+  },
+  RU: {
+    name:'俄罗斯', callingCode:'7', regionSystem:'iso3166-2', regions: FOREIGN_REGIONS.RU,
+    locale:{ l1:'联邦主体', l2:'城市', l3:null, postcode:'Postal Code' },
+    postcodeStyle:'numeric', postcodeLen:6,
+    fields:{ ethnicity:false, landline:false, bank:false, creditCode:false },
+    namePool:'ru', streetPool:'ru',
+    idTypes:['ru_passport','ru_inn'], defaultIds:['ru_passport','ru_inn'],
+    emailDomains:['gmail.com','mail.ru','yandex.ru','rambler.ru','bk.ru'],
+    companySuffix:['OOO','PAO'],
+    gen:{ name:genNameRU, phone:genPhoneRU, postcode:genPostcodeNumeric, address:genAddressRU, company:genCompanyForeign, email:genEmailForeign },
+  },
+};
+
+// ─── 证件类型注册表（label + gen(ctx)）───
+const ID_TYPE_DEFS = {
+  cn_resident:  { label:'身份证',                      gen: genCNResident },
+  cn_passport:  { label:'中国护照',                    gen: genCNPassport },
+  hk_permit:    { label:'往来港澳通行证',              gen: genHKPermit },
+  tw_permit:    { label:'往来台湾通行证',              gen: genTWPermit },
+  hk_mainland:  { label:'港澳居民来往内地通行证',      gen: genHKMainland },
+  tw_mainland:  { label:'台胞证(台湾居民来往大陆通行证)', gen: genTWMainland },
+  us_passport:  { label:'美国护照',                    gen: genUSPassport },
+  us_ssn:       { label:'美国社会安全号(SSN)',         gen: genUSSSN },
+  gb_passport:  { label:'英国护照',                    gen: genGBPassport },
+  gb_nino:      { label:'英国国民保险号(NINO)',        gen: genGBNINO },
+  jp_passport:  { label:'日本护照',                    gen: genJPPassport },
+  jp_mynumber:  { label:'日本个人编号(MyNumber)',      gen: genJPMyNumber },
+  kr_passport:  { label:'韩国护照',                    gen: genKRPassport },
+  kr_rrn:       { label:'韩国居民登录号',              gen: genKRRRN },
+  ca_passport:  { label:'加拿大护照',                  gen: genCAPassport },
+  ca_sin:       { label:'加拿大社会保险号(SIN)',       gen: genCASIN },
+  au_passport:  { label:'澳大利亚护照',                gen: genAUPassport },
+  de_passport:  { label:'德国护照',                    gen: genDEPassport },
+  fr_passport:  { label:'法国护照',                    gen: genFRPassport },
+  fr_insee:     { label:'法国社保号(INSEE)',           gen: genFRINSEE },
+  sg_nric:      { label:'新加坡 NRIC/FIN',             gen: genSGNRIC },
+  sg_passport:  { label:'新加坡护照',                  gen: genSGPassport },
+  my_mykad:     { label:'马来西亚身份证(MyKad)',       gen: genMYMyKad },
+  my_passport:  { label:'马来西亚护照',                gen: genMYPassport },
+  th_id:        { label:'泰国国民身份证',              gen: genTHID },
+  th_passport:  { label:'泰国护照',                    gen: genTHPassport },
+  ru_passport:  { label:'俄罗斯护照',                  gen: genRUPassport },
+  ru_inn:       { label:'俄罗斯税号(INN)',             gen: genRUINN },
+};
+
 // ─── 可搜索级联地址选择器 ───
 let ssProvince, ssCity, ssDistrict;
 const RANDOM_ITEM = { value: '', label: '随机' };
+
+// ─── 模块状态：当前国家 / 当前地区树 / 共性字段勾选记忆 ───
+let currentCountry = 'CN';
+let currentAddrModel = ADDR_DATA;   // CN 指向 ADDR_DATA；国外指向 COUNTRIES[country].regions
+let userFieldPrefs = {};            // 共性字段勾选跨国家保留
 
 // 通用可搜索下拉：items=[{value,label}]，value='' 代表"随机"
 class SearchSelect {
@@ -508,29 +859,38 @@ class SearchSelect {
   }
 }
 
+// ─── 地址层级 items（按 regionSystem 分支：CN 三级 / 国外二级）───
+function addrL1Items() {
+  const C = COUNTRIES[currentCountry];
+  const label = x => C.regionSystem === 'cn-gbt2260' ? x.p : x.name;
+  return [RANDOM_ITEM, ...currentAddrModel.map((x, i) => ({ value: String(i), label: label(x) }))];
+}
+function addrL2Items(l1i) {
+  if (l1i === '') return [RANDOM_ITEM];
+  const C = COUNTRIES[currentCountry];
+  const l1 = currentAddrModel[l1i];
+  const label = c => C.regionSystem === 'cn-gbt2260' ? c.c : c.name;
+  return [RANDOM_ITEM, ...l1.cities.map((c, i) => ({ value: String(i), label: label(c) }))];
+}
+function addrL3Items(l1i, l2i) {
+  if (l1i === '' || l2i === '') return [RANDOM_ITEM];
+  const city = currentAddrModel[l1i].cities[l2i];   // 仅 CN 有 ds
+  return [RANDOM_ITEM, ...city.ds.map((d, i) => ({ value: String(i), label: d.n }))];
+}
+
 function buildAddrSelects() {
   ssProvince = new SearchSelect(document.getElementById('ssProvince'), '随机（可输入搜索）');
-  ssProvince.setItems([RANDOM_ITEM, ...ADDR_DATA.map((p, i) => ({ value: String(i), label: p.p }))]);
   ssProvince.onChange = v => onProvinceChange(v);
-
   ssCity = new SearchSelect(document.getElementById('ssCity'), '随机（可输入搜索）');
-  ssCity.setItems([RANDOM_ITEM]);
   ssCity.onChange = v => onCityChange(v);
-
   ssDistrict = new SearchSelect(document.getElementById('ssDistrict'), '随机（可输入搜索）');
-  ssDistrict.setItems([RANDOM_ITEM]);
-  ssDistrict.onChange = () => updateAddrPreview();
+  ssDistrict.onChange = () => { autoFillPostcode(); updateAddrPreview(); };
+  rebuildAddressForCountry(currentCountry);   // 初始按当前国家填充
 }
 
 function onProvinceChange(v) {
-  if (v === '') {
-    ssCity.setItems([RANDOM_ITEM]);
-    ssDistrict.setItems([RANDOM_ITEM]);
-  } else {
-    const prov = ADDR_DATA[v];
-    ssCity.setItems([RANDOM_ITEM, ...prov.cities.map((c, i) => ({ value: String(i), label: c.c }))]);
-    ssDistrict.setItems([RANDOM_ITEM]);
-  }
+  ssCity.setItems(addrL2Items(v));
+  ssDistrict.setItems([RANDOM_ITEM]);
   ssCity.setValue('');
   ssDistrict.setValue('');
   autoFillPostcode();
@@ -539,9 +899,9 @@ function onProvinceChange(v) {
 
 function onCityChange(v) {
   const pi = ssProvince.getValue();
-  if (v !== '' && pi !== '') {
-    const city = ADDR_DATA[pi].cities[v];
-    ssDistrict.setItems([RANDOM_ITEM, ...city.ds.map((d, i) => ({ value: String(i), label: d.n }))]);
+  const C = COUNTRIES[currentCountry];
+  if (C.regionSystem === 'cn-gbt2260' && v !== '' && pi !== '') {
+    ssDistrict.setItems(addrL3Items(pi, v));
   } else {
     ssDistrict.setItems([RANDOM_ITEM]);
   }
@@ -553,64 +913,75 @@ function onCityChange(v) {
 // 用户是否手动编辑过邮政编码（编辑后不再随地区联动覆盖）
 let postcodeEdited = false;
 
-// 根据所选城市自动填充邮政编码（用户手动编辑过则保留原值）
+// 由当前下拉选择推导一个 areaInfo（供邮编联动/预览；未选满级时 CN 用首区码）
+function currentAreaInfoFromSelection() {
+  const l1i = ssProvince.getValue();
+  if (l1i === '') return null;
+  const C = COUNTRIES[currentCountry];
+  const l1 = currentAddrModel[l1i];
+  const l2i = ssCity.getValue();
+  if (C.regionSystem === 'cn-gbt2260') {
+    if (l2i === '') return null;
+    const city = l1.cities[l2i];
+    return { l1: l1.p, l2: city.c, l3: null, code3: city.ds[0].code, iso: null, zip: null, area: null };
+  }
+  const city = l2i !== '' ? l1.cities[l2i] : l1.cities[0];
+  return { l1: l1.name, l2: city.name, l3: null, code3: null, iso: l1.iso, zip: city.zip, area: city.area };
+}
+
+// 根据所选地区自动填充邮政编码（用户手动编辑过则保留原值）
 function autoFillPostcode() {
   if (postcodeEdited) return;
-  const pi = ssProvince.getValue();
-  const ci = ssCity.getValue();
-  let zip = '';
-  if (pi !== '' && ci !== '') {
-    const city = ADDR_DATA[pi].cities[ci];
-    zip = POSTAL_MAP[city.c] || '';
-  }
-  document.getElementById('customPostcode').value = zip;
-}
-
-// 由区级 code 推导省/市/区三级行政区划代码（GB/T 2260）
-function getCurrentCodes() {
-  const pi = ssProvince.getValue();
-  if (pi === '') return null;
-  const prov = ADDR_DATA[pi];
-  const ci = ssCity.getValue();
-  let baseCode;
-  if (ci !== '') {
-    const city = prov.cities[ci];
-    const di = ssDistrict.getValue();
-    baseCode = (di !== '') ? city.ds[di].code : city.ds[0].code;
+  const ai = currentAreaInfoFromSelection();
+  const input = document.getElementById('customPostcode');
+  if (!ai) { input.value = ''; return; }
+  const C = COUNTRIES[currentCountry];
+  if (C.regionSystem === 'cn-gbt2260') {
+    input.value = POSTAL_MAP[ai.l2] || '';
   } else {
-    baseCode = prov.cities[0].ds[0].code;
+    input.value = C.gen.postcode(ai);
   }
-  return {
-    provinceCode: baseCode.slice(0, 2) + '0000',
-    cityCode: baseCode.slice(0, 4) + '00',
-    districtCode: baseCode,
-  };
 }
 
-// 显示当前已选地区（含三级区划代码）与邮编
-function updateAddrPreview() {
-  const pi = ssProvince.getValue();
-  const preview = document.getElementById('addrPreview');
-  if (pi === '') {
-    preview.innerHTML = '未选择地址（将随机生成）';
-    return;
+// 推导省/市/区码：CN 为 GB/T 2260 六位码，国外为 ISO 3166-2
+function getCurrentCodes() {
+  const ai = currentAreaInfoFromSelection();
+  if (!ai) return null;
+  const C = COUNTRIES[currentCountry];
+  if (C.regionSystem === 'cn-gbt2260' && ai.code3) {
+    return { provinceCode: ai.code3.slice(0, 2) + '0000', cityCode: ai.code3.slice(0, 4) + '00', districtCode: ai.code3 };
   }
-  const ci = ssCity.getValue();
-  const prov = ADDR_DATA[pi];
+  return { provinceCode: ai.iso || '', cityCode: '', districtCode: '' };
+}
+
+// 显示当前已选地区（含区划代码）与邮编
+function updateAddrPreview() {
+  const preview = document.getElementById('addrPreview');
+  const l1i = ssProvince.getValue();
+  if (l1i === '') { preview.innerHTML = '未选择地址（将随机生成）'; return; }
+  const C = COUNTRIES[currentCountry];
+  const l1 = currentAddrModel[l1i];
+  const l2i = ssCity.getValue();
   const codes = getCurrentCodes();
-  let text = `${prov.p}（${codes.provinceCode}）`;
-  if (ci !== '') {
-    const city = prov.cities[ci];
-    text += ` · ${city.c}（${codes.cityCode}）`;
-    const di = ssDistrict.getValue();
-    if (di !== '') text += ` · ${city.ds[di].n}（${codes.districtCode}）`;
+  let text;
+  if (C.regionSystem === 'cn-gbt2260') {
+    text = `${l1.p}（${codes.provinceCode}）`;
+    if (l2i !== '') {
+      const city = l1.cities[l2i];
+      text += ` · ${city.c}（${codes.cityCode}）`;
+      const l3i = ssDistrict.getValue();
+      if (l3i !== '') text += ` · ${city.ds[l3i].n}（${codes.districtCode}）`;
+    }
+  } else {
+    text = `${l1.name}（${codes.provinceCode}）`;
+    if (l2i !== '') text += ` · ${l1.cities[l2i].name}`;
   }
   const zip = document.getElementById('customPostcode').value;
   text += zip ? `，邮编 ${zip}` : '，邮编随机';
   preview.innerHTML = `<span style="color:#4f46e5">已选：${text}</span>`;
 }
 
-// 输入 6 位行政区划码，定位到对应省/市/区
+// 输入 6 位行政区划码，定位到对应省/市/区（仅 CN 启用）
 function locateByCode(code) {
   if (!/^\d{6}$/.test(code)) return false;
   for (let pi = 0; pi < ADDR_DATA.length; pi++) {
@@ -632,72 +1003,100 @@ function locateByCode(code) {
   return false;
 }
 
+// 国家切换总调度：切换地区树、显隐第三级/定位框、改 label 文案、重置邮编、重填一级
+function rebuildAddressForCountry(country) {
+  currentCountry = country;
+  const C = COUNTRIES[country];
+  currentAddrModel = C.regions;
+  document.getElementById('lblL1').textContent = C.locale.l1;
+  document.getElementById('lblL2').textContent = C.locale.l2;
+  document.getElementById('lblL3').textContent = C.locale.l3 || '';
+  document.getElementById('lblPostcode').textContent = C.locale.postcode;
+  const showL3 = C.regionSystem === 'cn-gbt2260';
+  ssDistrict.container.style.display = showL3 ? '' : 'none';
+  document.getElementById('lblL3').style.visibility = showL3 ? '' : 'hidden';
+  document.getElementById('locateWrap').style.display = showL3 ? '' : 'none';
+  const pcInput = document.getElementById('customPostcode');
+  if (C.postcodeStyle === 'numeric') pcInput.setAttribute('inputmode', 'numeric');
+  else pcInput.removeAttribute('inputmode');
+  pcInput.setAttribute('maxlength', String(C.postcodeLen));
+  postcodeEdited = false;
+  pcInput.value = '';
+  ssProvince.setItems(addrL1Items());
+  ssCity.setItems([RANDOM_ITEM]);
+  ssDistrict.setItems([RANDOM_ITEM]);
+  ssProvince.setValue('');
+  ssCity.setValue('');
+  ssDistrict.setValue('');
+  updateAddrPreview();
+}
+
+function onCountryChange(v) {
+  rebuildAddressForCountry(v);
+  renderFieldCheckboxes(v);   // 刷新字段复选框（证件清单按国家变化）
+}
+
+// 读取当前选择的完整 areaInfo（用于生成；未选则随机）
+function getAddressInfo() {
+  const l1i = ssProvince.getValue();
+  if (l1i === '') return randomAddrInfo();
+  const C = COUNTRIES[currentCountry];
+  const l1 = currentAddrModel[l1i];
+  const l2i = ssCity.getValue();
+  if (C.regionSystem === 'cn-gbt2260') {
+    const city = l2i !== '' ? l1.cities[l2i] : pick(l1.cities);
+    const l3i = ssDistrict.getValue();
+    const dist = l3i !== '' ? city.ds[l3i] : pick(city.ds);
+    return { l1: l1.p, l2: city.c, l3: dist.n, code3: dist.code, iso: null, zip: null, area: null };
+  }
+  const city = l2i !== '' ? l1.cities[l2i] : pick(l1.cities);
+  return { l1: l1.name, l2: city.name, l3: null, code3: null, iso: l1.iso, zip: city.zip, area: city.area };
+}
+
+function randomAddrInfo() {
+  const C = COUNTRIES[currentCountry];
+  if (C.regionSystem === 'cn-gbt2260') {
+    const prov = pick(ADDR_DATA);
+    const city = pick(prov.cities);
+    const dist = pick(city.ds);
+    return { l1: prov.p, l2: city.c, l3: dist.n, code3: dist.code, iso: null, zip: null, area: null };
+  }
+  const state = pick(C.regions);
+  const city = pick(state.cities);
+  return { l1: state.name, l2: city.name, l3: null, code3: null, iso: state.iso, zip: city.zip, area: city.area };
+}
+
 // 读取自定义设置，返回 { birthday:'YYYY-MM-DD'|null, areaCode:'123456'|null, areaInfo:{p,c,d,code}|null, postcode:'123456'|null }
 function getCustomSettings() {
-  const s = { gender: null, birthday: null, areaInfo: null, postcode: null };
+  const s = { country: currentCountry, gender: null, birthday: null, areaInfo: null, postcode: null };
 
   // 性别
   const gInput = document.getElementById('customGender').value;
   if (gInput) s.gender = gInput;
 
-  // 生日
+  // 生日 / 年龄
   const bInput = document.getElementById('customBirthday').value;
   const aInput = document.getElementById('customAge').value;
   if (bInput) {
     s.birthday = bInput;
   } else if (aInput && parseInt(aInput) > 0) {
     const age = parseInt(aInput);
-    const now = new Date();
-    const year = now.getFullYear() - age;
-    const m = pad2(randInt(1, 12));
-    const d = pad2(randInt(1, 28));
-    s.birthday = `${year}-${m}-${d}`;
+    const year = new Date().getFullYear() - age;
+    s.birthday = `${year}-${pad2(randInt(1, 12))}-${pad2(randInt(1, 28))}`;
   }
 
-  // 地址
-  const pi = ssProvince.getValue();
-  if (pi !== '') {
-    const ci = ssCity.getValue();
-    if (ci !== '') {
-      const di = ssDistrict.getValue();
-      if (di !== '') {
-        // 完整：省 + 市 + 区
-        const prov = ADDR_DATA[pi];
-        const city = prov.cities[ci];
-        const dist = city.ds[di];
-        s.areaInfo = { p: prov.p, c: city.c, d: dist.n, code: dist.code };
-      } else {
-        // 省 + 市，随机区
-        const prov = ADDR_DATA[pi];
-        const city = prov.cities[ci];
-        const dist = pick(city.ds);
-        s.areaInfo = { p: prov.p, c: city.c, d: dist.n, code: dist.code };
-      }
-    } else {
-      // 只选了省，随机市+区
-      const prov = ADDR_DATA[pi];
-      const city = pick(prov.cities);
-      const dist = pick(city.ds);
-      s.areaInfo = { p: prov.p, c: city.c, d: dist.n, code: dist.code };
-    }
-  }
+  // 地址（统一 areaInfo 形状；未选则随机）
+  s.areaInfo = getAddressInfo();
 
-  // 邮政编码（手动输入，须为 6 位数字）
+  // 邮政编码（手动输入；CN 6 位数字，国外按各自格式，非空即采用）
   const pcInput = document.getElementById('customPostcode').value.trim();
-  if (/^\d{6}$/.test(pcInput)) s.postcode = pcInput;
+  if (pcInput) s.postcode = pcInput;
 
   return s;
 }
 
-// ─── 生成器 ───
+// ─── 通用生成器 ───
 function genGender() { return pick(['男', '女']); }
-
-function genName(gender) {
-  const surname = pick(SURNAMES);
-  const pool = gender === '女' ? FEMALE_NAME_CHARS : MALE_NAME_CHARS;
-  const given = Math.random() < 0.1 ? pick(pool) : pick(pool) + pick(pool);
-  return surname + given;
-}
 
 function genBirthday(custom) {
   if (custom) return custom;
@@ -709,15 +1108,25 @@ function genBirthday(custom) {
 
 function genEthnicity() { return pick(ETHNICITIES); }
 
-function genPhone() {
+// 国外公司词库（英文，搭配各国公司后缀）
+const EN_COMPANY_WORDS = ['Global','Prime','Apex','Nova','Vertex','Summit','Vantage','Pioneer','Stellar','Quantum','Blue','Silver','Iron','Gold','Royal','Crown','Union','Unity','Falcon','Eagle','Tiger','Phoenix','Orion','Atlas','Titan','Nexus','Horizon','Crystal','Meridian','Zenith'];
+
+// ─── 中国（CN）策略 ───
+function genNameCN(ctx) {
+  const surname = pick(SURNAMES);
+  const pool = ctx.gender === '女' ? FEMALE_NAME_CHARS : MALE_NAME_CHARS;
+  const given = Math.random() < 0.1 ? pick(pool) : pick(pool) + pick(pool);
+  return surname + given;
+}
+function genPhoneCN() {
   return pick(PHONE_PREFIXES) + String(randInt(0, 99999999)).padStart(8, '0');
 }
-
-function genLandline(areaInfo) {
+function genLandline(ctx) {
+  const ai = ctx.areaInfo;
   let areaCode;
-  if (areaInfo) {
-    const provMap = TEL_AREA_CODES[areaInfo.p];
-    if (provMap) areaCode = provMap[areaInfo.c] || pick(Object.values(provMap));
+  if (ai) {
+    const provMap = TEL_AREA_CODES[ai.l1];
+    if (provMap) areaCode = provMap[ai.l2] || pick(Object.values(provMap));
   }
   if (!areaCode) {
     const prov = pick(Object.keys(TEL_AREA_CODES));
@@ -728,16 +1137,35 @@ function genLandline(areaInfo) {
   for (let i = 0; i < localLen; i++) local += randInt(0, 9);
   return areaCode + '-' + local;
 }
-
-function genPostcode(areaInfo, customPostcode) {
-  if (customPostcode) return customPostcode;
-  let baseZip;
-  if (areaInfo) baseZip = POSTAL_MAP[areaInfo.c];
-  if (!baseZip) baseZip = pick(Object.values(POSTAL_MAP));
+function genPostcodeCN(ctx) {
+  const baseZip = POSTAL_MAP[ctx.areaInfo.l2] || pick(Object.values(POSTAL_MAP));
   return baseZip.slice(0, 4) + String(randInt(0, 99)).padStart(2, '0');
 }
-
-function genIdCard(gender, birthday, areaCode) {
+function genAddressCN(ctx) {
+  const a = ctx.areaInfo;
+  const road = pick(ROADS);
+  const detail = `${road}${randInt(1, 999)}${pick(ROAD_TYPES)}`;
+  return a.l1 + a.l2 + a.l3 + detail;
+}
+// 省级名称转公司前缀用的简称（广东省→广东、壮族自治区→广西、特别行政区→香港）
+function provinceShort(p) {
+  return p.replace(/(省|市|特别行政区)$/, '').replace(/(维吾尔|回族|壮族)?自治区$/, '');
+}
+// 由地区信息派生公司名地名前缀：优先城市名（深圳市→深圳），回退省简称
+function regionShort(areaInfo) {
+  if (areaInfo.l2.endsWith('市')) return areaInfo.l2.slice(0, -1);
+  return provinceShort(areaInfo.l1);
+}
+function genCompanyCN(ctx) {
+  const region = ctx.areaInfo ? regionShort(ctx.areaInfo) : pick(['北京','上海','广州','深圳','南京','杭州','成都','武汉','长沙','济南','郑州','福州','天津','重庆','合肥']);
+  return region + pick(COMPANY_PREFIXES) + pick(COMPANY_MIDDLES) + pick(COMPANY_SUFFIXES);
+}
+function genEmailCN() {
+  const pinyin_surnames = ['wang','li','zhang','liu','chen','yang','zhao','huang','zhou','wu','xu','sun','hu','zhu','gao','lin','he','guo','ma','luo','liang','song','zheng','xie','han','tang','feng','yu','dong','xiao','cheng','cao','yuan','deng','xu','fu','shen','zeng','peng','lv','su','lu','jiang','cai','jia','ding','wei','xue','ye','yan','yu','pan','du','dai','xia','zhong','wang','tian','ren','jiang','fan','fang','shi','yao','tan','liao','zou','xiong','jin','lu','hao','kong','bai','cui','kang','mao','qiu','qin','jiang','shi','gu','hou','shao','meng','long','wan','duan','lei','qian','tang','yin','li','yi','chang','wu','qiao','he','lai','gong','wen','wen','kang','shi','niu','fan','hu','ge','xing','an','qi','yi','wu','yu','yuan','bu','qin','yue','zhang','pan','hui'];
+  return pick(pinyin_surnames) + pick(['wei','fang','na','min','jing','li','yan','jun','xiu','ying','hui','qiao','mei','ting','xue','lin','lei','qin','zhen','lan','feng','ju','shu','xin','yue','yao','tong','xuan','jia','meng','yi','han','yu','ping','xia','ling','lu','fei','qian','yuan','ni','ke','qi','wen','lan','rui','wan','rong','ya','fen','he','lu','hong','shi','yun','xin','miao','jie','xiao','hao','chen','jian','jun','liang','zheng','da','hang','kai','ming','xuan','bin','yang','heng','cheng','qi','nan','sen','song','tong','de','xiang','guang','qing','an','shu','run','yi','jin','jia','ji','yao','chang']) + randInt(10, 999) + '@' + pick(EMAIL_DOMAINS);
+}
+// 身份证主体（18 位 GB/T 2260 加权校验）
+function genIdCardBody(gender, birthday, areaCode) {
   const area = areaCode || pick([
     '110101','110102','110105','110106','310101','310104','310115','320102',
     '320104','320106','440103','440104','440305','440306','330102','330106',
@@ -754,6 +1182,7 @@ function genIdCard(gender, birthday, areaCode) {
   return base + checkChars[sum % 11];
 }
 
+// ─── 银行卡 / 统一信用代码（中国特有，保留）───
 function genBankCard() {
   const bank = pick(Object.keys(BANK_PREFIXES));
   const prefix = BANK_PREFIXES[bank];
@@ -769,7 +1198,6 @@ function genBankCard() {
   digits += (10 - (sum % 10)) % 10;
   return { name: bank, card: digits };
 }
-
 function genCreditCode() {
   const chars = '0123456789ABCDEFGHJKLMNPQRTUWXY';
   const dept = pick(['1','5','9']);
@@ -785,103 +1213,323 @@ function genCreditCode() {
   return base + chars[check % 31];
 }
 
-function genAddress(areaInfo) {
-  let p, c, d;
-  if (areaInfo) {
-    p = areaInfo.p; c = areaInfo.c; d = areaInfo.d;
-  } else {
-    const prov = pick(ADDR_DATA);
-    const city = pick(prov.cities);
-    const dist = pick(city.ds);
-    p = prov.p; c = city.c; d = dist.n;
-  }
-  const road = pick(ROADS);
-  const num = randInt(1, 999);
-  const detail = `${road}${num}${pick(ROAD_TYPES)}`;
-  return p + c + d + detail;
+// ─── 国外邮编策略 ───
+function genPostcodeNumeric(ctx) {
+  const len = COUNTRIES[ctx.country].postcodeLen;
+  const prefix = ctx.areaInfo.zip || '';
+  let body = prefix;
+  while (body.length < len) body += randInt(0, 9);
+  return body.slice(0, len);
+}
+function genPostcodeJP(ctx) {
+  const prefix = (ctx.areaInfo.zip || randDigits(3)).slice(0, 3);
+  return prefix.padStart(3, '0') + '-' + randDigits(4);
+}
+function genPostcodeGB(ctx) {
+  const prefix = ctx.areaInfo.zip || randUpper(2);
+  return prefix + randInt(1, 9) + ' ' + randInt(1, 9) + randUpper(2);
+}
+function genPostcodeCA() {
+  const A = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const c = () => A[randInt(0, 25)], n = () => randInt(1, 9);
+  return c() + n() + c() + ' ' + n() + c() + n();
 }
 
-// 省级名称转公司前缀用的简称（广东省→广东、壮族自治区→广西、特别行政区→香港）
-function provinceShort(p) {
-  return p
-    .replace(/(省|市|特别行政区)$/, '')
-    .replace(/(维吾尔|回族|壮族)?自治区$/, '');
+// ─── 国外姓名策略 ───
+function genNameForeign(ctx, poolKey) {
+  const pool = NAME_POOLS[poolKey];
+  return pick(pool.first) + ' ' + pick(pool.last);
 }
-// 由地区信息派生公司名地名前缀：优先城市名（深圳市→深圳），回退省简称
-function regionShort(areaInfo) {
-  if (areaInfo.c.endsWith('市')) return areaInfo.c.slice(0, -1);
-  return provinceShort(areaInfo.p);
+function genNameEN(ctx) { return genNameForeign(ctx, 'en'); }
+function genNameFR(ctx) { return genNameForeign(ctx, 'fr'); }
+function genNameDE(ctx) { return genNameForeign(ctx, 'de'); }
+function genNameJP(ctx) { return genNameForeign(ctx, 'jp'); }
+function genNameKR(ctx) { return genNameForeign(ctx, 'kr'); }
+function genNameRU(ctx) { return genNameForeign(ctx, 'ru'); }
+function genNameMY(ctx) { return genNameForeign(ctx, 'my'); }
+function genNameTH(ctx) { return genNameForeign(ctx, 'th'); }
+
+// ─── 国外电话策略 ───
+function genPhoneNANP(ctx) {
+  const npa = ctx.areaInfo.area || (randInt(2, 9) + randDigits(2));
+  const nxx = randInt(2, 9) + randDigits(2);
+  return npa + '-' + nxx + '-' + randDigits(4);
 }
-function genCompany(areaInfo) {
-  const region = areaInfo
-    ? regionShort(areaInfo)
-    : pick(['北京','上海','广州','深圳','南京','杭州','成都','武汉','长沙','济南','郑州','福州','天津','重庆','合肥']);
-  return region + pick(COMPANY_PREFIXES) + pick(COMPANY_MIDDLES) + pick(COMPANY_SUFFIXES);
+function genPhoneGB() { return '07' + randDigits(2) + ' ' + randDigits(3) + ' ' + randDigits(3); }
+function genPhoneJP() { return '0' + pick(['90','80','70']) + '-' + randDigits(4) + '-' + randDigits(4); }
+function genPhoneKR() { return '010-' + randDigits(4) + '-' + randDigits(4); }
+function genPhoneAU() { return '04' + randDigits(2) + ' ' + randDigits(3) + ' ' + randDigits(3); }
+function genPhoneDE() { return '015' + randInt(1, 9) + ' ' + randDigits(7); }
+function genPhoneFR() { return '0' + pick(['6','7']) + ' ' + randDigits(2) + ' ' + randDigits(2) + ' ' + randDigits(2) + ' ' + randDigits(2); }
+function genPhoneSG() { return pick(['8','9']) + randDigits(3) + ' ' + randDigits(4); }
+function genPhoneMY() { return '01' + pick(['1','2','3','6','7','8','9']) + '-' + randDigits(3) + ' ' + randDigits(4); }
+function genPhoneTH() { return '0' + pick(['8','9','6']) + randInt(1, 9) + '-' + randDigits(3) + '-' + randDigits(3); }
+function genPhoneRU() { return '9' + randDigits(2) + ' ' + randDigits(3) + '-' + randDigits(2) + '-' + randDigits(2); }
+
+// ─── 国外地址策略 ───
+function genAddressEN(ctx) {
+  const a = ctx.areaInfo, sp = STREET_POOLS.en, suf = pick(sp.suffixes);
+  const street = pick(sp.streets) + (suf ? ' ' + suf : '');
+  return `${randInt(1, 9999)} ${street}, ${a.l2}, ${a.iso} ${genPostcodeNumeric(ctx)}`;
+}
+function genAddressGB(ctx) {
+  const a = ctx.areaInfo, sp = STREET_POOLS.gb, suf = pick(sp.suffixes);
+  const street = pick(sp.streets) + (suf ? ' ' + suf : '');
+  return `${randInt(1, 200)} ${street}, ${a.l2} ${genPostcodeGB(ctx)}`;
+}
+function genAddressJP(ctx) {
+  const a = ctx.areaInfo, sp = STREET_POOLS.jp;
+  return `${randInt(1, 9)}-${randInt(1, 30)}-${randInt(1, 30)} ${pick(sp.streets)}, ${a.l2}, ${a.l1} ${genPostcodeJP(ctx)}`;
+}
+function genAddressKR(ctx) {
+  const a = ctx.areaInfo, sp = STREET_POOLS.kr;
+  return `${randInt(1, 999)} ${pick(sp.streets)}, ${a.l2}, ${a.l1} ${genPostcodeNumeric(ctx)}`;
+}
+function genAddressDE(ctx) {
+  const a = ctx.areaInfo, sp = STREET_POOLS.de;
+  return `${pick(sp.streets)} ${randInt(1, 200)}, ${genPostcodeNumeric(ctx)} ${a.l2}`;
+}
+function genAddressFR(ctx) {
+  const a = ctx.areaInfo, sp = STREET_POOLS.fr;
+  return `${randInt(1, 200)} ${pick(sp.streets)}, ${genPostcodeNumeric(ctx)} ${a.l2}`;
+}
+function genAddressSG(ctx) {
+  const a = ctx.areaInfo, sp = STREET_POOLS.sg;
+  return `${randInt(1, 999)} ${pick(sp.streets)}, ${a.l2}, Singapore ${genPostcodeNumeric(ctx)}`;
+}
+function genAddressMY(ctx) {
+  const a = ctx.areaInfo, sp = STREET_POOLS.my;
+  return `${randInt(1, 999)} ${pick(sp.streets)}, ${genPostcodeNumeric(ctx)} ${a.l2}, ${a.l1}`;
+}
+function genAddressTH(ctx) {
+  const a = ctx.areaInfo, sp = STREET_POOLS.th;
+  return `${randInt(1, 999)} ${pick(sp.streets)}, ${a.l2}, ${a.l1} ${genPostcodeNumeric(ctx)}`;
+}
+function genAddressRU(ctx) {
+  const a = ctx.areaInfo, sp = STREET_POOLS.ru;
+  return `${randInt(1, 200)} ${pick(sp.streets)}, ${a.l2}, ${genPostcodeNumeric(ctx)}`;
 }
 
-function genEmail(name) {
-  const pinyin_surnames = ['wang','li','zhang','liu','chen','yang','zhao','huang','zhou','wu','xu','sun','hu','zhu','gao','lin','he','guo','ma','luo','liang','song','zheng','xie','han','tang','feng','yu','dong','xiao','cheng','cao','yuan','deng','xu','fu','shen','zeng','peng','lv','su','lu','jiang','cai','jia','ding','wei','xue','ye','yan','yu','pan','du','dai','xia','zhong','wang','tian','ren','jiang','fan','fang','shi','yao','tan','liao','zou','xiong','jin','lu','hao','kong','bai','cui','kang','mao','qiu','qin','jiang','shi','gu','hou','shao','meng','long','wan','duan','lei','qian','tang','yin','li','yi','chang','wu','qiao','he','lai','gong','wen','wen','kang','shi','niu','fan','hu','ge','xing','an','qi','yi','wu','yu','yuan','bu','qin','yue','zhang','pan','hui'];
-  const prefix = name
-    ? name.toLowerCase().replace(/[^\w]/g, '').slice(0, 8) + randInt(10, 999)
-    : pick(pinyin_surnames) + pick(['wei','fang','na','min','jing','li','yan','jun','xiu','ying','hui','qiao','mei','ting','xue','ying','lin','lei','wei','qin','zhen','li','lan','feng','ju','shu','xin','yue','yao','tong','xuan','yan','jia','meng','xin','yi','han','yu','ping','xia','yan','ling','lu','xuan','fei','qian','yuan','ni','ying','ke','qi','wen','jing','lan','rui','wan','rong','ya','fen','he','mei','lu','shuang','hong','die','shi','yun','rou','rong','huan','xin','miao','man','yi','jie','qing','ning','bi','xiao','zhao','hao','chen','xu','jian','cong','jun','wei','liang','zheng','da','yuan','hang','kai','zhe','yi','ming','hao','xuan','xin','bin','rui','yang','lin','heng','cheng','ming','hui','rui','yi','yuan','cheng','yuan','qi','nan','kai','hao','sen','song','bai','tong','hong','de','qi','xiang','guang','qing','zheng','xin','cheng','an','chen','shu','cheng','run','han','hong','yi','jin','rong','jia','li','ji','wei','yao','chang','ping']) + randInt(10, 999);
-  return prefix + '@' + pick(EMAIL_DOMAINS);
+// ─── 国外通用公司 / 邮箱 ───
+function genCompanyForeign(ctx) {
+  const C = COUNTRIES[ctx.country];
+  return pick(EN_COMPANY_WORDS) + ' ' + pick(EN_COMPANY_WORDS) + ' ' + pick(C.companySuffix);
+}
+function genEmailForeign(ctx, name) {
+  const C = COUNTRIES[ctx.country];
+  const base = (name ? name.toLowerCase().replace(/[^a-z]/g, '') : pick(NAME_POOLS[C.namePool].first).toLowerCase()).slice(0, 10);
+  return base + randInt(10, 999) + '@' + pick(C.emailDomains);
 }
 
-// ─── 生成一条记录 ───
+// ─── 证件生成器（ID_TYPE_DEFS.gen 实现，含真实校验位）───
+function genCNResident(ctx) {
+  const code = ctx.areaInfo && ctx.areaInfo.code3;
+  if (code && ['81','82','71'].includes(code.slice(0, 2))) return '';  // 港澳台无大陆身份证
+  return genIdCardBody(ctx.gender, ctx.birthday, code);
+}
+function genCNPassport() { return 'E' + randDigits(8); }
+function genHKPermit() { return 'C' + randDigits(8); }
+function genTWPermit() { return 'L' + randDigits(8); }
+function genHKMainland() { return pick(['H', 'M']) + randDigits(8); }
+function genTWMainland() { return randDigits(8); }
+function genUSPassport() { return randDigits(9); }
+function genUSSSN() {
+  const a = randInt(1, 665), g = randInt(1, 99), s = randInt(1, 9999);
+  return String(a).padStart(3, '0') + '-' + String(g).padStart(2, '0') + '-' + String(s).padStart(4, '0');
+}
+function genGBPassport() { return randDigits(9); }
+function genGBNINO() {
+  const F = 'ABCEGHJKLMNPRSTWXYZ', L = 'ABCD';  // 首字母避开 D/F/I/Q/U/V/O
+  return pick(F) + pick(F) + ' ' + randDigits(2) + ' ' + randDigits(2) + ' ' + randDigits(2) + ' ' + pick(L);
+}
+function genJPPassport() { return 'M' + randDigits(8); }
+function genJPMyNumber() {
+  const body = randDigits(11), w = [6,5,4,3,2,7,6,5,4,3,2];
+  let sum = 0; for (let i = 0; i < 11; i++) sum += parseInt(body[i]) * w[i];
+  const r = sum % 11, c = r <= 1 ? 0 : (11 - r);
+  return body + String(c);
+}
+function genKRPassport() { return 'M' + randDigits(8); }
+function genKRRRN(ctx) {
+  const bd = ctx.birthday || genBirthday(null), [y, m, d] = bd.split('-');
+  const s = ctx.gender === '女' ? (parseInt(y) >= 2000 ? 4 : 2) : (parseInt(y) >= 2000 ? 3 : 1);
+  let body = y.slice(2) + m + d + String(s) + randDigits(6);
+  const w = [2,3,4,5,6,7,8,9,2,3,4,5];
+  let sum = 0; for (let i = 0; i < 12; i++) sum += parseInt(body[i]) * w[i];
+  return body + String((11 - (sum % 11)) % 10);
+}
+function genCAPassport() { return randUpper(2) + randDigits(6); }
+function genCASIN() { return luhnComplete('', 9); }
+function genAUPassport() { return randUpper(2) + randDigits(7); }
+function genDEPassport() { return pick(['C', 'L']) + randDigits(8); }
+function genFRPassport() { return randDigits(9); }
+function genFRINSEE(ctx) {
+  const bd = ctx.birthday || genBirthday(null), [y, m, d] = bd.split('-');
+  const sex = ctx.gender === '女' ? 2 : 1;
+  const num = String(sex) + y.slice(2) + m + d + String(randInt(1, 95)).padStart(2, '0') + String(randInt(1, 999)).padStart(3, '0');
+  const key = 97 - (parseInt(num) % 97);
+  return num + ' ' + String(key).padStart(2, '0');
+}
+function genSGNRIC() {
+  const prefix = pick(['S', 'T', 'F', 'G']), digits = randDigits(7), w = [2,7,6,5,4,3,2];
+  let sum = 0; for (let i = 0; i < 7; i++) sum += parseInt(digits[i]) * w[i];
+  if (prefix === 'T' || prefix === 'G') sum += 4;
+  const letters = (prefix === 'S' || prefix === 'T') ? ['J','Z','I','H','G','F','E','D','C','B','A'] : ['X','W','U','T','R','Q','P','N','M','L','K'];
+  return prefix + digits + letters[(11 - (sum % 11)) % 11];
+}
+function genSGPassport() { return 'E' + randDigits(7); }
+function genMYMyKad(ctx) {
+  const bd = ctx.birthday || genBirthday(null), [y, m, d] = bd.split('-');
+  const pb = pick(['01','02','03','04','05','06','07','08','09','10','11','12','13','14','15','16']);
+  const g = ctx.gender === '女' ? String(randInt(0, 4) * 2) : String(randInt(0, 4) * 2 + 1);
+  return y.slice(2) + m + d + '-' + pb + '-' + randDigits(3) + g;
+}
+function genMYPassport() { return pick(['A','B','C','D','E','F','G','H','K']) + randDigits(8); }
+function genTHID() {
+  const body = String(randInt(1, 8)) + randDigits(11), w = [13,12,11,10,9,8,7,6,5,4,3,2];
+  let sum = 0; for (let i = 0; i < 12; i++) sum += parseInt(body[i]) * w[i];
+  return body + String((11 - (sum % 11)) % 10);
+}
+function genTHPassport() { return pick(['A','B','C','D','E','F','G','H','J','K','L','M','N','P']) + randDigits(7); }
+function genRUPassport() { return randDigits(10); }
+function genRUINN() {
+  let d = randDigits(10);
+  const w1 = [7,2,4,10,3,5,9,4,6,8];
+  let s1 = 0; for (let i = 0; i < 10; i++) s1 += parseInt(d[i]) * w1[i];
+  d += String(s1 % 11 % 10);
+  const w2 = [3,7,2,4,10,3,5,9,4,6,8];
+  let s2 = 0; for (let i = 0; i < 11; i++) s2 += parseInt(d[i]) * w2[i];
+  return d + String(s2 % 11 % 10);
+}
+
+// ─── 生成一条记录（按国家派发）───
+let genWarnings = [];
 function genOne(settings) {
+  const country = settings.country || currentCountry;
+  const C = COUNTRIES[country];
   const gender = settings.gender || genGender();
   const birthday = genBirthday(settings.birthday);
-  // 地址统一：随机或自定义都用同一个 areaInfo
-  let areaInfo;
-  if (settings.areaInfo) {
-    areaInfo = settings.areaInfo;
-  } else {
-    const prov = pick(ADDR_DATA);
-    const city = pick(prov.cities);
-    const dist = pick(city.ds);
-    areaInfo = { p: prov.p, c: city.c, d: dist.n, code: dist.code };
+  const ctx = { country, gender, birthday, areaInfo: settings.areaInfo || randomAddrInfo() };
+  const a = ctx.areaInfo;
+
+  // 省市 code：CN 为 GB/T 2260 六位码，国外为 ISO 3166-2
+  let provinceCode = '', cityCode = '';
+  if (C.regionSystem === 'cn-gbt2260' && a.code3) {
+    provinceCode = a.code3.slice(0, 2) + '0000';
+    cityCode = a.code3.slice(0, 4) + '00';
+  } else if (a.iso) {
+    provinceCode = a.iso;
   }
-  const bankInfo = genBankCard();
-  return {
-    name: genName(gender),
+
+  const name = C.gen.name(ctx);
+  const rec = {
+    name,
     gender,
     birthday,
-    ethnicity: genEthnicity(),
-    phone: genPhone(),
-    landline: genLandline(areaInfo),
-    postcode: genPostcode(areaInfo, settings.postcode),
-    idCard: genIdCard(gender, birthday, areaInfo.code),
-    bankName: bankInfo.name,
-    bankCard: bankInfo.card,
-    creditCode: genCreditCode(),
-    company: genCompany(areaInfo),
-    email: genEmail(),
-    address: genAddress(areaInfo),
+    phone: C.gen.phone(ctx),
+    postcode: settings.postcode || C.gen.postcode(ctx),
+    provinceCode,
+    cityCode,
+    company: C.gen.company(ctx),
+    email: C.gen.email(ctx, name),
+    address: C.gen.address(ctx),
   };
+
+  // 中国特有字段（受国家开关控制，国外不出列）
+  if (C.fields.ethnicity) rec.ethnicity = genEthnicity();
+  if (C.fields.landline)  rec.landline = genLandline(ctx);
+  if (C.fields.bank)      { const b = genBankCard(); rec.bankName = b.name; rec.bankCard = b.card; }
+  if (C.fields.creditCode) rec.creditCode = genCreditCode();
+
+  // 证件多列：遍历用户多选（港澳台身份证等返回空串则记录告警）
+  (settings.selectedIdTypes || []).forEach(k => {
+    const val = ID_TYPE_DEFS[k].gen(ctx);
+    rec['idcol_' + k] = val;
+    if (val === '') genWarnings.push(k);
+  });
+  return rec;
 }
 
 // ─── UI 逻辑 ───
 let results = [];
 
-function buildCheckboxes() {
+// 按国家动态计算字段清单（共性字段 + 国家开关字段 + 证件列）
+function computeFields(country) {
+  const C = COUNTRIES[country];
+  const out = [
+    { key: 'name', label: '姓名' },
+    { key: 'gender', label: '性别' },
+    { key: 'birthday', label: '生日', default: false },
+  ];
+  if (C.fields.ethnicity) out.push({ key: 'ethnicity', label: '民族' });
+  out.push(
+    { key: 'phone', label: '手机号' },
+    { key: 'postcode', label: C.locale.postcode },
+    { key: 'provinceCode', label: '省/州码' },
+    { key: 'cityCode', label: '市/区码' },
+  );
+  C.idTypes.forEach(k => out.push({ key: 'idcol_' + k, label: ID_TYPE_DEFS[k].label, group: 'id', default: C.defaultIds.includes(k) }));
+  if (C.fields.landline) out.push({ key: 'landline', label: '固定电话', default: false });
+  if (C.fields.bank) out.push({ key: 'bankName', label: '银行名称', default: false }, { key: 'bankCard', label: '银行卡号', default: false });
+  if (C.fields.creditCode) out.push({ key: 'creditCode', label: '统一信用代码', default: false });
+  out.push(
+    { key: 'company', label: '单位名称' },
+    { key: 'email', label: '邮箱' },
+    { key: 'address', label: '详细地址' },
+  );
+  return out;
+}
+
+function syncToggleAll() {
+  const cbs = document.querySelectorAll('#fieldChecks input[type=checkbox]:not(#toggleAll)');
+  const toggle = document.getElementById('toggleAll');
+  if (toggle) toggle.checked = cbs.length > 0 && [...cbs].every(cb => cb.checked);
+}
+
+// 渲染字段复选框：共性字段勾选跨国家保留；证件按当前国家 defaultIds 默认勾选
+function renderFieldCheckboxes(country) {
   const wrap = document.getElementById('fieldChecks');
-  FIELDS.forEach(f => {
+  wrap.innerHTML = '';
+  const fields = computeFields(country);
+  let inIdGroup = false;
+  fields.forEach(f => {
+    if (f.group === 'id' && !inIdGroup) {
+      inIdGroup = true;
+      const sep = document.createElement('div');
+      sep.className = 'field-group-label';
+      sep.textContent = '证件类型（可多选，随国家变化）';
+      wrap.appendChild(sep);
+    }
     const lbl = document.createElement('label');
-    const unchecked = ['birthday', 'bankName', 'bankCard'].includes(f.key);
-    lbl.innerHTML = `<input type="checkbox" value="${f.key}" ${unchecked ? '' : 'checked'}> ${f.label}`;
+    const checked = userFieldPrefs[f.key] !== undefined ? userFieldPrefs[f.key] : (f.default !== false);
+    lbl.innerHTML = `<input type="checkbox" value="${f.key}" data-label="${f.label}" ${checked ? 'checked' : ''}> ${f.label}`;
+    const cb = lbl.querySelector('input');
+    cb.addEventListener('change', () => { userFieldPrefs[f.key] = cb.checked; syncToggleAll(); });
     wrap.appendChild(lbl);
   });
   const all = document.createElement('label');
   all.style.cssText = 'margin-left:auto;color:#4f46e5;font-weight:600';
-  all.innerHTML = `<input type="checkbox" id="toggleAll" checked> 全选`;
+  all.innerHTML = `<input type="checkbox" id="toggleAll"> 全选`;
   all.querySelector('input').addEventListener('change', e => {
-    wrap.querySelectorAll('input[type=checkbox]:not(#toggleAll)').forEach(cb => cb.checked = e.target.checked);
+    wrap.querySelectorAll('input[type=checkbox]:not(#toggleAll)').forEach(cb => {
+      cb.checked = e.target.checked;
+      userFieldPrefs[cb.value] = cb.checked;
+    });
   });
   wrap.appendChild(all);
+  syncToggleAll();
 }
 
 function getSelectedFields() {
-  return [...document.querySelectorAll('#fieldChecks input:checked:not(#toggleAll)')].map(cb => cb.value);
+  return [...document.querySelectorAll('#fieldChecks input:checked:not(#toggleAll)')]
+    .map(cb => ({ key: cb.value, label: cb.dataset.label }));
+}
+
+function getSelectedIdTypes() {
+  return [...document.querySelectorAll('#fieldChecks input:checked:not(#toggleAll)')]
+    .map(cb => cb.value)
+    .filter(v => v.startsWith('idcol_'))
+    .map(v => v.slice('idcol_'.length));
 }
 
 function generate() {
@@ -889,21 +1537,27 @@ function generate() {
   const fields = getSelectedFields();
   if (!fields.length) { showToast('请至少选择一个字段'); return; }
   const settings = getCustomSettings();
+  settings.selectedIdTypes = getSelectedIdTypes();
+  genWarnings = [];
   results = Array.from({ length: count }, () => genOne(settings));
   renderTable(fields);
+  if (genWarnings.length) {
+    const types = [...new Set(genWarnings)];
+    showToast(`部分证件已留空：${types.map(k => ID_TYPE_DEFS[k].label).join('、')}（港澳台地区无大陆身份证，可用港澳/台胞证件）`);
+  }
 }
 
 function renderTable(fields) {
   const area = document.getElementById('resultArea');
   if (!results.length) { area.innerHTML = '<div class="empty">暂无数据</div>'; document.getElementById('resultCount').textContent = ''; return; }
-  const selFields = fields || getSelectedFields();
+  const selFields = (fields && fields.length ? fields : getSelectedFields());
   document.getElementById('resultCount').textContent = `共 ${results.length} 条`;
   let html = '<div class="table-wrap"><table class="result-table"><thead><tr><th>#</th>';
-  selFields.forEach(k => { html += `<th>${FIELDS.find(f=>f.key===k).label}</th>`; });
+  selFields.forEach(f => { html += `<th>${f.label}</th>`; });
   html += '</tr></thead><tbody>';
   results.forEach((row, i) => {
     html += `<tr><td>${i + 1}</td>`;
-    selFields.forEach(k => { html += `<td class="copy-cell" title="点击复制" onclick="copyCell(this)">${row[k]}</td>`; });
+    selFields.forEach(f => { const v = row[f.key]; html += `<td class="copy-cell" title="点击复制" onclick="copyCell(this)">${v == null ? '' : v}</td>`; });
     html += '</tr>';
   });
   html += '</tbody></table></div>';
@@ -923,10 +1577,10 @@ function clearAll() {
 function exportCSV() {
   if (!results.length) { showToast('请先生成数据'); return; }
   const fields = getSelectedFields();
-  const headers = fields.map(k => FIELDS.find(f=>f.key===k).label);
+  const headers = fields.map(f => f.label);
   let csv = '﻿' + headers.join(',') + '\n';
   results.forEach(row => {
-    csv += fields.map(k => `"${row[k]}"`).join(',') + '\n';
+    csv += fields.map(f => `"${row[f.key] == null ? '' : row[f.key]}"`).join(',') + '\n';
   });
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
   const url = URL.createObjectURL(blob);
@@ -946,10 +1600,24 @@ function showToast(msg) {
 }
 
 // ─── 初始化 ───
+function populateCountrySelect() {
+  const sel = document.getElementById('countrySelect');
+  Object.keys(COUNTRIES).forEach(k => {
+    const opt = document.createElement('option');
+    opt.value = k; opt.textContent = COUNTRIES[k].name;
+    sel.appendChild(opt);
+  });
+  sel.value = currentCountry;
+  sel.addEventListener('change', () => onCountryChange(sel.value));
+}
+
 function bindPostcodeInput() {
   const input = document.getElementById('customPostcode');
   input.addEventListener('input', () => {
-    input.value = input.value.replace(/\D/g, '').slice(0, 6);
+    const C = COUNTRIES[currentCountry];
+    if (C.postcodeStyle === 'numeric') {              // 仅纯数字邮编过滤非数字；GB/CA 字母邮编保留
+      input.value = input.value.replace(/\D/g, '').slice(0, C.postcodeLen);
+    }
     postcodeEdited = input.value !== '';
     updateAddrPreview();
   });
@@ -965,7 +1633,8 @@ function bindLocateInput() {
   });
 }
 
-buildCheckboxes();
+populateCountrySelect();
+renderFieldCheckboxes(currentCountry);
 buildAddrSelects();
 bindPostcodeInput();
 bindLocateInput();
