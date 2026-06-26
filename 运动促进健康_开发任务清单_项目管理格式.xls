@@ -1,0 +1,839 @@
+<?xml version="1.0"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:o="urn:schemas-microsoft-com:office:office"
+ xmlns:x="urn:schemas-microsoft-com:office:excel"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:html="http://www.w3.org/TR/REC-html40">
+ <DocumentProperties xmlns="urn:schemas-microsoft-com:office:office">
+  <Author>系统生成</Author>
+  <Created>2026-03-02T07:13:11.846Z</Created>
+  <Company>运动促进健康项目组</Company>
+ </DocumentProperties>
+ <ExcelWorkbook xmlns="urn:schemas-microsoft-com:office:excel">
+  <WindowHeight>9000</WindowHeight>
+  <WindowWidth>13860</WindowWidth>
+  <WindowTopX>240</WindowTopX>
+  <WindowTopY>75</WindowTopY>
+  <ProtectStructure>False</ProtectStructure>
+  <ProtectWindows>False</ProtectWindows>
+ </ExcelWorkbook>
+ <Styles>
+  <Style ss:ID="Default" ss:Name="Normal">
+   <Alignment ss:Vertical="Bottom"/>
+   <Borders/>
+   <Font ss:FontName="微软雅黑" x:CharSet="134" ss:Size="11"/>
+   <Interior ss:Color="#FFFFFF"/>
+   <NumberFormat/>
+   <Protection/>
+  </Style>
+  <Style ss:ID="Header">
+   <Font ss:FontName="微软雅黑" x:CharSet="134" ss:Size="11" ss:Bold="1"/>
+   <Interior ss:Color="#E6F0FF"/>
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+  </Style>
+  <Style ss:ID="P0">
+   <Font ss:FontName="微软雅黑" x:CharSet="134" ss:Size="11" ss:Color="#FF0000"/>
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+  </Style>
+  <Style ss:ID="P1">
+   <Font ss:FontName="微软雅黑" x:CharSet="134" ss:Size="11" ss:Color="#FF9900"/>
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+  </Style>
+  <Style ss:ID="P2">
+   <Font ss:FontName="微软雅黑" x:CharSet="134" ss:Size="11" ss:Color="#666666"/>
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+  </Style>
+  <Style ss:ID="ModuleLevel1">
+   <Font ss:FontName="微软雅黑" x:CharSet="134" ss:Size="11" ss:Bold="1"/>
+   <Alignment ss:Horizontal="Left" ss:Vertical="Center"/>
+  </Style>
+  <Style ss:ID="DateStyle">
+   <Font ss:FontName="微软雅黑" x:CharSet="134" ss:Size="11"/>
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <NumberFormat ss:Format="yyyy/mm/dd"/>
+  </Style>
+ </Styles>
+ <Worksheet ss:Name="开发任务清单">
+  <Table ss:ExpandedColumnCount="9" ss:ExpandedRowCount="70" x:FullColumns="1" x:FullRows="1" ss:DefaultRowHeight="18">
+   <Column ss:Width="120"/>
+   <Column ss:Width="150"/>
+   <Column ss:Width="150"/>
+   <Column ss:Width="200"/>
+   <Column ss:Width="100"/>
+   <Column ss:Width="60"/>
+   <Column ss:Width="100"/>
+   <Column ss:Width="100"/>
+   <Column ss:Width="80"/>
+   <Row ss:StyleID="Header" ss:Height="25">
+    <Cell><Data ss:Type="String">项目名称</Data></Cell>
+    <Cell><Data ss:Type="String">一级模块</Data></Cell>
+    <Cell><Data ss:Type="String">二级模块</Data></Cell>
+    <Cell><Data ss:Type="String">三级模块</Data></Cell>
+    <Cell><Data ss:Type="String">工作类型</Data></Cell>
+    <Cell><Data ss:Type="String">工（天）</Data></Cell>
+    <Cell><Data ss:Type="String">计划开始时间</Data></Cell>
+    <Cell><Data ss:Type="String">计划结束时间</Data></Cell>
+    <Cell><Data ss:Type="String">负责人</Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell ss:StyleID="ModuleLevel1"><Data ss:Type="String">运动促进健康申报管理系统</Data></Cell>
+    <Cell ss:StyleID="ModuleLevel1"><Data ss:Type="String">系统流程图</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String">系统流程图展示</Data></Cell>
+    <Cell><Data ss:Type="String">系统设计</Data></Cell>
+    <Cell><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/03/03</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/03/04</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell ss:StyleID="ModuleLevel1"><Data ss:Type="String">运动促进健康申报管理系统</Data></Cell>
+    <Cell ss:StyleID="ModuleLevel1"><Data ss:Type="String">省体育局群体处</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String">省级管理后台</Data></Cell>
+    <Cell><Data ss:Type="String">需求分析</Data></Cell>
+    <Cell><Data ss:Type="Number">5</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/03/05</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/03/11</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell><Data ss:Type="String">运动促进健康申报管理系统</Data></Cell>
+    <Cell><Data ss:Type="String">运动促进健康中心管理</Data></Cell>
+    <Cell><Data ss:Type="String">模板管理</Data></Cell>
+    <Cell><Data ss:Type="String">模板列表管理</Data></Cell>
+    <Cell><Data ss:Type="String">需求分析</Data></Cell>
+    <Cell><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/03/05</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/03/05</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell><Data ss:Type="String">运动促进健康申报管理系统</Data></Cell>
+    <Cell><Data ss:Type="String">运动促进健康中心管理</Data></Cell>
+    <Cell><Data ss:Type="String">模板管理</Data></Cell>
+    <Cell><Data ss:Type="String">模板列表管理</Data></Cell>
+    <Cell><Data ss:Type="String">系统设计</Data></Cell>
+    <Cell><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/03/06</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/03/06</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell><Data ss:Type="String">运动促进健康申报管理系统</Data></Cell>
+    <Cell><Data ss:Type="String">运动促进健康中心管理</Data></Cell>
+    <Cell><Data ss:Type="String">模板管理</Data></Cell>
+    <Cell><Data ss:Type="String">模板列表管理</Data></Cell>
+    <Cell><Data ss:Type="String">前端开发</Data></Cell>
+    <Cell><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/03/09</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/03/10</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell><Data ss:Type="String">运动促进健康申报管理系统</Data></Cell>
+    <Cell><Data ss:Type="String">运动促进健康中心管理</Data></Cell>
+    <Cell><Data ss:Type="String">模板管理</Data></Cell>
+    <Cell><Data ss:Type="String">设计模板（处室看）</Data></Cell>
+    <Cell><Data ss:Type="String">前端开发</Data></Cell>
+    <Cell><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/03/11</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/03/11</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell><Data ss:Type="String">运动促进健康申报管理系统</Data></Cell>
+    <Cell><Data ss:Type="String">运动促进健康中心管理</Data></Cell>
+    <Cell><Data ss:Type="String">模板管理</Data></Cell>
+    <Cell><Data ss:Type="String">设计模板（开发看）</Data></Cell>
+    <Cell><Data ss:Type="String">前端开发</Data></Cell>
+    <Cell><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/03/12</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/03/12</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell><Data ss:Type="String">运动促进健康申报管理系统</Data></Cell>
+    <Cell><Data ss:Type="String">运动促进健康中心管理</Data></Cell>
+    <Cell><Data ss:Type="String">申报设置</Data></Cell>
+    <Cell><Data ss:Type="String">申报参数配置</Data></Cell>
+    <Cell><Data ss:Type="String">需求分析</Data></Cell>
+    <Cell><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/03/13</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/03/13</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell><Data ss:Type="String">运动促进健康申报管理系统</Data></Cell>
+    <Cell><Data ss:Type="String">运动促进健康中心管理</Data></Cell>
+    <Cell><Data ss:Type="String">申报设置</Data></Cell>
+    <Cell><Data ss:Type="String">申报参数配置</Data></Cell>
+    <Cell><Data ss:Type="String">系统设计</Data></Cell>
+    <Cell><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/03/16</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/03/16</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell><Data ss:Type="String">运动促进健康申报管理系统</Data></Cell>
+    <Cell><Data ss:Type="String">运动促进健康中心管理</Data></Cell>
+    <Cell><Data ss:Type="String">申报设置</Data></Cell>
+    <Cell><Data ss:Type="String">申报参数配置</Data></Cell>
+    <Cell><Data ss:Type="String">前端开发</Data></Cell>
+    <Cell><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/03/17</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/03/18</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell><Data ss:Type="String">运动促进健康申报管理系统</Data></Cell>
+    <Cell><Data ss:Type="String">运动促进健康中心管理</Data></Cell>
+    <Cell><Data ss:Type="String">申报设置</Data></Cell>
+    <Cell><Data ss:Type="String">申报参数配置</Data></Cell>
+    <Cell><Data ss:Type="String">后端开发</Data></Cell>
+    <Cell><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/03/17</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/03/18</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell><Data ss:Type="String">运动促进健康申报管理系统</Data></Cell>
+    <Cell><Data ss:Type="String">运动促进健康中心管理</Data></Cell>
+    <Cell><Data ss:Type="String">资格初审</Data></Cell>
+    <Cell><Data ss:Type="String">资格审核功能</Data></Cell>
+    <Cell><Data ss:Type="String">需求分析</Data></Cell>
+    <Cell><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/03/19</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/03/19</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell><Data ss:Type="String">运动促进健康申报管理系统</Data></Cell>
+    <Cell><Data ss:Type="String">运动促进健康中心管理</Data></Cell>
+    <Cell><Data ss:Type="String">资格初审</Data></Cell>
+    <Cell><Data ss:Type="String">资格审核功能</Data></Cell>
+    <Cell><Data ss:Type="String">系统设计</Data></Cell>
+    <Cell><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/03/20</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/03/20</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell><Data ss:Type="String">运动促进健康申报管理系统</Data></Cell>
+    <Cell><Data ss:Type="String">运动促进健康中心管理</Data></Cell>
+    <Cell><Data ss:Type="String">资格初审</Data></Cell>
+    <Cell><Data ss:Type="String">资格审核功能</Data></Cell>
+    <Cell><Data ss:Type="String">前端开发</Data></Cell>
+    <Cell><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/03/23</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/03/24</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell><Data ss:Type="String">运动促进健康申报管理系统</Data></Cell>
+    <Cell><Data ss:Type="String">运动促进健康中心管理</Data></Cell>
+    <Cell><Data ss:Type="String">资格初审</Data></Cell>
+    <Cell><Data ss:Type="String">资格审核功能</Data></Cell>
+    <Cell><Data ss:Type="String">后端开发</Data></Cell>
+    <Cell><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/03/23</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/03/24</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell><Data ss:Type="String">运动促进健康申报管理系统</Data></Cell>
+    <Cell><Data ss:Type="String">运动促进健康中心管理</Data></Cell>
+    <Cell><Data ss:Type="String">书面评审</Data></Cell>
+    <Cell><Data ss:Type="String">专家分配</Data></Cell>
+    <Cell><Data ss:Type="String">需求分析</Data></Cell>
+    <Cell><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/03/25</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/03/25</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell><Data ss:Type="String">运动促进健康申报管理系统</Data></Cell>
+    <Cell><Data ss:Type="String">运动促进健康中心管理</Data></Cell>
+    <Cell><Data ss:Type="String">书面评审</Data></Cell>
+    <Cell><Data ss:Type="String">专家分配</Data></Cell>
+    <Cell><Data ss:Type="String">系统设计</Data></Cell>
+    <Cell><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/03/26</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/03/26</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell><Data ss:Type="String">运动促进健康申报管理系统</Data></Cell>
+    <Cell><Data ss:Type="String">运动促进健康中心管理</Data></Cell>
+    <Cell><Data ss:Type="String">书面评审</Data></Cell>
+    <Cell><Data ss:Type="String">专家分配</Data></Cell>
+    <Cell><Data ss:Type="String">前端开发</Data></Cell>
+    <Cell><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/03/27</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/03/30</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell><Data ss:Type="String">运动促进健康申报管理系统</Data></Cell>
+    <Cell><Data ss:Type="String">运动促进健康中心管理</Data></Cell>
+    <Cell><Data ss:Type="String">书面评审</Data></Cell>
+    <Cell><Data ss:Type="String">专家分配</Data></Cell>
+    <Cell><Data ss:Type="String">后端开发</Data></Cell>
+    <Cell><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/03/27</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/03/30</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell><Data ss:Type="String">运动促进健康申报管理系统</Data></Cell>
+    <Cell><Data ss:Type="String">运动促进健康中心管理</Data></Cell>
+    <Cell><Data ss:Type="String">书面评审</Data></Cell>
+    <Cell><Data ss:Type="String">评审进度跟踪</Data></Cell>
+    <Cell><Data ss:Type="String">前端开发</Data></Cell>
+    <Cell><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/03/31</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/03/31</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell><Data ss:Type="String">运动促进健康申报管理系统</Data></Cell>
+    <Cell><Data ss:Type="String">运动促进健康中心管理</Data></Cell>
+    <Cell><Data ss:Type="String">书面评审评分汇总</Data></Cell>
+    <Cell><Data ss:Type="String">分数汇总统计</Data></Cell>
+    <Cell><Data ss:Type="String">需求分析</Data></Cell>
+    <Cell><Data ss:Type="Number">0.5</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/04/01</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/04/01</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell><Data ss:Type="String">运动促进健康申报管理系统</Data></Cell>
+    <Cell><Data ss:Type="String">运动促进健康中心管理</Data></Cell>
+    <Cell><Data ss:Type="String">书面评审评分汇总</Data></Cell>
+    <Cell><Data ss:Type="String">分数汇总统计</Data></Cell>
+    <Cell><Data ss:Type="String">系统设计</Data></Cell>
+    <Cell><Data ss:Type="Number">0.5</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/04/02</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/04/02</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell><Data ss:Type="String">运动促进健康申报管理系统</Data></Cell>
+    <Cell><Data ss:Type="String">运动促进健康中心管理</Data></Cell>
+    <Cell><Data ss:Type="String">书面评审评分汇总</Data></Cell>
+    <Cell><Data ss:Type="String">分数汇总统计</Data></Cell>
+    <Cell><Data ss:Type="String">前端开发</Data></Cell>
+    <Cell><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/04/03</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/04/03</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell><Data ss:Type="String">运动促进健康申报管理系统</Data></Cell>
+    <Cell><Data ss:Type="String">运动促进健康中心管理</Data></Cell>
+    <Cell><Data ss:Type="String">书面评审评分汇总</Data></Cell>
+    <Cell><Data ss:Type="String">报表导出</Data></Cell>
+    <Cell><Data ss:Type="String">前端开发</Data></Cell>
+    <Cell><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/04/06</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/04/06</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell><Data ss:Type="String">运动促进健康申报管理系统</Data></Cell>
+    <Cell><Data ss:Type="String">运动促进健康中心管理</Data></Cell>
+    <Cell><Data ss:Type="String">实地考察</Data></Cell>
+    <Cell><Data ss:Type="String">考察组管理</Data></Cell>
+    <Cell><Data ss:Type="String">需求分析</Data></Cell>
+    <Cell><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/04/07</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/04/07</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell><Data ss:Type="String">运动促进健康申报管理系统</Data></Cell>
+    <Cell><Data ss:Type="String">运动促进健康中心管理</Data></Cell>
+    <Cell><Data ss:Type="String">实地考察</Data></Cell>
+    <Cell><Data ss:Type="String">考察组管理</Data></Cell>
+    <Cell><Data ss:Type="String">系统设计</Data></Cell>
+    <Cell><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/04/08</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/04/08</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell><Data ss:Type="String">运动促进健康申报管理系统</Data></Cell>
+    <Cell><Data ss:Type="String">运动促进健康中心管理</Data></Cell>
+    <Cell><Data ss:Type="String">实地考察</Data></Cell>
+    <Cell><Data ss:Type="String">考察组管理</Data></Cell>
+    <Cell><Data ss:Type="String">前端开发</Data></Cell>
+    <Cell><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/04/09</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/04/10</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell><Data ss:Type="String">运动促进健康申报管理系统</Data></Cell>
+    <Cell><Data ss:Type="String">运动促进健康中心管理</Data></Cell>
+    <Cell><Data ss:Type="String">实地考察</Data></Cell>
+    <Cell><Data ss:Type="String">考察报告</Data></Cell>
+    <Cell><Data ss:Type="String">前端开发</Data></Cell>
+    <Cell><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/04/13</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/04/13</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell><Data ss:Type="String">运动促进健康申报管理系统</Data></Cell>
+    <Cell><Data ss:Type="String">运动促进健康中心管理</Data></Cell>
+    <Cell><Data ss:Type="String">实地考察</Data></Cell>
+    <Cell><Data ss:Type="String">小程序实地考察</Data></Cell>
+    <Cell><Data ss:Type="String">小程序开发</Data></Cell>
+    <Cell><Data ss:Type="Number">8</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/04/14</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/04/24</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell><Data ss:Type="String">运动促进健康申报管理系统</Data></Cell>
+    <Cell><Data ss:Type="String">运动促进健康中心管理</Data></Cell>
+    <Cell><Data ss:Type="String">实地考察评分汇总</Data></Cell>
+    <Cell><Data ss:Type="String">考察分数汇总</Data></Cell>
+    <Cell><Data ss:Type="String">前端开发</Data></Cell>
+    <Cell><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/04/24</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/04/27</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell><Data ss:Type="String">运动促进健康申报管理系统</Data></Cell>
+    <Cell><Data ss:Type="String">运动促进健康中心管理</Data></Cell>
+    <Cell><Data ss:Type="String">实地考察评分汇总</Data></Cell>
+    <Cell><Data ss:Type="String">考察分数汇总</Data></Cell>
+    <Cell><Data ss:Type="String">后端开发</Data></Cell>
+    <Cell><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/04/28</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/04/28</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell><Data ss:Type="String">运动促进健康申报管理系统</Data></Cell>
+    <Cell><Data ss:Type="String">运动促进健康中心管理</Data></Cell>
+    <Cell><Data ss:Type="String">评分汇总</Data></Cell>
+    <Cell><Data ss:Type="String">综合评分统计</Data></Cell>
+    <Cell><Data ss:Type="String">需求分析</Data></Cell>
+    <Cell><Data ss:Type="Number">0.5</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/04/29</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/04/29</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell><Data ss:Type="String">运动促进健康申报管理系统</Data></Cell>
+    <Cell><Data ss:Type="String">运动促进健康中心管理</Data></Cell>
+    <Cell><Data ss:Type="String">评分汇总</Data></Cell>
+    <Cell><Data ss:Type="String">综合评分统计</Data></Cell>
+    <Cell><Data ss:Type="String">系统设计</Data></Cell>
+    <Cell><Data ss:Type="Number">0.5</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/04/30</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/04/30</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell><Data ss:Type="String">运动促进健康申报管理系统</Data></Cell>
+    <Cell><Data ss:Type="String">运动促进健康中心管理</Data></Cell>
+    <Cell><Data ss:Type="String">评分汇总</Data></Cell>
+    <Cell><Data ss:Type="String">综合评分统计</Data></Cell>
+    <Cell><Data ss:Type="String">前端开发</Data></Cell>
+    <Cell><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/05/05</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/05/06</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell><Data ss:Type="String">运动促进健康申报管理系统</Data></Cell>
+    <Cell><Data ss:Type="String">运动促进健康中心管理</Data></Cell>
+    <Cell><Data ss:Type="String">评分汇总</Data></Cell>
+    <Cell><Data ss:Type="String">分数导出公示</Data></Cell>
+    <Cell><Data ss:Type="String">前端开发</Data></Cell>
+    <Cell><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/05/07</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/05/07</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell><Data ss:Type="String">运动促进健康申报管理系统</Data></Cell>
+    <Cell><Data ss:Type="String">机构端</Data></Cell>
+    <Cell><Data ss:Type="String">首页</Data></Cell>
+    <Cell><Data ss:Type="String">机构首页展示</Data></Cell>
+    <Cell><Data ss:Type="String">需求分析</Data></Cell>
+    <Cell><Data ss:Type="Number">0.5</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/05/08</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/05/08</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell><Data ss:Type="String">运动促进健康申报管理系统</Data></Cell>
+    <Cell><Data ss:Type="String">机构端</Data></Cell>
+    <Cell><Data ss:Type="String">首页</Data></Cell>
+    <Cell><Data ss:Type="String">机构首页展示</Data></Cell>
+    <Cell><Data ss:Type="String">UI设计</Data></Cell>
+    <Cell><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/05/11</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/05/11</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell><Data ss:Type="String">运动促进健康申报管理系统</Data></Cell>
+    <Cell><Data ss:Type="String">机构端</Data></Cell>
+    <Cell><Data ss:Type="String">首页</Data></Cell>
+    <Cell><Data ss:Type="String">机构首页展示</Data></Cell>
+    <Cell><Data ss:Type="String">前端开发</Data></Cell>
+    <Cell><Data ss:Type="Number">1.5</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/05/12</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/05/13</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell><Data ss:Type="String">运动促进健康申报管理系统</Data></Cell>
+    <Cell><Data ss:Type="String">机构端</Data></Cell>
+    <Cell><Data ss:Type="String">补助申请</Data></Cell>
+    <Cell><Data ss:Type="String">申请表单设计</Data></Cell>
+    <Cell><Data ss:Type="String">需求分析</Data></Cell>
+    <Cell><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/05/14</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/05/14</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell><Data ss:Type="String">运动促进健康申报管理系统</Data></Cell>
+    <Cell><Data ss:Type="String">机构端</Data></Cell>
+    <Cell><Data ss:Type="String">补助申请</Data></Cell>
+    <Cell><Data ss:Type="String">申请表单设计</Data></Cell>
+    <Cell><Data ss:Type="String">UI设计</Data></Cell>
+    <Cell><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/05/15</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/05/15</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell><Data ss:Type="String">运动促进健康申报管理系统</Data></Cell>
+    <Cell><Data ss:Type="String">机构端</Data></Cell>
+    <Cell><Data ss:Type="String">补助申请</Data></Cell>
+    <Cell><Data ss:Type="String">表单填写保存</Data></Cell>
+    <Cell><Data ss:Type="String">前端开发</Data></Cell>
+    <Cell><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/05/18</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/05/19</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell><Data ss:Type="String">运动促进健康申报管理系统</Data></Cell>
+    <Cell><Data ss:Type="String">机构端</Data></Cell>
+    <Cell><Data ss:Type="String">补助申请</Data></Cell>
+    <Cell><Data ss:Type="String">表单填写保存</Data></Cell>
+    <Cell><Data ss:Type="String">后端开发</Data></Cell>
+    <Cell><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/05/18</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/05/19</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell><Data ss:Type="String">运动促进健康申报管理系统</Data></Cell>
+    <Cell><Data ss:Type="String">机构端</Data></Cell>
+    <Cell><Data ss:Type="String">补助申请</Data></Cell>
+    <Cell><Data ss:Type="String">表单校验提交</Data></Cell>
+    <Cell><Data ss:Type="String">前端开发</Data></Cell>
+    <Cell><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/05/20</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/05/20</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell><Data ss:Type="String">运动促进健康申报管理系统</Data></Cell>
+    <Cell><Data ss:Type="String">机构端</Data></Cell>
+    <Cell><Data ss:Type="String">PDF生成及文件上传</Data></Cell>
+    <Cell><Data ss:Type="String">PDF生成功能</Data></Cell>
+    <Cell><Data ss:Type="String">需求分析</Data></Cell>
+    <Cell><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/05/21</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/05/21</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell><Data ss:Type="String">运动促进健康申报管理系统</Data></Cell>
+    <Cell><Data ss:Type="String">机构端</Data></Cell>
+    <Cell><Data ss:Type="String">PDF生成及文件上传</Data></Cell>
+    <Cell><Data ss:Type="String">PDF生成功能</Data></Cell>
+    <Cell><Data ss:Type="String">后端开发</Data></Cell>
+    <Cell><Data ss:Type="Number">3</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/05/22</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/05/26</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell><Data ss:Type="String">运动促进健康申报管理系统</Data></Cell>
+    <Cell><Data ss:Type="String">机构端</Data></Cell>
+    <Cell><Data ss:Type="String">PDF生成及文件上传</Data></Cell>
+    <Cell><Data ss:Type="String">佐证文件上传</Data></Cell>
+    <Cell><Data ss:Type="String">前端开发</Data></Cell>
+    <Cell><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/05/27</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/05/27</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell><Data ss:Type="String">运动促进健康申报管理系统</Data></Cell>
+    <Cell><Data ss:Type="String">市体育部门</Data></Cell>
+    <Cell><Data ss:Type="String">市级报送</Data></Cell>
+    <Cell><Data ss:Type="String">报送管理</Data></Cell>
+    <Cell><Data ss:Type="String">需求分析</Data></Cell>
+    <Cell><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/05/28</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/05/28</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell><Data ss:Type="String">运动促进健康申报管理系统</Data></Cell>
+    <Cell><Data ss:Type="String">市体育部门</Data></Cell>
+    <Cell><Data ss:Type="String">市级报送</Data></Cell>
+    <Cell><Data ss:Type="String">报送管理</Data></Cell>
+    <Cell><Data ss:Type="String">系统设计</Data></Cell>
+    <Cell><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/05/29</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/05/29</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell><Data ss:Type="String">运动促进健康申报管理系统</Data></Cell>
+    <Cell><Data ss:Type="String">市体育部门</Data></Cell>
+    <Cell><Data ss:Type="String">市级报送</Data></Cell>
+    <Cell><Data ss:Type="String">报送管理</Data></Cell>
+    <Cell><Data ss:Type="String">前端开发</Data></Cell>
+    <Cell><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/06/01</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/06/02</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell><Data ss:Type="String">运动促进健康申报管理系统</Data></Cell>
+    <Cell><Data ss:Type="String">市体育部门</Data></Cell>
+    <Cell><Data ss:Type="String">待审核</Data></Cell>
+    <Cell><Data ss:Type="String">待审核列表</Data></Cell>
+    <Cell><Data ss:Type="String">前端开发</Data></Cell>
+    <Cell><Data ss:Type="Number">1.5</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/06/03</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/06/04</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell><Data ss:Type="String">运动促进健康申报管理系统</Data></Cell>
+    <Cell><Data ss:Type="String">市体育部门</Data></Cell>
+    <Cell><Data ss:Type="String">待审核</Data></Cell>
+    <Cell><Data ss:Type="String">审核功能</Data></Cell>
+    <Cell><Data ss:Type="String">前端开发</Data></Cell>
+    <Cell><Data ss:Type="Number">1.5</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/06/05</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/06/08</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell><Data ss:Type="String">运动促进健康申报管理系统</Data></Cell>
+    <Cell><Data ss:Type="String">市体育部门</Data></Cell>
+    <Cell><Data ss:Type="String">待报送</Data></Cell>
+    <Cell><Data ss:Type="String">待报送列表</Data></Cell>
+    <Cell><Data ss:Type="String">前端开发</Data></Cell>
+    <Cell><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/06/09</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/06/09</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell><Data ss:Type="String">运动促进健康申报管理系统</Data></Cell>
+    <Cell><Data ss:Type="String">市体育部门</Data></Cell>
+    <Cell><Data ss:Type="String">待报送</Data></Cell>
+    <Cell><Data ss:Type="String">报送功能</Data></Cell>
+    <Cell><Data ss:Type="String">前端开发</Data></Cell>
+    <Cell><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/06/10</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/06/11</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell><Data ss:Type="String">运动促进健康申报管理系统</Data></Cell>
+    <Cell><Data ss:Type="String">市体育部门</Data></Cell>
+    <Cell><Data ss:Type="String">已报送</Data></Cell>
+    <Cell><Data ss:Type="String">已报送列表查看</Data></Cell>
+    <Cell><Data ss:Type="String">前端开发</Data></Cell>
+    <Cell><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/06/12</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/06/15</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell><Data ss:Type="String">运动促进健康申报管理系统</Data></Cell>
+    <Cell><Data ss:Type="String">市体育部门</Data></Cell>
+    <Cell><Data ss:Type="String">已驳回</Data></Cell>
+    <Cell><Data ss:Type="String">已驳回列表</Data></Cell>
+    <Cell><Data ss:Type="String">前端开发</Data></Cell>
+    <Cell><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/06/16</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/06/16</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell><Data ss:Type="String">运动促进健康申报管理系统</Data></Cell>
+    <Cell><Data ss:Type="String">市体育部门</Data></Cell>
+    <Cell><Data ss:Type="String">已驳回</Data></Cell>
+    <Cell><Data ss:Type="String">重新申报功能</Data></Cell>
+    <Cell><Data ss:Type="String">前端开发</Data></Cell>
+    <Cell><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/06/17</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/06/17</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell><Data ss:Type="String">运动促进健康申报管理系统</Data></Cell>
+    <Cell><Data ss:Type="String">市体育部门</Data></Cell>
+    <Cell><Data ss:Type="String">不通过</Data></Cell>
+    <Cell><Data ss:Type="String">不通过列表展示</Data></Cell>
+    <Cell><Data ss:Type="String">前端开发</Data></Cell>
+    <Cell><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/06/18</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/06/19</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell><Data ss:Type="String">运动促进健康申报管理系统</Data></Cell>
+    <Cell><Data ss:Type="String">专家端</Data></Cell>
+    <Cell><Data ss:Type="String">专家账号</Data></Cell>
+    <Cell><Data ss:Type="String">账号体系搭建</Data></Cell>
+    <Cell><Data ss:Type="String">需求分析</Data></Cell>
+    <Cell><Data ss:Type="Number">0.5</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/06/22</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/06/22</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell><Data ss:Type="String">运动促进健康申报管理系统</Data></Cell>
+    <Cell><Data ss:Type="String">专家端</Data></Cell>
+    <Cell><Data ss:Type="String">专家账号</Data></Cell>
+    <Cell><Data ss:Type="String">账号体系搭建</Data></Cell>
+    <Cell><Data ss:Type="String">后端开发</Data></Cell>
+    <Cell><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/06/23</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/06/23</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell><Data ss:Type="String">运动促进健康申报管理系统</Data></Cell>
+    <Cell><Data ss:Type="String">专家端</Data></Cell>
+    <Cell><Data ss:Type="String">书面评审</Data></Cell>
+    <Cell><Data ss:Type="String">在线评审功能</Data></Cell>
+    <Cell><Data ss:Type="String">需求分析</Data></Cell>
+    <Cell><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/06/24</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/06/24</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell><Data ss:Type="String">运动促进健康申报管理系统</Data></Cell>
+    <Cell><Data ss:Type="String">专家端</Data></Cell>
+    <Cell><Data ss:Type="String">书面评审</Data></Cell>
+    <Cell><Data ss:Type="String">在线评审功能</Data></Cell>
+    <Cell><Data ss:Type="String">UI设计</Data></Cell>
+    <Cell><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/06/25</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/06/25</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell><Data ss:Type="String">运动促进健康申报管理系统</Data></Cell>
+    <Cell><Data ss:Type="String">专家端</Data></Cell>
+    <Cell><Data ss:Type="String">书面评审</Data></Cell>
+    <Cell><Data ss:Type="String">在线评审功能</Data></Cell>
+    <Cell><Data ss:Type="String">前端开发</Data></Cell>
+    <Cell><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/06/26</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/06/29</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell><Data ss:Type="String">运动促进健康申报管理系统</Data></Cell>
+    <Cell><Data ss:Type="String">专家端</Data></Cell>
+    <Cell><Data ss:Type="String">书面评审</Data></Cell>
+    <Cell><Data ss:Type="String">打分和评审意见</Data></Cell>
+    <Cell><Data ss:Type="String">前端开发</Data></Cell>
+    <Cell><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/06/30</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/06/30</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell><Data ss:Type="String">运动促进健康申报管理系统</Data></Cell>
+    <Cell><Data ss:Type="String">专家端</Data></Cell>
+    <Cell><Data ss:Type="String">小程序实地考察</Data></Cell>
+    <Cell><Data ss:Type="String">小程序框架搭建</Data></Cell>
+    <Cell><Data ss:Type="String">需求分析</Data></Cell>
+    <Cell><Data ss:Type="Number">0.5</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/07/01</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/07/01</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell><Data ss:Type="String">运动促进健康申报管理系统</Data></Cell>
+    <Cell><Data ss:Type="String">专家端</Data></Cell>
+    <Cell><Data ss:Type="String">小程序实地考察</Data></Cell>
+    <Cell><Data ss:Type="String">小程序框架搭建</Data></Cell>
+    <Cell><Data ss:Type="String">UI设计</Data></Cell>
+    <Cell><Data ss:Type="Number">1</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/07/02</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/07/02</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell><Data ss:Type="String">运动促进健康申报管理系统</Data></Cell>
+    <Cell><Data ss:Type="String">专家端</Data></Cell>
+    <Cell><Data ss:Type="String">小程序实地考察</Data></Cell>
+    <Cell><Data ss:Type="String">现场打分功能</Data></Cell>
+    <Cell><Data ss:Type="String">小程序开发</Data></Cell>
+    <Cell><Data ss:Type="Number">3</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/07/03</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/07/07</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell><Data ss:Type="String">运动促进健康申报管理系统</Data></Cell>
+    <Cell><Data ss:Type="String">专家端</Data></Cell>
+    <Cell><Data ss:Type="String">小程序实地考察</Data></Cell>
+    <Cell><Data ss:Type="String">拍照记录功能</Data></Cell>
+    <Cell><Data ss:Type="String">小程序开发</Data></Cell>
+    <Cell><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/07/08</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/07/09</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell><Data ss:Type="String">运动促进健康申报管理系统</Data></Cell>
+    <Cell><Data ss:Type="String">专家端</Data></Cell>
+    <Cell><Data ss:Type="String">小程序实地考察</Data></Cell>
+    <Cell><Data ss:Type="String">数据同步功能</Data></Cell>
+    <Cell><Data ss:Type="String">小程序开发</Data></Cell>
+    <Cell><Data ss:Type="Number">2</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/07/10</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/07/13</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row ss:Height="20">
+    <Cell><Data ss:Type="String">运动促进健康申报管理系统</Data></Cell>
+    <Cell><Data ss:Type="String">专家端</Data></Cell>
+    <Cell><Data ss:Type="String">小程序实地考察</Data></Cell>
+    <Cell><Data ss:Type="String">考察报告生成</Data></Cell>
+    <Cell><Data ss:Type="String">小程序开发</Data></Cell>
+    <Cell><Data ss:Type="Number">1.5</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/07/14</Data></Cell>
+    <Cell ss:StyleID="DateStyle"><Data ss:Type="String">2026/07/15</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+  </Table>
+ </Worksheet>
+</Workbook>

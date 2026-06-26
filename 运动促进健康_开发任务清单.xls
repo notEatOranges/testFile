@@ -1,0 +1,341 @@
+<?xml version="1.0"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:o="urn:schemas-microsoft-com:office:office"
+ xmlns:x="urn:schemas-microsoft-com:office:excel"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:html="http://www.w3.org/TR/REC-html40">
+ <DocumentProperties xmlns="urn:schemas-microsoft-com:office:office">
+  <Author>系统生成</Author>
+  <Created>2026-03-02T06:59:38.229Z</Created>
+  <Company>运动促进健康项目组</Company>
+ </DocumentProperties>
+ <ExcelWorkbook xmlns="urn:schemas-microsoft-com:office:excel">
+  <WindowHeight>9000</WindowHeight>
+  <WindowWidth>13860</WindowWidth>
+  <WindowTopX>240</WindowTopX>
+  <WindowTopY>75</WindowTopY>
+  <ProtectStructure>False</ProtectStructure>
+  <ProtectWindows>False</ProtectWindows>
+ </ExcelWorkbook>
+ <Styles>
+  <Style ss:ID="Default" ss:Name="Normal">
+   <Alignment ss:Vertical="Bottom"/>
+   <Borders/>
+   <Font ss:FontName="宋体" x:CharSet="134" ss:Size="11"/>
+   <Interior/>
+   <NumberFormat/>
+   <Protection/>
+  </Style>
+  <Style ss:ID="s62">
+   <Font ss:FontName="宋体" x:CharSet="134" ss:Size="11" ss:Bold="1"/>
+  </Style>
+  <Style ss:ID="s63">
+   <Font ss:FontName="宋体" x:CharSet="134" ss:Size="11" ss:Color="#FF0000"/>
+  </Style>
+  <Style ss:ID="s64">
+   <Font ss:FontName="宋体" x:CharSet="134" ss:Size="11" ss:Color="#008000"/>
+  </Style>
+ </Styles>
+ <Worksheet ss:Name="开发任务清单">
+  <Table ss:ExpandedColumnCount="9" ss:ExpandedRowCount="24" x:FullColumns="1" x:FullRows="1" ss:DefaultRowHeight="15">
+   <Column ss:Width="30"/>
+   <Column ss:Width="100"/>
+   <Column ss:Width="120"/>
+   <Column ss:Width="150"/>
+   <Column ss:Width="300"/>
+   <Column ss:Width="50"/>
+   <Column ss:Width="60"/>
+   <Column ss:Width="80"/>
+   <Column ss:Width="80"/>
+   <Column ss:Width="200"/>
+   <Row ss:StyleID="s62">
+    <Cell><Data ss:Type="String">序号</Data></Cell>
+    <Cell><Data ss:Type="String">模块</Data></Cell>
+    <Cell><Data ss:Type="String">功能点</Data></Cell>
+    <Cell><Data ss:Type="String">页面/组件</Data></Cell>
+    <Cell><Data ss:Type="String">任务描述</Data></Cell>
+    <Cell><Data ss:Type="String">优先级</Data></Cell>
+    <Cell><Data ss:Type="String">工作量(人天)</Data></Cell>
+    <Cell><Data ss:Type="String">负责人</Data></Cell>
+    <Cell><Data ss:Type="String">状态</Data></Cell>
+    <Cell><Data ss:Type="String">备注</Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="Number">1</Data></Cell>
+    <Cell><Data ss:Type="String">系统流程图</Data></Cell>
+    <Cell><Data ss:Type="String">系统流程图展示</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">系统流程图</Data></Cell>
+    <Cell><Data ss:Type="String">实现系统整体流程的可视化展示，包含各角色之间的业务流程关系</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">P0</Data></Cell>
+    <Cell><Data ss:Type="Number">2</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String">待开始</Data></Cell>
+    <Cell><Data ss:Type="String">需要与产品确认流程细节</Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="Number">2</Data></Cell>
+    <Cell><Data ss:Type="String">省体育局群体处</Data></Cell>
+    <Cell><Data ss:Type="String">省级管理后台</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">省体育局群体处模块</Data></Cell>
+    <Cell><Data ss:Type="String">实现省体育局群体处的管理功能，包括项目管理、申报管理等</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">P0</Data></Cell>
+    <Cell><Data ss:Type="Number">5</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String">待开始</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="Number">3</Data></Cell>
+    <Cell><Data ss:Type="String">运动促进健康中心管理</Data></Cell>
+    <Cell><Data ss:Type="String">模板管理</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">设计模板列表</Data></Cell>
+    <Cell><Data ss:Type="String">实现申报模板的管理功能，包括模板的创建、编辑、删除</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">P0</Data></Cell>
+    <Cell><Data ss:Type="Number">3</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String">待开始</Data></Cell>
+    <Cell><Data ss:Type="String">区分处室视图和开发视图</Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="Number">4</Data></Cell>
+    <Cell><Data ss:Type="String">运动促进健康中心管理</Data></Cell>
+    <Cell><Data ss:Type="String">模板管理-设计模板（处室看）</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="String">设计模板（处室看）页面</Data></Cell>
+    <Cell><Data ss:Type="String">面向处室人员的模板展示页面，展示模板配置信息</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="String">P1</Data></Cell>
+    <Cell><Data ss:Type="Number">1</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String">待开始</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="Number">5</Data></Cell>
+    <Cell><Data ss:Type="String">运动促进健康中心管理</Data></Cell>
+    <Cell><Data ss:Type="String">模板管理-设计模板（开发看）</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="String">设计模板（开发看）页面</Data></Cell>
+    <Cell><Data ss:Type="String">面向开发人员的模板展示页面，展示技术实现相关配置</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="String">P1</Data></Cell>
+    <Cell><Data ss:Type="Number">1</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String">待开始</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="Number">6</Data></Cell>
+    <Cell><Data ss:Type="String">运动促进健康中心管理</Data></Cell>
+    <Cell><Data ss:Type="String">申报设置</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">申报设置页面</Data></Cell>
+    <Cell><Data ss:Type="String">实现申报相关参数配置功能，包括申报周期、申报条件等</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">P0</Data></Cell>
+    <Cell><Data ss:Type="Number">3</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String">待开始</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="Number">7</Data></Cell>
+    <Cell><Data ss:Type="String">运动促进健康中心管理</Data></Cell>
+    <Cell><Data ss:Type="String">资格初审</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">资格初审页面</Data></Cell>
+    <Cell><Data ss:Type="String">实现申报单位资格的初审功能，包括查看、审核、驳回</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">P0</Data></Cell>
+    <Cell><Data ss:Type="Number">4</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String">待开始</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="Number">8</Data></Cell>
+    <Cell><Data ss:Type="String">运动促进健康中心管理</Data></Cell>
+    <Cell><Data ss:Type="String">书面评审</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">书面评审页面</Data></Cell>
+    <Cell><Data ss:Type="String">实现书面材料评审功能，包括专家分配、评审进度跟踪</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">P0</Data></Cell>
+    <Cell><Data ss:Type="Number">5</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String">待开始</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="Number">9</Data></Cell>
+    <Cell><Data ss:Type="String">运动促进健康中心管理</Data></Cell>
+    <Cell><Data ss:Type="String">书面评审评分汇总</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">书面评审评分汇总页面</Data></Cell>
+    <Cell><Data ss:Type="String">实现书面评审分数的汇总统计功能，支持导出报表</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">P0</Data></Cell>
+    <Cell><Data ss:Type="Number">3</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String">待开始</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="Number">10</Data></Cell>
+    <Cell><Data ss:Type="String">运动促进健康中心管理</Data></Cell>
+    <Cell><Data ss:Type="String">实地考察</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">实地考察页面</Data></Cell>
+    <Cell><Data ss:Type="String">实现实地考察安排和记录功能，包括考察组管理、考察报告</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">P0</Data></Cell>
+    <Cell><Data ss:Type="Number">5</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String">待开始</Data></Cell>
+    <Cell><Data ss:Type="String">涉及小程序端</Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="Number">11</Data></Cell>
+    <Cell><Data ss:Type="String">运动促进健康中心管理</Data></Cell>
+    <Cell><Data ss:Type="String">实地考察评分汇总</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">实地考察评分汇总页面</Data></Cell>
+    <Cell><Data ss:Type="String">实现实地考察分数的汇总统计功能</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">P0</Data></Cell>
+    <Cell><Data ss:Type="Number">3</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String">待开始</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="Number">12</Data></Cell>
+    <Cell><Data ss:Type="String">运动促进健康中心管理</Data></Cell>
+    <Cell><Data ss:Type="String">评分汇总</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">评分汇总页面</Data></Cell>
+    <Cell><Data ss:Type="String">实现综合评分汇总功能，汇总书面评审和实地考察分数</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">P0</Data></Cell>
+    <Cell><Data ss:Type="Number">4</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String">待开始</Data></Cell>
+    <Cell><Data ss:Type="String">需要支持分数导出和公示</Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="Number">13</Data></Cell>
+    <Cell><Data ss:Type="String">运动促进健康机构-法人</Data></Cell>
+    <Cell><Data ss:Type="String">首页</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">机构首页</Data></Cell>
+    <Cell><Data ss:Type="String">实现机构端首页，展示申报通知、当前申报状态等信息</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">P0</Data></Cell>
+    <Cell><Data ss:Type="Number">3</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String">待开始</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="Number">14</Data></Cell>
+    <Cell><Data ss:Type="String">运动促进健康机构-法人</Data></Cell>
+    <Cell><Data ss:Type="String">运促中心专项资金补助申请</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">补助申请表单页面</Data></Cell>
+    <Cell><Data ss:Type="String">实现专项资金补助申请功能，包括在线表单填写、保存、提交</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">P0</Data></Cell>
+    <Cell><Data ss:Type="Number">6</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String">待开始</Data></Cell>
+    <Cell><Data ss:Type="String">表单校验、暂存、提交功能</Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="Number">15</Data></Cell>
+    <Cell><Data ss:Type="String">运动促进健康机构-法人</Data></Cell>
+    <Cell><Data ss:Type="String">申请书pdf生成及佐证文件上传</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">PDF生成页面</Data></Cell>
+    <Cell><Data ss:Type="String">实现申请书PDF生成功能，支持佐证文件上传和管理</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">P0</Data></Cell>
+    <Cell><Data ss:Type="Number">5</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String">待开始</Data></Cell>
+    <Cell><Data ss:Type="String">需要PDF生成库支持</Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="Number">16</Data></Cell>
+    <Cell><Data ss:Type="String">市体育部门</Data></Cell>
+    <Cell><Data ss:Type="String">市级报送</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">市级报送管理</Data></Cell>
+    <Cell><Data ss:Type="String">实现市级报送管理功能，汇总本地区申报材料并报送</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">P0</Data></Cell>
+    <Cell><Data ss:Type="Number">4</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String">待开始</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="Number">17</Data></Cell>
+    <Cell><Data ss:Type="String">市体育部门</Data></Cell>
+    <Cell><Data ss:Type="String">待审核</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">待审核列表页面</Data></Cell>
+    <Cell><Data ss:Type="String">实现待审核申报材料的列表展示和审核功能</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">P0</Data></Cell>
+    <Cell><Data ss:Type="Number">3</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String">待开始</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="Number">18</Data></Cell>
+    <Cell><Data ss:Type="String">市体育部门</Data></Cell>
+    <Cell><Data ss:Type="String">待报送</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">待报送列表页面</Data></Cell>
+    <Cell><Data ss:Type="String">实现待报送申报材料的列表展示和报送功能</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">P0</Data></Cell>
+    <Cell><Data ss:Type="Number">3</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String">待开始</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="Number">19</Data></Cell>
+    <Cell><Data ss:Type="String">市体育部门</Data></Cell>
+    <Cell><Data ss:Type="String">已报送</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="String">已报送列表页面</Data></Cell>
+    <Cell><Data ss:Type="String">实现已报送申报材料的列表展示和查看功能</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="String">P1</Data></Cell>
+    <Cell><Data ss:Type="Number">2</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String">待开始</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="Number">20</Data></Cell>
+    <Cell><Data ss:Type="String">市体育部门</Data></Cell>
+    <Cell><Data ss:Type="String">已驳回</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="String">已驳回列表页面</Data></Cell>
+    <Cell><Data ss:Type="String">实现已驳回申报材料的列表展示和重新申报功能</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="String">P1</Data></Cell>
+    <Cell><Data ss:Type="Number">2</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String">待开始</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="Number">21</Data></Cell>
+    <Cell><Data ss:Type="String">市体育部门</Data></Cell>
+    <Cell><Data ss:Type="String">不通过</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="String">不通过列表页面</Data></Cell>
+    <Cell><Data ss:Type="String">实现评审不通过申报材料的列表展示</Data></Cell>
+    <Cell ss:StyleID="s64"><Data ss:Type="String">P1</Data></Cell>
+    <Cell><Data ss:Type="Number">2</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String">待开始</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="Number">22</Data></Cell>
+    <Cell><Data ss:Type="String">专家</Data></Cell>
+    <Cell><Data ss:Type="String">书面评审</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">专家书面评审页面</Data></Cell>
+    <Cell><Data ss:Type="String">实现专家在线书面评审功能，支持打分和填写评审意见</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">P0</Data></Cell>
+    <Cell><Data ss:Type="Number">5</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String">待开始</Data></Cell>
+    <Cell><Data ss:Type="String">需要专家账号体系</Data></Cell>
+   </Row>
+   <Row>
+    <Cell><Data ss:Type="Number">23</Data></Cell>
+    <Cell><Data ss:Type="String">专家</Data></Cell>
+    <Cell><Data ss:Type="String">小程序-实地考察</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">实地考察小程序页面</Data></Cell>
+    <Cell><Data ss:Type="String">实现实地考察小程序功能，支持现场打分和拍照记录</Data></Cell>
+    <Cell ss:StyleID="s63"><Data ss:Type="String">P0</Data></Cell>
+    <Cell><Data ss:Type="Number">8</Data></Cell>
+    <Cell><Data ss:Type="String"></Data></Cell>
+    <Cell><Data ss:Type="String">待开始</Data></Cell>
+    <Cell><Data ss:Type="String">需要小程序开发</Data></Cell>
+   </Row>
+  </Table>
+ </Worksheet>
+</Workbook>
