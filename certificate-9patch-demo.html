@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>证书 .9图效果 (CSS border-image 九宫格) 示例</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: #eef1f5;
+    font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    padding: 24px 16px 60px;
+  }
+
+  /* —— 顶部控制条：切换内容长短，演示拉伸效果 —— */
+  .toolbar {
+    position: sticky;
+    top: 10px;
+    z-index: 10;
+    background: #fff;
+    padding: 10px 16px;
+    border-radius: 10px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, .08);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    font-size: 14px;
+  }
+  .toolbar button {
+    border: none;
+    background: #3a5aeb;
+    color: #fff;
+    padding: 6px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  .toolbar button:hover { background: #2a47c4; }
+  .toolbar .hint { color: #888; }
+
+  /* =====================================================================
+     证书主体：CSS 九宫格 (.9图) 核心实现 —— border-image
+     =====================================================================
+     九宫格原理（把底图切成 3×3 = 9 块）：
+       四角       → 原样显示，绝不缩放
+       上/下边中段 → 垂直方向固定，水平方向随容器宽拉伸
+       左/右边中段 → 水平方向固定，垂直方向随容器高拉伸
+       正中间     → 水平、垂直都随容器拉伸（靠 fill 关键字填充）
+     所以：容器【高度】变化时，只有中间留白被纵向拉长 —— 正是你要的“内容可长可短”。
+     ===================================================================== */
+  .cert {
+    /* ① 关键前提：宽度固定，只让高度随内容变。
+          这样左右花纹不会被横向拉伸（横向拉伸会让标题文字变形）。 */
+    width: 1080px;
+    max-width: 100%;
+
+    /* ② 内边距：把 HTML 内容推到中间留白区，避开四周边框花纹 */
+    padding: 40px 110px 60px;
+
+    /* ③ 九宫格三件套 */
+    border-style: solid;                         /* 必须！否则 border-image 不生效 */
+    border-image-source: url("assets/images/证书底图.png");
+    border-image-slice: 400 215 430 215 fill;    /* 上 右 下 左（单位是【原图像素】，不带 px）；fill=填充中间 */
+    border-image-width: 400px 215px 430px 215px;  /* 边框显示厚度；与 slice 相等 = 1:1 不缩放显示 */
+    /* border-image-repeat 默认就是 stretch，可不写 */
+
+    /* 文字排布：内容短时在中间留白区垂直居中，长时自然撑开 */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 1000px;                          /* 内容很短时也保证证书有足够高度 */
+    text-align: center;
+    color: #6b4423;
+  }
+
+  /* —— 中间可变内容 ——
+     说明：理想情况下，标题/姓名/正文/落款都应该用 HTML 写（如本示例），
+     底图只负责“纯装饰边框”。你这张图本身已带标题和印章，
+     缩小显示时它们会被横向拉伸变形（这是 .9 图的固有规律，无法避免）。
+     生产环境建议：向设计要一张“无文字、纯边框花纹”的底图。 */
+  .cert__title {
+    font-size: 30px;
+    letter-spacing: 8px;
+    margin: 0 0 6px;
+    color: #b8860b;
+  }
+  .cert__subtitle {
+    font-size: 13px;
+    letter-spacing: 4px;
+    color: #b8860b;
+    margin: 0 0 26px;
+    opacity: .8;
+  }
+  .cert__name {
+    font-size: 24px;
+    margin: 0 0 16px;
+    letter-spacing: 2px;
+  }
+  .cert__body {
+    font-size: 19px;
+    line-height: 2;
+    text-align: justify;
+    text-indent: 2em;
+    margin: 0 auto;
+    max-width: 720px;
+  }
+  .cert__sign {
+    margin-top: 30px;
+    font-size: 17px;
+    color: #8a6a3a;
+    align-self: flex-end;
+    text-align: right;
+    line-height: 1.9;
+  }
+</style>
+</head>
+<body>
+
+  <div class="toolbar">
+    <span>内容长度：</span>
+    <button data-len="short">短内容</button>
+    <button data-len="long">长内容</button>
+    <button data-len="huge">超长内容</button>
+    <span class="hint">（切换看底图如何随高度拉伸，四角花纹不变形）</span>
+  </div>
+
+  <div class="cert" id="cert">
+    <h1 class="cert__title">结业证书</h1>
+    <p class="cert__subtitle">CERTIFICATE OF COMPLETION</p>
+    <p class="cert__name">张　三 同学：</p>
+    <p class="cert__body" id="body">参加 2026 年度“运动促进健康”专项培训，完成全部课程学习并考核合格，特发此证。</p>
+    <div class="cert__sign">
+      颁发单位：运动促进健康项目组<br>
+      2026 年 06 月 26 日
+    </div>
+  </div>
+
+<script>
+  const TEXTS = {
+    short: '参加 2026 年度“运动促进健康”专项培训，完成全部课程学习并考核合格，特发此证。',
+    long:  '参加 2026 年度“运动促进健康”专项培训，系统学习了有氧运动处方、慢病运动干预、运动风险评估、营养与恢复等模块，并通过理论与实践考核，成绩优秀，特发此证，以资鼓励。',
+    huge:  '参加 2026 年度“运动促进健康”专项培训。在培训期间，系统学习了有氧运动处方制定、抗阻训练原则、柔韧性与平衡训练、慢性疾病（高血压、糖尿病、骨质疏松）运动干预策略、运动前健康筛查与风险评估、心肺耐力测试与解读、运动营养与恢复、常见运动损伤预防与处理、特殊人群（老年、孕产妇、青少年）运动指导等多个核心模块。经理论与实践综合考核，成绩优秀，表现突出，特发此证，以资鼓励。希望你在今后的工作中继续秉承科学运动理念，带动更多人通过运动收获健康。'
+  };
+  document.querySelectorAll('.toolbar button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.getElementById('body').textContent = TEXTS[btn.dataset.len];
+    });
+  });
+</script>
+</body>
+</html>
