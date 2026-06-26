@@ -35,7 +35,8 @@
       "Bash(git -c core.quotepath=false status --short)",
       "Bash(git commit *)",
       "Bash(gh --version)",
-      "Bash(gh auth *)"
+      "Bash(gh auth *)",
+      "Bash(python -m http.server 8848 --bind 127.0.0.1)"
     ],
     "additionalDirectories": [
       "d:\\Users\\Orange\\Desktop\\vue3+elementPlus\\src",
