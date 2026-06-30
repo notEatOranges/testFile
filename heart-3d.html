@@ -6,9 +6,38 @@
 <title>My Heart Is Yours · 3D 粒子爱心</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  /* —— 主题变量：夜间（默认深色基调） —— */
+  :root {
+    --bg-1: #3a0f2c; --bg-2: #1b0717; --bg-3: #070309;
+    --title: #ffe1ea;
+    --title-shadow:
+      0 0 18px rgba(255, 90, 130, .9),
+      0 0 42px rgba(255, 60, 110, .55),
+      0 0 80px rgba(255, 40, 90, .35);
+    --subtitle: rgba(255, 200, 215, .82);
+    --sub-shadow: 0 0 14px rgba(255, 80, 120, .5);
+    --hint: rgba(255, 190, 210, .5);
+    --petal: rgba(255, 100, 140, .85);
+    --petal-shadow: rgba(255, 80, 120, .65);
+  }
+  /* —— 日间（亮色）：覆盖变量 —— */
+  body.light {
+    --bg-1: #efd9e1; --bg-2: #e6c8d3; --bg-3: #f6e6ec;
+    --title: #b3123e;
+    --title-shadow:
+      0 2px 8px rgba(255, 130, 170, .35),
+      0 0 24px rgba(255, 110, 150, .2);
+    --subtitle: rgba(150, 20, 70, .9);
+    --sub-shadow: 0 1px 4px rgba(255, 130, 170, .25);
+    --hint: rgba(170, 40, 90, .6);
+    --petal: rgba(214, 51, 108, .7);
+    --petal-shadow: rgba(255, 120, 160, .4);
+  }
+
   html, body {
     width: 100%; height: 100%; overflow: hidden;
-    background: radial-gradient(ellipse at 50% 42%, #3a0f2c 0%, #1b0717 38%, #070309 100%);
+    background: radial-gradient(ellipse at 50% 42%, var(--bg-1) 0%, var(--bg-2) 38%, var(--bg-3) 100%);
     font-family: "Georgia", "Songti SC", "STSong", serif;
     cursor: grab;
     overscroll-behavior: none;        /* 禁止下拉刷新干扰触摸 */
@@ -41,24 +70,23 @@
     font-style: italic;
     font-size: clamp(2.2rem, 6.5vw, 5rem);
     letter-spacing: .14em;
-    color: #ffe1ea;
-    text-shadow:
-      0 0 18px rgba(255, 90, 130, .9),
-      0 0 42px rgba(255, 60, 110, .55),
-      0 0 80px rgba(255, 40, 90, .35);
+    color: var(--title);
+    text-shadow: var(--title-shadow);
     animation: fadeUp 1.8s cubic-bezier(.2,.7,.2,1) both .4s;
   }
   .subtitle {
     margin-top: .9rem;
-    font-size: clamp(.9rem, 1.6vw, 1.25rem);
-    letter-spacing: .35em;
-    color: rgba(255, 200, 215, .82);
-    text-shadow: 0 0 14px rgba(255, 80, 120, .5);
+    max-width: min(82vw, 680px);
+    font-size: clamp(.92rem, 1.7vw, 1.3rem);
+    letter-spacing: .12em;
+    line-height: 1.75;
+    color: var(--subtitle);
+    text-shadow: var(--sub-shadow);
     animation: fadeUp 1.8s cubic-bezier(.2,.7,.2,1) both .9s;
   }
   .hint {
     position: fixed; top: 4.5vh; left: 50%; transform: translateX(-50%);
-    font-size: .8rem; letter-spacing: .25em; color: rgba(255, 190, 210, .5);
+    font-size: .8rem; letter-spacing: .25em; color: var(--hint);
     animation: fadeIn 2s ease both 1.4s, pulseHint 3s ease-in-out 2.4s infinite;
     pointer-events: none;
   }
@@ -104,8 +132,8 @@
   /* —— 飘落爱心 —— */
   .petal {
     position: fixed; top: -8%; pointer-events: none; user-select: none;
-    color: rgba(255, 100, 140, .85);
-    filter: drop-shadow(0 0 6px rgba(255, 80, 120, .65));
+    color: var(--petal);
+    filter: drop-shadow(0 0 6px var(--petal-shadow));
     animation: fall linear infinite;
     will-change: transform, opacity;
   }
@@ -117,21 +145,26 @@
   }
 </style>
 </head>
-<body>
+<body class="light">
   <canvas id="scene"></canvas>
 
   <div class="hint">拖动旋转 · 轻点让它心跳</div>
 
   <div class="controls">
     <label class="switch">
-      <input type="checkbox" id="beatToggle" checked />
+      <input type="checkbox" id="beatToggle" />
       <span class="track"><span class="thumb"></span></span>
       <span>跳动</span>
     </label>
     <label class="switch">
-      <input type="checkbox" id="twinkleToggle" checked />
+      <input type="checkbox" id="twinkleToggle" />
       <span class="track"><span class="thumb"></span></span>
       <span>闪烁</span>
+    </label>
+    <label class="switch">
+      <input type="checkbox" id="themeToggle" checked />
+      <span class="track"><span class="thumb"></span></span>
+      <span>日间</span>
     </label>
   </div>
 
@@ -188,7 +221,7 @@
           F(x,y,z) = (x² + 9y²/4 + z² - 1)³ - x²z³ - 9y²z³/200
           其中 z 是心形上下轴 → 映射到世界 Y，使其正立
        ========================================================= */
-    const HEART_COUNT = isMobile ? 3500 : 6500;   // 降低密度，让每个「潘/火」字不被相邻粒子淹没
+    const HEART_COUNT = isMobile ? 3000 : 6000;   // 实心饱满；亮色靠 depthWrite 前层遮挡后层，多而不糊
     const SCALE = 7.2;
 
     const palette = [
@@ -214,7 +247,7 @@
       const t = x * x + 2.25 * y * y + z * z - 1;
       const F = t * t * t - x * x * z * z * z - 0.045 * y * y * z * z * z;
 
-      if (F < 0) {
+      if (F < 0) {   // 实心体积采样，爱心饱满；中央清晰靠 depthWrite 前层遮挡后层
         // 映射到世界坐标：(x, z, y) → 让心形正立（尖端朝下）
         const wx = x * SCALE;
         const wy = z * SCALE;
@@ -231,9 +264,11 @@
         colors[i * 3 + 1] = c.g;
         colors[i * 3 + 2] = c.b;
 
-        sizes[i]   = 1.4 + Math.random() * 2.4;   // 适当放大，让每个「潘 / 火」字清晰可辨
+        sizes[i]   = 2.0 + Math.random() * 2.8;   // 字再放大，笔画更清楚
         phases[i]  = Math.random();
-        charIdx[i] = i % 3;   // 在「潘」「火」「火」之间循环分配
+        // 按 6:2:2 加权分配「潘 / 火 / 火」，让「潘」占主导、不会被两个「火」淹没
+        const r = Math.random();
+        charIdx[i] = r < 0.6 ? 0 : (r < 0.8 ? 1 : 2);
         i++;
       }
     }
@@ -274,8 +309,10 @@
         uTime:       { value: 0 },
         uBurst:      { value: 0 },
         uPixelRatio: { value: renderer.getPixelRatio() },
-        uBeatOn:     { value: 1.0 },   // 跳动开关（1=跳动，0=静止）
-        uTwinkleOn:  { value: 1.0 },   // 闪烁开关（1=闪烁，0=稳定）
+        uBeatOn:     { value: 0.0 },   // 跳动开关（默认关）
+        uTwinkleOn:  { value: 0.0 },   // 闪烁开关（默认关）
+        uDarken:     { value: 1.0 },   // 亮色模式下加深字色，保证浅背景上可读
+        uEmissive:   { value: 1.0 },   // 夜间 Additive 发光强度（<1 降亮度，避免中心过曝刺眼）
         uCharTex:    { value: charTex },
         uCellU:      { value: 1.0 / CHAR_LIST.length }  // 每个字在图集 u 方向占的宽度
       },
@@ -332,6 +369,8 @@
       fragmentShader: /* glsl */`
         uniform sampler2D uCharTex;
         uniform float uCellU;
+        uniform float uDarken;
+        uniform float uEmissive;
         varying vec3  vColor;
         varying float vGlow;
         varying float vCharOffset;
@@ -349,16 +388,29 @@
           float cv = 1.0 - gl_PointCoord.y;   // CanvasTexture 默认 flipY，翻转 v 让「潘火火」正立
           float glyph = texture2D(uCharTex, vec2(cu, cv)).a;   // 字形 alpha
           alpha *= glyph;
-          if (glyph < 0.02) discard;
+          if (alpha < 0.06) discard;   // 丢弃近透明像素，避免 depthWrite 时透明区写深度造成孔洞
 
           vec3 col = vColor * vGlow;
+          // 亮色模式下把字色压向深酒红，避免浅粉字在浅背景上看不清
+          col = mix(col, mix(col, vec3(0.45, 0.04, 0.16), 0.6), uDarken);
           col += vec3(0.55, 0.30, 0.40) * pow(1.0 - d * 2.0, 4.0) * glyph; // 字心高光
-          gl_FragColor = vec4(col, alpha);
+          gl_FragColor = vec4(col * uEmissive, alpha);
         }
       `,
       transparent: true,
       depthWrite: false,
       blending: THREE.AdditiveBlending
+    });
+
+    // 亮色专用材质：同一套着色器与 uniforms，但用 NormalBlending
+    // （Additive 发光混合在浅色背景上会把字「洗」没，必须改为正常混合字才清晰）
+    const heartMatLight = new THREE.ShaderMaterial({
+      uniforms: heartMat.uniforms,             // 共享 uniforms，tick 更新一份即可同步两个材质
+      vertexShader: heartMat.vertexShader,
+      fragmentShader: heartMat.fragmentShader,
+      transparent: true,
+      depthWrite: true,                        // 写深度：前排字遮挡后排，中央不再因多层半透叠加而糊
+      blending: THREE.NormalBlending
     });
 
     const heart = new THREE.Points(heartGeo, heartMat);
@@ -389,7 +441,7 @@
     starGeo.setAttribute('aPhase',   new THREE.BufferAttribute(sPhase, 1));
 
     const starMat = new THREE.ShaderMaterial({
-      uniforms: { uTime: { value: 0 }, uPixelRatio: { value: renderer.getPixelRatio() } },
+      uniforms: { uTime: { value: 0 }, uPixelRatio: { value: renderer.getPixelRatio() }, uOpacity: { value: 0.15 } },
       vertexShader: /* glsl */`
         uniform float uTime;
         uniform float uPixelRatio;
@@ -405,12 +457,13 @@
       `,
       fragmentShader: /* glsl */`
         varying float vTw;
+        uniform float uOpacity;
         void main() {
           vec2 uv = gl_PointCoord - 0.5;
           float d = length(uv);
           if (d > 0.5) discard;
           float a = smoothstep(0.5, 0.0, d);
-          gl_FragColor = vec4(vec3(1.0, 0.92, 0.95) * vTw, a * vTw);
+          gl_FragColor = vec4(vec3(1.0, 0.92, 0.95) * vTw, a * vTw * uOpacity);
         }
       `,
       transparent: true, depthWrite: false, blending: THREE.AdditiveBlending
@@ -523,6 +576,63 @@
       }
     }
     spawnPetals(isMobile ? 12 : 26);
+
+    /* =========================================================
+       8. 情话：纯本地甜言蜜语库，刷新随机换一条
+          （在线接口内容不可控——会混进「好好学习」这类励志句，情侣场景不合适）
+       ========================================================= */
+    const QUOTES = [
+      "你是我绕过山河错落，才找到的人间烟火。",
+      "我见过银河，但仍只钟情你这一颗星。",
+      "想和你看落日，只谈微风和晚星。",
+      "你笑起来，真像好天气。",
+      "我贪恋的人间烟火，不偏不倚，恰好是你。",
+      "愿我如星君如月，夜夜流光相皎洁。",
+      "世间万物皆是苦，唯有你是甜。",
+      "春水初生，春林初盛，春风十里，不如你。",
+      "你走向我的每一步，我都心动。",
+      "愿余生岁岁常相见，日日皆如初见。",
+      "满天星光，都不及你眼底温柔。",
+      "想和你一屋两人，三餐四季。",
+      "你是我这一生，最想赖着的人。",
+      "遇见你之后，我没想过别人。",
+      "余生很长，请多指教。",
+      "你是我藏在口袋里的玫瑰，也是心尖上的月亮。",
+      "全世界都在催我长大，你却把我宠成了小朋友。",
+      "我没什么特别的，只是特别爱你。",
+      "想牵你的手，从心动，到古稀。",
+      "你说清醒容易孤独，我就陪你醉在这场浪漫里。",
+      "海鸟和鱼相爱，原来真的会有奇迹。",
+      "我把月亮戳碎了变成星星，铺好等你来。",
+    ];
+    let lastQuote = -1;
+    function pickQuote() {
+      let k;
+      do { k = (Math.random() * QUOTES.length) | 0; } while (k === lastQuote && QUOTES.length > 1);
+      lastQuote = k;
+      return QUOTES[k];
+    }
+    document.querySelector('.subtitle').textContent = pickQuote();
+
+    /* =========================================================
+       9. 主题：日间 / 夜间（默认日间，localStorage 记住选择）
+       ========================================================= */
+    const themeToggle = document.getElementById('themeToggle');
+    function applyTheme(isLight) {
+      document.body.classList.toggle('light', isLight);
+      starMat.uniforms.uOpacity.value = isLight ? 0.15 : 1.0;   // 白天弱化星空
+      heartMat.uniforms.uDarken.value = isLight ? 1.0 : 0.0;    // 亮色加深字色
+      heartMat.uniforms.uEmissive.value = isLight ? 1.0 : 0.3;  // 夜间降低发光，避免中心过曝刺眼
+      heart.material = isLight ? heartMatLight : heartMat;      // 亮色用 NormalBlending 让字清晰
+    }
+    const savedTheme = localStorage.getItem('heart-theme');
+    const initLight = savedTheme ? savedTheme === 'light' : true;   // 无记录时默认日间
+    themeToggle.checked = initLight;
+    applyTheme(initLight);
+    themeToggle.addEventListener('change', e => {
+      applyTheme(e.target.checked);
+      localStorage.setItem('heart-theme', e.target.checked ? 'light' : 'dark');
+    });
   </script>
 </body>
 </html>
