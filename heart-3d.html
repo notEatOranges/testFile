@@ -66,6 +66,41 @@
   @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
   @keyframes pulseHint { 0%,100% { opacity: .35; } 50% { opacity: .75; } }
 
+  /* —— 控制开关：跳动 / 闪烁 —— */
+  .controls {
+    position: fixed; top: 4.5vh; right: 5vw; z-index: 10;
+    display: flex; flex-direction: column; gap: .9rem;
+    pointer-events: auto;
+  }
+  .switch {
+    display: flex; align-items: center; gap: .6rem;
+    cursor: pointer; user-select: none;
+    font-size: .82rem; letter-spacing: .2em;
+    color: rgba(255, 200, 215, .88);
+    text-shadow: 0 0 10px rgba(255, 80, 120, .5);
+  }
+  .switch input { display: none; }
+  .switch .track {
+    position: relative;
+    width: 42px; height: 22px; border-radius: 22px;
+    background: rgba(255, 255, 255, .12);
+    border: 1px solid rgba(255, 150, 175, .4);
+    box-shadow: inset 0 0 6px rgba(0,0,0,.4);
+    transition: background .3s ease, box-shadow .3s ease;
+  }
+  .switch .thumb {
+    position: absolute; top: 2px; left: 2px;
+    width: 16px; height: 16px; border-radius: 50%;
+    background: linear-gradient(180deg, #ffd0dd, #ff7a9c);
+    box-shadow: 0 0 8px rgba(255, 90, 130, .8);
+    transition: transform .3s cubic-bezier(.2,.7,.2,1);
+  }
+  .switch input:checked + .track {
+    background: rgba(255, 60, 110, .35);
+    box-shadow: inset 0 0 8px rgba(255, 40, 90, .6), 0 0 14px rgba(255, 80, 120, .5);
+  }
+  .switch input:checked + .track .thumb { transform: translateX(20px); }
+
   /* —— 飘落爱心 —— */
   .petal {
     position: fixed; top: -8%; pointer-events: none; user-select: none;
@@ -86,6 +121,19 @@
   <canvas id="scene"></canvas>
 
   <div class="hint">拖动旋转 · 轻点让它心跳</div>
+
+  <div class="controls">
+    <label class="switch">
+      <input type="checkbox" id="beatToggle" checked />
+      <span class="track"><span class="thumb"></span></span>
+      <span>跳动</span>
+    </label>
+    <label class="switch">
+      <input type="checkbox" id="twinkleToggle" checked />
+      <span class="track"><span class="thumb"></span></span>
+      <span>闪烁</span>
+    </label>
+  </div>
 
   <div class="overlay">
     <div class="title">My Heart Is Yours</div>
@@ -140,7 +188,7 @@
           F(x,y,z) = (x² + 9y²/4 + z² - 1)³ - x²z³ - 9y²z³/200
           其中 z 是心形上下轴 → 映射到世界 Y，使其正立
        ========================================================= */
-    const HEART_COUNT = isMobile ? 5500 : 12000;
+    const HEART_COUNT = isMobile ? 3500 : 6500;   // 降低密度，让每个「潘/火」字不被相邻粒子淹没
     const SCALE = 7.2;
 
     const palette = [
@@ -154,6 +202,7 @@
     const colors    = new Float32Array(HEART_COUNT * 3);
     const sizes     = new Float32Array(HEART_COUNT);
     const phases    = new Float32Array(HEART_COUNT);
+    const charIdx   = new Float32Array(HEART_COUNT);   // 每个粒子用「潘火火」中的哪一个字
 
     let i = 0, tries = 0;
     while (i < HEART_COUNT && tries < HEART_COUNT * 80) {
@@ -182,8 +231,9 @@
         colors[i * 3 + 1] = c.g;
         colors[i * 3 + 2] = c.b;
 
-        sizes[i]  = 0.6 + Math.random() * 1.7;
-        phases[i] = Math.random();
+        sizes[i]   = 1.4 + Math.random() * 2.4;   // 适当放大，让每个「潘 / 火」字清晰可辨
+        phases[i]  = Math.random();
+        charIdx[i] = i % 3;   // 在「潘」「火」「火」之间循环分配
         i++;
       }
     }
@@ -193,24 +243,56 @@
     heartGeo.setAttribute('aColor',   new THREE.BufferAttribute(colors, 3));
     heartGeo.setAttribute('aSize',    new THREE.BufferAttribute(sizes, 1));
     heartGeo.setAttribute('aPhase',   new THREE.BufferAttribute(phases, 1));
+    heartGeo.setAttribute('aChar',    new THREE.BufferAttribute(charIdx, 1));
     heartGeo.center(); // 居中
+
+    /* ---------- 生成「潘火火」字符纹理图集（横向 3 格） ---------- */
+    // 把三个字画进一张 canvas，每个粒子按 aChar 采样对应那一格
+    const CHAR_LIST = ['潘', '火', '火'];
+    const CELL = 256;                 // 每个字格子的像素尺寸
+    const atlas = document.createElement('canvas');
+    atlas.width = CELL * CHAR_LIST.length;
+    atlas.height = CELL;
+    const actx = atlas.getContext('2d');
+    actx.clearRect(0, 0, atlas.width, atlas.height);
+    actx.font = `bold ${Math.floor(CELL * 0.78)}px "PingFang SC","Microsoft YaHei","STHeiti",sans-serif`;
+    actx.textAlign = 'center';
+    actx.textBaseline = 'middle';
+    CHAR_LIST.forEach((ch, k) => {
+      const cx = k * CELL + CELL / 2;
+      const cy = CELL / 2 + CELL * 0.04;
+      actx.fillStyle = '#ffffff';
+      actx.fillText(ch, cx, cy);
+    });
+    const charTex = new THREE.CanvasTexture(atlas);
+    charTex.minFilter = THREE.LinearFilter;
+    charTex.magFilter = THREE.LinearFilter;
 
     /* ---------- 心形粒子着色器 ---------- */
     const heartMat = new THREE.ShaderMaterial({
       uniforms: {
-        uTime:  { value: 0 },
-        uBurst: { value: 0 },
-        uPixelRatio: { value: renderer.getPixelRatio() }
+        uTime:       { value: 0 },
+        uBurst:      { value: 0 },
+        uPixelRatio: { value: renderer.getPixelRatio() },
+        uBeatOn:     { value: 1.0 },   // 跳动开关（1=跳动，0=静止）
+        uTwinkleOn:  { value: 1.0 },   // 闪烁开关（1=闪烁，0=稳定）
+        uCharTex:    { value: charTex },
+        uCellU:      { value: 1.0 / CHAR_LIST.length }  // 每个字在图集 u 方向占的宽度
       },
       vertexShader: /* glsl */`
         uniform float uTime;
         uniform float uBurst;
         uniform float uPixelRatio;
+        uniform float uBeatOn;
+        uniform float uTwinkleOn;
+        uniform float uCellU;
         attribute float aSize;
         attribute vec3  aColor;
         attribute float aPhase;
+        attribute float aChar;
         varying vec3  vColor;
         varying float vGlow;
+        varying float vCharOffset;
 
         // 近似心跳节律：周期内「咚-哒」两次脉冲
         float heartBeat(float t) {
@@ -224,9 +306,11 @@
 
         void main() {
           vColor = aColor;
+          vCharOffset = aChar * uCellU;          // 该粒子对应字在图集中的 u 起点
           vec3 pos = position;
 
-          float beat  = heartBeat(uTime);
+          // 跳动：用 uBeatOn 在「静止」与「心跳脉冲」之间插值
+          float beat  = mix(0.0, heartBeat(uTime), uBeatOn);
           float pulse = 1.0 + beat * 0.07;
           pos *= pulse;
 
@@ -237,22 +321,38 @@
           vec4 mv = modelViewMatrix * vec4(pos, 1.0);
           gl_Position = projectionMatrix * mv;
 
-          vGlow = 0.7 + 0.3 * sin(uTime * 3.0 + aPhase * 6.2831);
+          // 闪烁：开启则正弦呼吸，关闭则稳定亮度
+          float twinkle = 0.7 + 0.3 * sin(uTime * 3.0 + aPhase * 6.2831);
+          vGlow = mix(0.85, twinkle, uTwinkleOn);
+
           float size = aSize * (300.0 / -mv.z) * uPixelRatio;
           gl_PointSize = size * (0.85 + beat * 0.55);
         }
       `,
       fragmentShader: /* glsl */`
+        uniform sampler2D uCharTex;
+        uniform float uCellU;
         varying vec3  vColor;
         varying float vGlow;
+        varying float vCharOffset;
         void main() {
+          // 圆形软边遮罩（保留点精灵的外形）
           vec2 uv = gl_PointCoord - 0.5;
           float d = length(uv);
           if (d > 0.5) discard;
           float alpha = smoothstep(0.5, 0.0, d);
           alpha = pow(alpha, 1.5);
+
+          // 采样该粒子对应的字（内缩 3% 避免线性过滤混入相邻字）
+          float inset = uCellU * 0.03;
+          float cu = vCharOffset + inset + gl_PointCoord.x * (uCellU - 2.0 * inset);
+          float cv = 1.0 - gl_PointCoord.y;   // CanvasTexture 默认 flipY，翻转 v 让「潘火火」正立
+          float glyph = texture2D(uCharTex, vec2(cu, cv)).a;   // 字形 alpha
+          alpha *= glyph;
+          if (glyph < 0.02) discard;
+
           vec3 col = vColor * vGlow;
-          col += vec3(0.55, 0.30, 0.40) * pow(1.0 - d * 2.0, 4.0); // 中心高光
+          col += vec3(0.55, 0.30, 0.40) * pow(1.0 - d * 2.0, 4.0) * glyph; // 字心高光
           gl_FragColor = vec4(col, alpha);
         }
       `,
@@ -348,6 +448,14 @@
     canvas.addEventListener('click', () => {
       heartMat.uniforms.uBurst.value = 1.0;
       burstTimer = 0;
+    });
+
+    // 开关：跳动 / 闪烁
+    document.getElementById('beatToggle').addEventListener('change', e => {
+      heartMat.uniforms.uBeatOn.value = e.target.checked ? 1.0 : 0.0;
+    });
+    document.getElementById('twinkleToggle').addEventListener('change', e => {
+      heartMat.uniforms.uTwinkleOn.value = e.target.checked ? 1.0 : 0.0;
     });
 
     /* =========================================================

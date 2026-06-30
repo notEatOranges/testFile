@@ -36,7 +36,11 @@
       "Bash(git commit *)",
       "Bash(gh --version)",
       "Bash(gh auth *)",
-      "Bash(python -m http.server 8848 --bind 127.0.0.1)"
+      "Bash(python -m http.server 8848 --bind 127.0.0.1)",
+      "Bash(python -c \"import pdfplumber; print\\('pdfplumber OK'\\)\")",
+      "Bash(python -c \"import PyPDF2; print\\('PyPDF2 OK'\\)\")",
+      "Bash(python -c \"import fitz; print\\('pymupdf OK'\\)\")",
+      "mcp__chrome-devtools__resize_page"
     ],
     "additionalDirectories": [
       "d:\\Users\\Orange\\Desktop\\vue3+elementPlus\\src",
