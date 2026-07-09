@@ -62,6 +62,52 @@
   --name: "薰衣草紫";
 }
 
+/* —— 新增 5 套马卡龙 —— */
+[data-theme="peach"] {
+  --bg-1: #fff3ec; --bg-2: #ffe4d4; --bg-3: #ffd0b8;
+  --primary: #ff9a6c; --primary-deep: #f17844; --primary-soft: #ffc4a6; --accent: #ffb088;
+  --text: #5a3d2e; --text-soft: #8a6b58;
+  --card: #ffffff; --card-shadow: rgba(255, 154, 108, 0.18); --border: rgba(255, 154, 108, 0.25);
+  --bubble-me: linear-gradient(135deg, #ffb088, #f17844); --bubble-peer: #ffffff;
+  --chip: rgba(255, 154, 108, 0.12); --name: "蜜桃橙";
+}
+
+[data-theme="babyblue"] {
+  --bg-1: #eef6fd; --bg-2: #d6ebfa; --bg-3: #b3d9f5;
+  --primary: #6db4e8; --primary-deep: #4f93cf; --primary-soft: #a8d4f3; --accent: #8cc4ee;
+  --text: #2f414e; --text-soft: #5e7787;
+  --card: #ffffff; --card-shadow: rgba(109, 180, 232, 0.18); --border: rgba(109, 180, 232, 0.25);
+  --bubble-me: linear-gradient(135deg, #8cc4ee, #4f93cf); --bubble-peer: #ffffff;
+  --chip: rgba(109, 180, 232, 0.12); --name: "奶蓝";
+}
+
+[data-theme="lemon"] {
+  --bg-1: #fff9e8; --bg-2: #fff0c8; --bg-3: #ffe6a3;
+  --primary: #e8b94d; --primary-deep: #c99a2f; --primary-soft: #f1d488; --accent: #eecb6e;
+  --text: #4d4128; --text-soft: #7a6c4e;
+  --card: #ffffff; --card-shadow: rgba(232, 185, 77, 0.2); --border: rgba(232, 185, 77, 0.28);
+  --bubble-me: linear-gradient(135deg, #eecb6e, #c99a2f); --bubble-peer: #ffffff;
+  --chip: rgba(232, 185, 77, 0.14); --name: "奶酪黄";
+}
+
+[data-theme="berry"] {
+  --bg-1: #fff0f3; --bg-2: #ffdde4; --bg-3: #ffc6d2;
+  --primary: #e87090; --primary-deep: #cf4f73; --primary-soft: #f3a8bd; --accent: #ee8ba6;
+  --text: #4d2e36; --text-soft: #7a5862;
+  --card: #ffffff; --card-shadow: rgba(232, 112, 144, 0.18); --border: rgba(232, 112, 144, 0.25);
+  --bubble-me: linear-gradient(135deg, #ee8ba6, #cf4f73); --bubble-peer: #ffffff;
+  --chip: rgba(232, 112, 144, 0.12); --name: "莓莓红";
+}
+
+[data-theme="cocoa"] {
+  --bg-1: #f7f1ea; --bg-2: #ecdfd0; --bg-3: #dccab4;
+  --primary: #b08968; --primary-deep: #8c6a4f; --primary-soft: #ccb094; --accent: #bd9a7d;
+  --text: #3d2f24; --text-soft: #6d5b4a;
+  --card: #ffffff; --card-shadow: rgba(176, 137, 104, 0.18); --border: rgba(176, 137, 104, 0.25);
+  --bubble-me: linear-gradient(135deg, #bd9a7d, #8c6a4f); --bubble-peer: #ffffff;
+  --chip: rgba(176, 137, 104, 0.12); --name: "可可棕";
+}
+
 /* 全局共享变量（不随主题变） */
 :root {
   --radius: 18px;

@@ -75,6 +75,30 @@ export function isOnline(p) {
   return (Store.now() - (p.lastSeen || 0)) < ONLINE_TIMEOUT;
 }
 
+/* ====================== 房间 PIN（软门禁） ======================
+   PIN 仅作 UI 层软门禁：防「只拿到房间号」的人通过本应用进入。
+   （DB 对 anon 可读，PIN 不是密码学屏障；真正隔离靠房间号 + PIN 两个秘密。）
+   - 首次进入： rooms/{room} 无 pin → 用本次输入设置
+   - 之后进入： 必须 PIN 匹配
+   返回 {ok, created?, reason?} */
+function hashPin(s) {
+  // 非加密级哈希（djb2 变体），仅避免明文落库；同步、无 https 依赖
+  let h = 5381;
+  for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) >>> 0;
+  return "p" + h.toString(36);
+}
+export async function verifyOrSetPin(room, pin) {
+  if (!pin) return { ok: false, reason: "empty" };
+  Store.setRoom(room);
+  const stored = await Store.getOnce("pin");
+  const entered = hashPin(pin);
+  if (!stored) {                       // 首次：设置 PIN
+    await Store.set("pin", entered);
+    return { ok: true, created: true };
+  }
+  return stored === entered ? { ok: true } : { ok: false, reason: "wrong" };
+}
+
 /* ====================== 历史房间记录（长久保存） ====================== */
 /** [{room, role, ts}]，最新在前，按 room 去重，上限 10 */
 export function getRoomHistory() {

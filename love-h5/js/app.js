@@ -7,6 +7,7 @@ import * as room from "./core/room.js";
 import { initSwitcher } from "./core/theme.js";
 import * as router from "./core/router.js";
 import { toast, roleFull, escapeHtml } from "./core/utils.js";
+import { showConfirm } from "./core/modal.js";
 
 import * as home from "./views/home.js";
 import * as chat from "./views/chat.js";
@@ -36,13 +37,23 @@ function selectRole(role) {
   });
 }
 
-/** 统一进入入口：走 room.enter（含 2 人容量检查）。成功→进主应用。 */
-async function doEnter(roomCode, role) {
+/** 统一进入入口：先 PIN 门禁，再 room.enter（含 2 人容量检查）。成功→进主应用。 */
+async function doEnter(roomCode, role, pin) {
+  const pinRes = await room.verifyOrSetPin(roomCode, pin);
+  if (!pinRes.ok) { toast(pinRes.reason === "empty" ? "输个房间 PIN～" : "房间 PIN 不对～"); return false; }
   const ok = await room.enter(roomCode, role);
   if (!ok) { toast("这个身份已经有人啦，换一个～"); return false; }
   enterApp();
-  toast("欢迎回家 ♥");
+  toast(pinRes.created ? "房间已创建，欢迎回家 ♥" : "欢迎回家 ♥");
   return true;
+}
+
+/** 进入按钮的 loading 态（转圈 + 禁用，防重复点击） */
+function setEnterLoading(on) {
+  const btn = document.getElementById("enterBtn");
+  if (!btn) return;
+  btn.disabled = on;
+  btn.innerHTML = on ? `<i class="ri-loader-4-line spin"></i> 进入中…` : `进入 ♥`;
 }
 
 /** 相对时间文案 */
@@ -75,10 +86,10 @@ function renderRoomHistory() {
 
   box.querySelectorAll(".rh-item").forEach(el => el.onclick = async (e) => {
     if (e.target.classList.contains("rh-del")) return;   // 删除按钮单独处理
-    const r = el.dataset.room, role = el.dataset.role;
-    document.getElementById("roomInput").value = r;
-    selectRole(role);
-    await doEnter(r, role);
+    document.getElementById("roomInput").value = el.dataset.room;
+    selectRole(el.dataset.role);
+    const pin = document.getElementById("pinInput");
+    if (pin) pin.focus();   // 历史进入仍需手输 PIN（安全），再点「进入」
   });
   box.querySelectorAll(".rh-del").forEach(el => el.onclick = (e) => {
     e.stopPropagation();
@@ -89,9 +100,16 @@ function renderRoomHistory() {
   if (clr) clr.onclick = () => { room.clearRoomHistory(); renderRoomHistory(); };
 }
 
-/** 退出当前房间（带确认）→ 回引导页 */
-function exitRoom() {
-  if (!confirm("确定退出当前房间吗？")) return;
+/** 退出当前房间（自定义确认弹框）→ 回引导页 */
+async function exitRoom() {
+  const ok = await showConfirm({
+    title: "退出房间",
+    message: "确定退出当前房间吗？",
+    okText: "退出",
+    cancelText: "取消",
+    danger: true,
+  });
+  if (!ok) return;
   room.leave();
   room.clearSetup();                 // 关键：否则下次 boot 自动重进
   document.getElementById("app").style.display = "none";
@@ -109,9 +127,16 @@ function bindOnboarding() {
   ob.querySelectorAll(".role-card").forEach(c => c.onclick = () => selectRole(c.dataset.role));
   document.getElementById("enterBtn").onclick = async () => {
     const r = document.getElementById("roomInput").value.trim();
+    const pin = document.getElementById("pinInput").value.trim();
     if (!r) { toast("输个房间号～"); return; }
+    if (!pin) { toast("输个房间 PIN～"); return; }
     if (!pickedRole) { toast("选个身份～"); return; }
-    await doEnter(r, pickedRole);
+    setEnterLoading(true);
+    try {
+      await doEnter(r, pickedRole, pin);
+    } finally {
+      setEnterLoading(false);
+    }
   };
   document.getElementById("backBtn").onclick = () => router.go("home");
   const exitBtn = document.getElementById("exitBtn");

@@ -65,6 +65,9 @@ img { display: block; max-width: 100%; }
 .btn-ghost { background: var(--card); color: var(--text); box-shadow: 0 2px 10px var(--card-shadow); }
 .btn-block { display: flex; width: 100%; }
 .btn:disabled { opacity: 0.5; }
+.btn i { font-size: 1.15em; line-height: 1; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.spin { display: inline-block; animation: spin 0.8s linear infinite; }
 
 /* —— 输入 —— */
 .input, .textarea {
@@ -87,18 +90,9 @@ img { display: block; max-width: 100%; }
 .view.active { display: block; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 
-/* —— 主题切换浮动按钮 —— */
-.theme-fab {
-  position: fixed; right: 16px; bottom: calc(20px + var(--safe-bottom));
-  z-index: 60; width: 50px; height: 50px; border-radius: 50%;
-  display: grid; place-items: center; font-size: 22px;
-  background: var(--card); box-shadow: 0 6px 22px var(--card-shadow);
-  transition: transform var(--transition);
-}
-.theme-fab:active { transform: scale(0.9); }
-
+/* —— 主题切换弹层（顶栏右上角 #themeBtn 触发，向下展开）—— */
 .theme-pop {
-  position: fixed; right: 16px; bottom: calc(80px + var(--safe-bottom));
+  position: fixed; right: 14px; top: calc(58px + var(--safe-top)); bottom: auto;
   z-index: 61; background: var(--card); border-radius: var(--radius);
   box-shadow: 0 8px 30px var(--card-shadow); padding: 10px;
   display: none; flex-direction: column; gap: 8px; min-width: 150px;
@@ -141,3 +135,35 @@ img { display: block; max-width: 100%; }
 .dot { width: 8px; height: 8px; border-radius: 50%; background: #ccc; flex: none; }
 .dot.on { background: #4cd97b; box-shadow: 0 0 6px #4cd97b; }
 .empty { text-align: center; color: var(--text-soft); padding: 40px 20px; font-size: 14px; }
+
+/* —— 图标（Remix Icon 字体）居中：覆盖 emoji 字符的基线偏移 —— */
+.topbar .icon-btn i { font-size: 20px; line-height: 1; }
+
+/* —— 危险按钮（用于退出/删除等） —— */
+.btn-danger { background: linear-gradient(135deg, #ff7a7a, #e85555); color: #fff; box-shadow: 0 6px 18px rgba(232, 85, 85, 0.3); }
+
+/* —— 通用模态弹框（showConfirm）—— */
+.modal-overlay {
+  position: fixed; inset: 0; z-index: 300;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0, 0, 0, 0); backdrop-filter: blur(0);
+  transition: background 0.2s ease, backdrop-filter 0.2s ease;
+  padding: 24px;
+}
+.modal-overlay.show { background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(3px); }
+.modal-card {
+  width: 100%; max-width: 320px; background: var(--card);
+  border-radius: var(--radius); box-shadow: 0 12px 40px var(--card-shadow);
+  padding: 22px 20px 18px; text-align: center;
+  transform: scale(0.92); opacity: 0; transition: transform 0.2s ease, opacity 0.2s ease;
+}
+.modal-overlay.show .modal-card { transform: scale(1); opacity: 1; }
+.modal-title { font-size: 17px; font-weight: 800; margin-bottom: 8px; }
+.modal-msg { font-size: 14px; color: var(--text-soft); line-height: 1.55; margin-bottom: 18px; }
+.modal-actions { display: flex; gap: 10px; }
+.modal-actions .btn { flex: 1; padding: 11px 0; }
+
+/* —— 聊天页布局：填满屏幕，外层不滚动，仅消息列表滚动 —— */
+body:has(#view-chat.active) { overflow: hidden; }
+.app:has(#view-chat.active) { padding-bottom: 0; height: 100dvh; min-height: 0; overflow: hidden; display: flex; flex-direction: column; }
+.app:has(#view-chat.active) > #view-chat.active { flex: 1 1 0; min-height: 0; }

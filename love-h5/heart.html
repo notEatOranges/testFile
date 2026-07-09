@@ -6,8 +6,9 @@
 <meta name="theme-color" content="#ffd1dc" />
 <title>3D 爱心 ♥</title>
 <!-- 防 FOUC：与主站同主题（hash 不变，仍读 lh5-theme） -->
-<script>(function(){try{var t=localStorage.getItem('lh5-theme');if(!t||['sakura','mint','lavender'].indexOf(t)<0)t='sakura';document.documentElement.setAttribute('data-theme',t);}catch(e){document.documentElement.setAttribute('data-theme','sakura');}})();</script>
+<script>(function(){try{var t=localStorage.getItem('lh5-theme');if(!t||['sakura','mint','lavender','peach','babyblue','lemon','berry','cocoa'].indexOf(t)<0)t='sakura';document.documentElement.setAttribute('data-theme',t);}catch(e){document.documentElement.setAttribute('data-theme','sakura');}})();</script>
 <link rel="stylesheet" href="./css/theme.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css" />
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body { height: 100%; overflow: hidden; }
@@ -62,17 +63,22 @@
 <body>
 
 <div class="h-top">
-  <button class="h-back" id="hBack">‹</button>
+  <button class="h-back" id="hBack" aria-label="返回"><i class="ri-arrow-left-s-line"></i></button>
   <div class="h-title">3D 爱心 ♥</div>
-  <button class="h-fab" id="hFab">🎨</button>
+  <button class="h-fab" id="hFab" aria-label="切换主题" title="切换主题"><i class="ri-palette-line"></i></button>
   <div class="h-pop" id="hPop">
     <div class="h-opt" data-theme="sakura"><span class="h-sw" style="background:linear-gradient(135deg,#ff7aa2,#ffd1dc)"></span>樱花</div>
     <div class="h-opt" data-theme="mint"><span class="h-sw" style="background:linear-gradient(135deg,#5bb89e,#b8e6cc)"></span>薄荷</div>
     <div class="h-opt" data-theme="lavender"><span class="h-sw" style="background:linear-gradient(135deg,#9b7fd4,#d2c2ec)"></span>薰衣草</div>
+    <div class="h-opt" data-theme="peach"><span class="h-sw" style="background:linear-gradient(135deg,#ff9a6c,#ffd0b8)"></span>蜜桃</div>
+    <div class="h-opt" data-theme="babyblue"><span class="h-sw" style="background:linear-gradient(135deg,#6db4e8,#b3d9f5)"></span>奶蓝</div>
+    <div class="h-opt" data-theme="lemon"><span class="h-sw" style="background:linear-gradient(135deg,#e8b94d,#ffe6a3)"></span>奶酪</div>
+    <div class="h-opt" data-theme="berry"><span class="h-sw" style="background:linear-gradient(135deg,#e87090,#ffc6d2)"></span>莓莓</div>
+    <div class="h-opt" data-theme="cocoa"><span class="h-sw" style="background:linear-gradient(135deg,#b08968,#dccab4)"></span>可可</div>
   </div>
 </div>
 
-<iframe class="h-frame" id="hFrame" src="./heart-3d.html" allow="autoplay; fullscreen"></iframe>
+<iframe class="h-frame" id="hFrame" src="./heart-3d.html" title="3D 爱心" allow="autoplay; fullscreen"></iframe>
 
 <script>
   (function () {
@@ -108,7 +114,7 @@
     document.addEventListener("click", function () { pop.classList.remove("show"); });
     pop.addEventListener("click", function (e) { e.stopPropagation(); });
     var cur = (function () {
-      try { var t = localStorage.getItem("lh5-theme"); return (["sakura","mint","lavender"].indexOf(t) >= 0) ? t : "sakura"; }
+      try { var t = localStorage.getItem("lh5-theme"); return (["sakura","mint","lavender","peach","babyblue","lemon","berry","cocoa"].indexOf(t) >= 0) ? t : "sakura"; }
       catch (e) { return "sakura"; }
     })();
     pop.querySelectorAll(".h-opt").forEach(function (el) {

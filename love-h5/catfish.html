@@ -6,15 +6,16 @@
 <meta name="theme-color" content="#ffd1dc" />
 <title>猫猫吃鱼 🐱🐟</title>
 <!-- 防 FOUC：与主站同主题（hash 不变，仍读 lh5-theme） -->
-<script>(function(){try{var t=localStorage.getItem('lh5-theme');if(!t||['sakura','mint','lavender'].indexOf(t)<0)t='sakura';document.documentElement.setAttribute('data-theme',t);}catch(e){document.documentElement.setAttribute('data-theme','sakura');}})();</script>
+<script>(function(){try{var t=localStorage.getItem('lh5-theme');if(!t||['sakura','mint','lavender','peach','babyblue','lemon','berry','cocoa'].indexOf(t)<0)t='sakura';document.documentElement.setAttribute('data-theme',t);}catch(e){document.documentElement.setAttribute('data-theme','sakura');}})();</script>
 <link rel="stylesheet" href="./css/theme.css" />
 <link rel="stylesheet" href="./css/catfish.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css" />
 </head>
 <body>
 
 <!-- 顶部 HUD（双方头像 + 分数 + 模式/倒计时 + 返回主题浮层） -->
 <div class="cf-hud">
-  <button class="cf-back" id="cfBack">‹</button>
+  <button class="cf-back" id="cfBack" aria-label="返回"><i class="ri-arrow-left-s-line"></i></button>
   <div class="cf-players">
     <div class="cf-p" id="cfGirl">
       <img class="cf-avatar" src="./assets/images/girl.jpg" alt=""/>
@@ -26,11 +27,16 @@
       <span class="cf-score" id="cfScoreBoy">0</span>
     </div>
   </div>
-  <button class="cf-fab" id="cfFab">🎨</button>
+  <button class="cf-fab" id="cfFab" aria-label="切换主题" title="切换主题"><i class="ri-palette-line"></i></button>
   <div class="cf-pop" id="cfPop">
     <div class="cf-opt" data-theme="sakura"><span class="cf-sw" style="background:linear-gradient(135deg,#ff7aa2,#ffd1dc)"></span>樱花</div>
     <div class="cf-opt" data-theme="mint"><span class="cf-sw" style="background:linear-gradient(135deg,#5bb89e,#b8e6cc)"></span>薄荷</div>
     <div class="cf-opt" data-theme="lavender"><span class="cf-sw" style="background:linear-gradient(135deg,#9b7fd4,#d2c2ec)"></span>薰衣草</div>
+    <div class="cf-opt" data-theme="peach"><span class="cf-sw" style="background:linear-gradient(135deg,#ff9a6c,#ffd0b8)"></span>蜜桃</div>
+    <div class="cf-opt" data-theme="babyblue"><span class="cf-sw" style="background:linear-gradient(135deg,#6db4e8,#b3d9f5)"></span>奶蓝</div>
+    <div class="cf-opt" data-theme="lemon"><span class="cf-sw" style="background:linear-gradient(135deg,#e8b94d,#ffe6a3)"></span>奶酪</div>
+    <div class="cf-opt" data-theme="berry"><span class="cf-sw" style="background:linear-gradient(135deg,#e87090,#ffc6d2)"></span>莓莓</div>
+    <div class="cf-opt" data-theme="cocoa"><span class="cf-sw" style="background:linear-gradient(135deg,#b08968,#dccab4)"></span>可可</div>
   </div>
 </div>
 

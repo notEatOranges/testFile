@@ -6,10 +6,12 @@
 <meta name="theme-color" content="#ffd1dc" />
 <title>我们的小窝 ♥</title>
 <!-- 防 FOUC：CSS 加载前先应用主题 -->
-<script>(function(){var t=localStorage.getItem('lh5-theme');if(!t||['sakura','mint','lavender'].indexOf(t)<0)t='sakura';document.documentElement.setAttribute('data-theme',t);})();</script>
+<script>(function(){var t=localStorage.getItem('lh5-theme');if(!t||['sakura','mint','lavender','peach','babyblue','lemon','berry','cocoa'].indexOf(t)<0)t='sakura';document.documentElement.setAttribute('data-theme',t);})();</script>
 <link rel="stylesheet" href="./css/theme.css" />
 <link rel="stylesheet" href="./css/base.css" />
 <link rel="stylesheet" href="./css/pages.css" />
+<!-- Remix Icon（网络图标，比 emoji 更清晰且天然居中） -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css" />
 </head>
 <body>
 
@@ -22,10 +24,13 @@
   <label class="bold small">输入你们约定的房间号（两人用同一个）</label>
   <input id="roomInput" class="input mt8" placeholder="如 love2026 或一串密码" autocomplete="off" />
 
+  <label class="bold small mt16">房间 PIN（两人约定的密码）</label>
+  <input id="pinInput" class="input mt8" type="password" placeholder="首次进入即设为此房间密码" autocomplete="off" />
+
   <div class="bold small mt16">我是…</div>
   <div class="role-pick">
-    <div class="role-card" data-role="boy"><img src="./assets/images/boy.jpg" alt="" /><div class="rl">男生</div></div>
     <div class="role-card" data-role="girl"><img src="./assets/images/girl.jpg" alt="" /><div class="rl">女生</div></div>
+    <div class="role-card" data-role="boy"><img src="./assets/images/boy.jpg" alt="" /><div class="rl">男生</div></div>
   </div>
 
   <button id="enterBtn" class="btn btn-primary btn-block mt16">进入 ♥</button>
@@ -41,9 +46,10 @@
 <!-- 主应用 -->
 <div id="app" class="app" style="display:none">
   <div class="topbar">
-    <button id="backBtn" class="icon-btn" style="display:none">‹</button>
+    <button id="backBtn" class="icon-btn" style="display:none" aria-label="返回"><i class="ri-arrow-left-s-line"></i></button>
     <div class="title" id="topTitle">我们的小窝</div>
-    <button id="exitBtn" class="icon-btn" title="退出房间" style="display:none">⏻</button>
+    <button id="themeBtn" class="icon-btn" aria-label="切换主题" title="切换主题"><i class="ri-palette-line"></i></button>
+    <button id="exitBtn" class="icon-btn" title="退出房间" style="display:none"><i class="ri-logout-box-r-line"></i></button>
   </div>
 
   <section id="view-home" class="view active"></section>
@@ -56,12 +62,16 @@
   <div id="iframeHost"></div>
 </div>
 
-<!-- 主题切换器（引导页和主应用都可用） -->
-<button id="themeFab" class="theme-fab">🎨</button>
+<!-- 主题切换弹层（触发按钮 #themeBtn 在顶栏右上角） -->
 <div id="themePop" class="theme-pop">
   <div class="theme-opt" data-theme="sakura"><span class="swatch" style="background:linear-gradient(135deg,#ff7aa2,#ffd1dc)"></span>樱花粉</div>
   <div class="theme-opt" data-theme="mint"><span class="swatch" style="background:linear-gradient(135deg,#5bb89e,#b8e6cc)"></span>薄荷绿</div>
   <div class="theme-opt" data-theme="lavender"><span class="swatch" style="background:linear-gradient(135deg,#9b7fd4,#d2c2ec)"></span>薰衣草紫</div>
+  <div class="theme-opt" data-theme="peach"><span class="swatch" style="background:linear-gradient(135deg,#ff9a6c,#ffd0b8)"></span>蜜桃橙</div>
+  <div class="theme-opt" data-theme="babyblue"><span class="swatch" style="background:linear-gradient(135deg,#6db4e8,#b3d9f5)"></span>奶蓝</div>
+  <div class="theme-opt" data-theme="lemon"><span class="swatch" style="background:linear-gradient(135deg,#e8b94d,#ffe6a3)"></span>奶酪黄</div>
+  <div class="theme-opt" data-theme="berry"><span class="swatch" style="background:linear-gradient(135deg,#e87090,#ffc6d2)"></span>莓莓红</div>
+  <div class="theme-opt" data-theme="cocoa"><span class="swatch" style="background:linear-gradient(135deg,#b08968,#dccab4)"></span>可可棕</div>
 </div>
 
 <script type="module" src="./js/app.js"></script>
