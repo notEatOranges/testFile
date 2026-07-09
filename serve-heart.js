@@ -90,17 +90,24 @@ const server = http.createServer((req, res) => {
   const filePath = safeJoin(urlPath);
   if (!filePath) { res.writeHead(403); return res.end('403 Forbidden'); }
 
-  fs.stat(filePath, (err, stat) => {
-    if (err || !stat.isFile()) {
-      res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
-      return res.end('404 Not Found: ' + urlPath);
-    }
-    const ext = path.extname(filePath).toLowerCase();
-    res.writeHead(200, {
-      'Content-Type'  : MIME[ext] || 'application/octet-stream',
-      'Cache-Control' : 'no-cache',
+  const respond = (fp) => {
+    fs.stat(fp, (e, st) => {
+      if (e || !st.isFile()) {
+        res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+        return res.end('404 Not Found: ' + urlPath);
+      }
+      const ext = path.extname(fp).toLowerCase();
+      res.writeHead(200, {
+        'Content-Type'  : MIME[ext] || 'application/octet-stream',
+        'Cache-Control' : 'no-cache',
+      });
+      fs.createReadStream(fp).pipe(res);
     });
-    fs.createReadStream(filePath).pipe(res);
+  };
+  fs.stat(filePath, (err, stat) => {
+    // 目录请求 → 自动定位到目录下的 index.html（支持子项目，如 /love-h5/）
+    if (!err && stat.isDirectory()) filePath = path.join(filePath, 'index.html');
+    respond(filePath);
   });
 });
 

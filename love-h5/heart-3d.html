@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>My Heart Is Yours · 3D 粒子爱心</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  /* —— 主题变量：夜间（默认深色基调） —— */
+  :root {
+    --bg-1: #3a0f2c; --bg-2: #1b0717; --bg-3: #070309;
+    --title: #ffe1ea;
+    --title-shadow:
+      0 0 18px rgba(255, 90, 130, .9),
+      0 0 42px rgba(255, 60, 110, .55),
+      0 0 80px rgba(255, 40, 90, .35);
+    --subtitle: rgba(255, 200, 215, .82);
+    --sub-shadow: 0 0 14px rgba(255, 80, 120, .5);
+    --hint: rgba(255, 190, 210, .5);
+    --petal: rgba(255, 100, 140, .85);
+    --petal-shadow: rgba(255, 80, 120, .65);
+  }
+  /* —— 日间（亮色）：覆盖变量 —— */
+  body.light {
+    --bg-1: #efd9e1; --bg-2: #e6c8d3; --bg-3: #f6e6ec;
+    --title: #b3123e;
+    --title-shadow:
+      0 2px 8px rgba(255, 130, 170, .35),
+      0 0 24px rgba(255, 110, 150, .2);
+    --subtitle: rgba(150, 20, 70, .9);
+    --sub-shadow: 0 1px 4px rgba(255, 130, 170, .25);
+    --hint: rgba(170, 40, 90, .6);
+    --petal: rgba(214, 51, 108, .7);
+    --petal-shadow: rgba(255, 120, 160, .4);
+  }
+
+  html, body {
+    width: 100%; height: 100%; overflow: hidden;
+    background: radial-gradient(ellipse at 50% 42%, var(--bg-1) 0%, var(--bg-2) 38%, var(--bg-3) 100%);
+    font-family: "Georgia", "Songti SC", "STSong", serif;
+    cursor: grab;
+    overscroll-behavior: none;        /* 禁止下拉刷新干扰触摸 */
+    -webkit-tap-highlight-color: transparent;
+  }
+  body:active { cursor: grabbing; }
+
+  #scene {
+    position: fixed; inset: 0; display: block;
+    touch-action: none;               /* 拖拽旋转不被浏览器手势抢走 */
+  }
+
+  /* —— 小屏微调 —— */
+  @media (max-width: 640px) {
+    .overlay { padding-bottom: 9vh; }
+    .hint   { top: 3.2vh; font-size: .68rem; letter-spacing: .2em; }
+    .subtitle { letter-spacing: .25em; margin-top: .6rem; }
+  }
+  @media (max-width: 640px) and (orientation: landscape) {
+    .overlay { padding-bottom: 4vh; }
+  }
+
+  /* —— 文字叠层 —— */
+  .overlay {
+    position: fixed; inset: 0; pointer-events: none;
+    display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+    padding-bottom: 7vh; text-align: center;
+  }
+  .title {
+    font-style: italic;
+    font-size: clamp(2.2rem, 6.5vw, 5rem);
+    letter-spacing: .14em;
+    color: var(--title);
+    text-shadow: var(--title-shadow);
+    animation: fadeUp 1.8s cubic-bezier(.2,.7,.2,1) both .4s;
+  }
+  .subtitle {
+    margin-top: .9rem;
+    max-width: min(82vw, 680px);
+    font-size: clamp(.92rem, 1.7vw, 1.3rem);
+    letter-spacing: .12em;
+    line-height: 1.75;
+    color: var(--subtitle);
+    text-shadow: var(--sub-shadow);
+    animation: fadeUp 1.8s cubic-bezier(.2,.7,.2,1) both .9s;
+  }
+  .hint {
+    position: fixed; top: 4.5vh; left: 50%; transform: translateX(-50%);
+    font-size: .8rem; letter-spacing: .25em; color: var(--hint);
+    animation: fadeIn 2s ease both 1.4s, pulseHint 3s ease-in-out 2.4s infinite;
+    pointer-events: none;
+  }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes pulseHint { 0%,100% { opacity: .35; } 50% { opacity: .75; } }
+
+  /* —— 控制开关：跳动 / 闪烁 —— */
+  .controls {
+    position: fixed; top: 4.5vh; right: 5vw; z-index: 10;
+    display: flex; flex-direction: column; gap: .9rem;
+    pointer-events: auto;
+  }
+  .switch {
+    display: flex; align-items: center; gap: .6rem;
+    cursor: pointer; user-select: none;
+    font-size: .82rem; letter-spacing: .2em;
+    color: rgba(255, 200, 215, .88);
+    text-shadow: 0 0 10px rgba(255, 80, 120, .5);
+  }
+  .switch input { display: none; }
+  .switch .track {
+    position: relative;
+    width: 42px; height: 22px; border-radius: 22px;
+    background: rgba(255, 255, 255, .12);
+    border: 1px solid rgba(255, 150, 175, .4);
+    box-shadow: inset 0 0 6px rgba(0,0,0,.4);
+    transition: background .3s ease, box-shadow .3s ease;
+  }
+  .switch .thumb {
+    position: absolute; top: 2px; left: 2px;
+    width: 16px; height: 16px; border-radius: 50%;
+    background: linear-gradient(180deg, #ffd0dd, #ff7a9c);
+    box-shadow: 0 0 8px rgba(255, 90, 130, .8);
+    transition: transform .3s cubic-bezier(.2,.7,.2,1);
+  }
+  .switch input:checked + .track {
+    background: rgba(255, 60, 110, .35);
+    box-shadow: inset 0 0 8px rgba(255, 40, 90, .6), 0 0 14px rgba(255, 80, 120, .5);
+  }
+  .switch input:checked + .track .thumb { transform: translateX(20px); }
+
+  /* —— 飘落爱心 —— */
+  .petal {
+    position: fixed; top: -8%; pointer-events: none; user-select: none;
+    color: var(--petal);
+    filter: drop-shadow(0 0 6px var(--petal-shadow));
+    animation: fall linear infinite;
+    will-change: transform, opacity;
+  }
+  @keyframes fall {
+    0%   { transform: translate3d(0, -10vh, 0) rotate(0deg)   scale(var(--s)); opacity: 0; }
+    8%   { opacity: .9; }
+    92%  { opacity: .9; }
+    100% { transform: translate3d(var(--drift), 112vh, 0) rotate(var(--spin)) scale(var(--s)); opacity: 0; }
+  }
+</style>
+</head>
+<body class="light">
+  <canvas id="scene"></canvas>
+
+  <div class="hint">拖动旋转 · 轻点让它心跳</div>
+
+  <div class="controls">
+    <label class="switch">
+      <input type="checkbox" id="beatToggle" />
+      <span class="track"><span class="thumb"></span></span>
+      <span>跳动</span>
+    </label>
+    <label class="switch">
+      <input type="checkbox" id="twinkleToggle" />
+      <span class="track"><span class="thumb"></span></span>
+      <span>闪烁</span>
+    </label>
+    <label class="switch">
+      <input type="checkbox" id="themeToggle" checked />
+      <span class="track"><span class="thumb"></span></span>
+      <span>日间</span>
+    </label>
+  </div>
+
+  <div class="overlay">
+    <div class="title">My Heart Is Yours</div>
+    <div class="subtitle">一颗心 · 为你而跳</div>
+  </div>
+
+  <!-- Three.js（ES Module + importmap） -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js"
+    }
+  }
+  </script>
+
+  <script type="module">
+    import * as THREE from 'three';
+
+    /* =========================================================
+       1. 基础场景（含移动端适配）
+       ========================================================= */
+    // 设备识别：UA 或窄屏均视为移动端，按需降低粒子上限与像素比
+    const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+                  || Math.min(window.innerWidth, window.innerHeight) < 768;
+    const DPR_CAP = isMobile ? 1.5 : 2;
+
+    const canvas = document.getElementById('scene');
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: !isMobile, alpha: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, DPR_CAP));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setClearColor(0x000000, 0);
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 300);
+
+    // 让心形在任何宽高比下都完整入镜：按较窄的那条轴反推相机距离
+    const HEART_HALF = 10; // 含脉动与留白的等效半宽
+    function fitHeartToView() {
+      const aspect  = window.innerWidth / window.innerHeight;
+      const halfFov = Math.tan((camera.fov * Math.PI) / 180 / 2);
+      const distV = HEART_HALF / halfFov;            // 竖向能容纳
+      const distH = HEART_HALF / (halfFov * aspect);  // 横向能容纳
+      camera.position.z = Math.max(distV, distH);
+      camera.position.y = 0.5;
+      camera.aspect = aspect;
+      camera.updateProjectionMatrix();
+    }
+    fitHeartToView();
+
+    /* =========================================================
+       2. 用 Taubin 心形隐式方程做「拒绝采样」生成 3D 实体心形点云
+          F(x,y,z) = (x² + 9y²/4 + z² - 1)³ - x²z³ - 9y²z³/200
+          其中 z 是心形上下轴 → 映射到世界 Y，使其正立
+       ========================================================= */
+    const HEART_COUNT = isMobile ? 3000 : 6000;   // 实心饱满；亮色靠 depthWrite 前层遮挡后层，多而不糊
+    const SCALE = 7.2;
+
+    const palette = [
+      '#ff2d6f', '#ff5d8f', '#ff0a54', '#ff85a1',
+      '#ffb3c6', '#ffafd0', '#ff7096', '#ff4d6d'
+    ].map(c => new THREE.Color(c));
+    const hotWhite = new THREE.Color('#ffffff');
+    const deepRed  = new THREE.Color('#9b0033');
+
+    const positions = new Float32Array(HEART_COUNT * 3);
+    const colors    = new Float32Array(HEART_COUNT * 3);
+    const sizes     = new Float32Array(HEART_COUNT);
+    const phases    = new Float32Array(HEART_COUNT);
+    const charIdx   = new Float32Array(HEART_COUNT);   // 每个粒子用「潘火火」中的哪一个字
+
+    let i = 0, tries = 0;
+    while (i < HEART_COUNT && tries < HEART_COUNT * 80) {
+      tries++;
+      const x = (Math.random() * 2 - 1) * 1.15;   // 左右
+      const y = (Math.random() * 2 - 1) * 1.15;   // 心形深度（前后）
+      const z = (Math.random() * 2 - 1) * 1.15;   // 上下
+
+      const t = x * x + 2.25 * y * y + z * z - 1;
+      const F = t * t * t - x * x * z * z * z - 0.045 * y * y * z * z * z;
+
+      if (F < 0) {   // 实心体积采样，爱心饱满；中央清晰靠 depthWrite 前层遮挡后层
+        // 映射到世界坐标：(x, z, y) → 让心形正立（尖端朝下）
+        const wx = x * SCALE;
+        const wy = z * SCALE;
+        const wz = y * SCALE;
+        positions[i * 3]     = wx;
+        positions[i * 3 + 1] = wy;
+        positions[i * 3 + 2] = wz;
+
+        // 颜色：随机调色板 + 12% 概率提亮为暖白高光 + 底部偏深红
+        const c = palette[(Math.random() * palette.length) | 0].clone();
+        if (Math.random() < 0.12) c.lerp(hotWhite, 0.45 + Math.random() * 0.5);
+        if (wy < -SCALE * 0.55) c.lerp(deepRed, 0.25);
+        colors[i * 3]     = c.r;
+        colors[i * 3 + 1] = c.g;
+        colors[i * 3 + 2] = c.b;
+
+        sizes[i]   = 2.0 + Math.random() * 2.8;   // 字再放大，笔画更清楚
+        phases[i]  = Math.random();
+        // 按 6:2:2 加权分配「潘 / 火 / 火」，让「潘」占主导、不会被两个「火」淹没
+        const r = Math.random();
+        charIdx[i] = r < 0.6 ? 0 : (r < 0.8 ? 1 : 2);
+        i++;
+      }
+    }
+
+    const heartGeo = new THREE.BufferGeometry();
+    heartGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    heartGeo.setAttribute('aColor',   new THREE.BufferAttribute(colors, 3));
+    heartGeo.setAttribute('aSize',    new THREE.BufferAttribute(sizes, 1));
+    heartGeo.setAttribute('aPhase',   new THREE.BufferAttribute(phases, 1));
+    heartGeo.setAttribute('aChar',    new THREE.BufferAttribute(charIdx, 1));
+    heartGeo.center(); // 居中
+
+    /* ---------- 生成「潘火火」字符纹理图集（横向 3 格） ---------- */
+    // 把三个字画进一张 canvas，每个粒子按 aChar 采样对应那一格
+    const CHAR_LIST = ['潘', '火', '火'];
+    const CELL = 256;                 // 每个字格子的像素尺寸
+    const atlas = document.createElement('canvas');
+    atlas.width = CELL * CHAR_LIST.length;
+    atlas.height = CELL;
+    const actx = atlas.getContext('2d');
+    actx.clearRect(0, 0, atlas.width, atlas.height);
+    actx.font = `bold ${Math.floor(CELL * 0.78)}px "PingFang SC","Microsoft YaHei","STHeiti",sans-serif`;
+    actx.textAlign = 'center';
+    actx.textBaseline = 'middle';
+    CHAR_LIST.forEach((ch, k) => {
+      const cx = k * CELL + CELL / 2;
+      const cy = CELL / 2 + CELL * 0.04;
+      actx.fillStyle = '#ffffff';
+      actx.fillText(ch, cx, cy);
+    });
+    const charTex = new THREE.CanvasTexture(atlas);
+    charTex.minFilter = THREE.LinearFilter;
+    charTex.magFilter = THREE.LinearFilter;
+
+    /* ---------- 心形粒子着色器 ---------- */
+    const heartMat = new THREE.ShaderMaterial({
+      uniforms: {
+        uTime:       { value: 0 },
+        uBurst:      { value: 0 },
+        uPixelRatio: { value: renderer.getPixelRatio() },
+        uBeatOn:     { value: 0.0 },   // 跳动开关（默认关）
+        uTwinkleOn:  { value: 0.0 },   // 闪烁开关（默认关）
+        uDarken:     { value: 1.0 },   // 亮色模式下加深字色，保证浅背景上可读
+        uEmissive:   { value: 1.0 },   // 夜间 Additive 发光强度（<1 降亮度，避免中心过曝刺眼）
+        uCharTex:    { value: charTex },
+        uCellU:      { value: 1.0 / CHAR_LIST.length }  // 每个字在图集 u 方向占的宽度
+      },
+      vertexShader: /* glsl */`
+        uniform float uTime;
+        uniform float uBurst;
+        uniform float uPixelRatio;
+        uniform float uBeatOn;
+        uniform float uTwinkleOn;
+        uniform float uCellU;
+        attribute float aSize;
+        attribute vec3  aColor;
+        attribute float aPhase;
+        attribute float aChar;
+        varying vec3  vColor;
+        varying float vGlow;
+        varying float vCharOffset;
+
+        // 近似心跳节律：周期内「咚-哒」两次脉冲
+        float heartBeat(float t) {
+          float period = 1.25;
+          float f = mod(t, period) / period;
+          float p = 0.0;
+          p += exp(-pow((f - 0.02) * 17.0, 2.0));
+          p += exp(-pow((f - 0.20) * 13.0, 2.0)) * 0.65;
+          return p;
+        }
+
+        void main() {
+          vColor = aColor;
+          vCharOffset = aChar * uCellU;          // 该粒子对应字在图集中的 u 起点
+          vec3 pos = position;
+
+          // 跳动：用 uBeatOn 在「静止」与「心跳脉冲」之间插值
+          float beat  = mix(0.0, heartBeat(uTime), uBeatOn);
+          float pulse = 1.0 + beat * 0.07;
+          pos *= pulse;
+
+          // 点击爆开：沿径向短暂外推
+          vec3 dir = normalize(position + vec3(1e-4));
+          pos += dir * uBurst * (0.35 + 0.65 * aPhase);
+
+          vec4 mv = modelViewMatrix * vec4(pos, 1.0);
+          gl_Position = projectionMatrix * mv;
+
+          // 闪烁：开启则正弦呼吸，关闭则稳定亮度
+          float twinkle = 0.7 + 0.3 * sin(uTime * 3.0 + aPhase * 6.2831);
+          vGlow = mix(0.85, twinkle, uTwinkleOn);
+
+          float size = aSize * (300.0 / -mv.z) * uPixelRatio;
+          gl_PointSize = size * (0.85 + beat * 0.55);
+        }
+      `,
+      fragmentShader: /* glsl */`
+        uniform sampler2D uCharTex;
+        uniform float uCellU;
+        uniform float uDarken;
+        uniform float uEmissive;
+        varying vec3  vColor;
+        varying float vGlow;
+        varying float vCharOffset;
+        void main() {
+          // 圆形软边遮罩（保留点精灵的外形）
+          vec2 uv = gl_PointCoord - 0.5;
+          float d = length(uv);
+          if (d > 0.5) discard;
+          float alpha = smoothstep(0.5, 0.0, d);
+          alpha = pow(alpha, 1.5);
+
+          // 采样该粒子对应的字（内缩 3% 避免线性过滤混入相邻字）
+          float inset = uCellU * 0.03;
+          float cu = vCharOffset + inset + gl_PointCoord.x * (uCellU - 2.0 * inset);
+          float cv = 1.0 - gl_PointCoord.y;   // CanvasTexture 默认 flipY，翻转 v 让「潘火火」正立
+          float glyph = texture2D(uCharTex, vec2(cu, cv)).a;   // 字形 alpha
+          alpha *= glyph;
+          if (alpha < 0.06) discard;   // 丢弃近透明像素，避免 depthWrite 时透明区写深度造成孔洞
+
+          vec3 col = vColor * vGlow;
+          // 亮色模式下把字色压向深酒红，避免浅粉字在浅背景上看不清
+          col = mix(col, mix(col, vec3(0.45, 0.04, 0.16), 0.6), uDarken);
+          col += vec3(0.55, 0.30, 0.40) * pow(1.0 - d * 2.0, 4.0) * glyph; // 字心高光
+          gl_FragColor = vec4(col * uEmissive, alpha);
+        }
+      `,
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending
+    });
+
+    // 亮色专用材质：同一套着色器与 uniforms，但用 NormalBlending
+    // （Additive 发光混合在浅色背景上会把字「洗」没，必须改为正常混合字才清晰）
+    const heartMatLight = new THREE.ShaderMaterial({
+      uniforms: heartMat.uniforms,             // 共享 uniforms，tick 更新一份即可同步两个材质
+      vertexShader: heartMat.vertexShader,
+      fragmentShader: heartMat.fragmentShader,
+      transparent: true,
+      depthWrite: true,                        // 写深度：前排字遮挡后排，中央不再因多层半透叠加而糊
+      blending: THREE.NormalBlending
+    });
+
+    const heart = new THREE.Points(heartGeo, heartMat);
+    heart.rotation.y = Math.PI;   // 正面朝向镜头（凹陷在两瓣之间）
+    scene.add(heart);
+
+    /* =========================================================
+       3. 背景星空
+       ========================================================= */
+    const STAR_COUNT = isMobile ? 800 : 1800;
+    const sPos = new Float32Array(STAR_COUNT * 3);
+    const sSize = new Float32Array(STAR_COUNT);
+    const sPhase = new Float32Array(STAR_COUNT);
+    for (let k = 0; k < STAR_COUNT; k++) {
+      // 球壳分布
+      const r = 60 + Math.random() * 40;
+      const theta = Math.random() * Math.PI * 2;
+      const phi   = Math.acos(2 * Math.random() - 1);
+      sPos[k * 3]     = r * Math.sin(phi) * Math.cos(theta);
+      sPos[k * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
+      sPos[k * 3 + 2] = r * Math.cos(phi);
+      sSize[k]  = Math.random() * 2.0 + 0.3;
+      sPhase[k] = Math.random();
+    }
+    const starGeo = new THREE.BufferGeometry();
+    starGeo.setAttribute('position', new THREE.BufferAttribute(sPos, 3));
+    starGeo.setAttribute('aSize',    new THREE.BufferAttribute(sSize, 1));
+    starGeo.setAttribute('aPhase',   new THREE.BufferAttribute(sPhase, 1));
+
+    const starMat = new THREE.ShaderMaterial({
+      uniforms: { uTime: { value: 0 }, uPixelRatio: { value: renderer.getPixelRatio() }, uOpacity: { value: 0.15 } },
+      vertexShader: /* glsl */`
+        uniform float uTime;
+        uniform float uPixelRatio;
+        attribute float aSize;
+        attribute float aPhase;
+        varying float vTw;
+        void main() {
+          vec4 mv = modelViewMatrix * vec4(position, 1.0);
+          gl_Position = projectionMatrix * mv;
+          vTw = 0.4 + 0.6 * (0.5 + 0.5 * sin(uTime * 1.5 + aPhase * 6.2831));
+          gl_PointSize = aSize * uPixelRatio * (60.0 / -mv.z) * 8.0;
+        }
+      `,
+      fragmentShader: /* glsl */`
+        varying float vTw;
+        uniform float uOpacity;
+        void main() {
+          vec2 uv = gl_PointCoord - 0.5;
+          float d = length(uv);
+          if (d > 0.5) discard;
+          float a = smoothstep(0.5, 0.0, d);
+          gl_FragColor = vec4(vec3(1.0, 0.92, 0.95) * vTw, a * vTw * uOpacity);
+        }
+      `,
+      transparent: true, depthWrite: false, blending: THREE.AdditiveBlending
+    });
+    const stars = new THREE.Points(starGeo, starMat);
+    scene.add(stars);
+
+    /* =========================================================
+       4. 交互：拖拽旋转 + 自动旋转 + 点击心跳
+       ========================================================= */
+    const target = { rx: 0.12, ry: 0 };
+    const current = { rx: 0.12, ry: 0 };
+    let dragging = false;
+    let lastX = 0, lastY = 0;
+    let autoSpeed = 0.0016;
+
+    function onDown(x, y) { dragging = true; lastX = x; lastY = y; }
+    function onMove(x, y) {
+      if (!dragging) return;
+      const dx = x - lastX, dy = y - lastY;
+      target.ry += dx * 0.006;
+      target.rx += dy * 0.006;
+      target.rx = Math.max(-1.0, Math.min(1.0, target.rx));
+      lastX = x; lastY = y;
+    }
+    function onUp() { dragging = false; }
+
+    canvas.addEventListener('pointerdown', e => { onDown(e.clientX, e.clientY); });
+    window.addEventListener('pointermove', e => { onMove(e.clientX, e.clientY); });
+    window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onUp);
+
+    // 点击触发爆开心跳
+    let burstTimer = 0;
+    canvas.addEventListener('click', () => {
+      heartMat.uniforms.uBurst.value = 1.0;
+      burstTimer = 0;
+    });
+
+    // 开关：跳动 / 闪烁
+    document.getElementById('beatToggle').addEventListener('change', e => {
+      heartMat.uniforms.uBeatOn.value = e.target.checked ? 1.0 : 0.0;
+    });
+    document.getElementById('twinkleToggle').addEventListener('change', e => {
+      heartMat.uniforms.uTwinkleOn.value = e.target.checked ? 1.0 : 0.0;
+    });
+
+    /* =========================================================
+       5. 主循环
+       ========================================================= */
+    const clock = new THREE.Clock();
+    function tick() {
+      const t = clock.getElapsedTime();
+
+      // 自动旋转（拖拽时减弱）
+      if (!dragging) target.ry += autoSpeed;
+
+      // 平滑插值
+      current.rx += (target.rx - current.rx) * 0.08;
+      current.ry += (target.ry - current.ry) * 0.08;
+      heart.rotation.x = current.rx;
+      heart.rotation.y = current.ry;
+
+      // 心形微微跟随鼠标的视差倾斜（额外浪漫感）
+      // 已由 current.rx/ry 体现，这里不再叠加
+
+      // 点击爆开衰减
+      heartMat.uniforms.uBurst.value *= 0.93;
+
+      heartMat.uniforms.uTime.value = t;
+      starMat.uniforms.uTime.value  = t;
+      stars.rotation.y = t * 0.01;
+
+      renderer.render(scene, camera);
+      requestAnimationFrame(tick);
+    }
+    tick();
+
+    /* =========================================================
+       6. 自适应
+       ========================================================= */
+    window.addEventListener('resize', () => {
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      fitHeartToView();   // 旋转屏幕/尺寸变化时重新让心形完整入镜
+      heartMat.uniforms.uPixelRatio.value = renderer.getPixelRatio();
+      starMat.uniforms.uPixelRatio.value = renderer.getPixelRatio();
+    });
+
+    /* =========================================================
+       7. 飘落爱心（DOM + CSS）
+       ========================================================= */
+    const petalChars = ['♥', '❤', '❥', '♡'];
+    function spawnPetals(n) {
+      for (let k = 0; k < n; k++) {
+        const el = document.createElement('div');
+        el.className = 'petal';
+        el.textContent = petalChars[(Math.random() * petalChars.length) | 0];
+        const size = 10 + Math.random() * 22;
+        const dur  = 9 + Math.random() * 10;
+        const delay = -Math.random() * dur; // 负延迟，立刻分布满屏
+        el.style.left = (Math.random() * 100) + 'vw';
+        el.style.fontSize = size + 'px';
+        el.style.opacity = String(0.4 + Math.random() * 0.5);
+        el.style.setProperty('--s', (0.6 + Math.random() * 0.9).toString());
+        el.style.setProperty('--drift', ((Math.random() * 2 - 1) * 120) + 'px');
+        el.style.setProperty('--spin', (Math.random() * 720 - 360) + 'deg');
+        el.style.animationDuration = dur + 's';
+        el.style.animationDelay = delay + 's';
+        document.body.appendChild(el);
+      }
+    }
+    spawnPetals(isMobile ? 12 : 26);
+
+    /* =========================================================
+       8. 情话：纯本地甜言蜜语库，刷新随机换一条
+          （在线接口内容不可控——会混进「好好学习」这类励志句，情侣场景不合适）
+       ========================================================= */
+    const QUOTES = [
+      "你是我绕过山河错落，才找到的人间烟火。",
+      "我见过银河，但仍只钟情你这一颗星。",
+      "想和你看落日，只谈微风和晚星。",
+      "你笑起来，真像好天气。",
+      "我贪恋的人间烟火，不偏不倚，恰好是你。",
+      "愿我如星君如月，夜夜流光相皎洁。",
+      "世间万物皆是苦，唯有你是甜。",
+      "春水初生，春林初盛，春风十里，不如你。",
+      "你走向我的每一步，我都心动。",
+      "愿余生岁岁常相见，日日皆如初见。",
+      "满天星光，都不及你眼底温柔。",
+      "想和你一屋两人，三餐四季。",
+      "你是我这一生，最想赖着的人。",
+      "遇见你之后，我没想过别人。",
+      "余生很长，请多指教。",
+      "你是我藏在口袋里的玫瑰，也是心尖上的月亮。",
+      "全世界都在催我长大，你却把我宠成了小朋友。",
+      "我没什么特别的，只是特别爱你。",
+      "想牵你的手，从心动，到古稀。",
+      "你说清醒容易孤独，我就陪你醉在这场浪漫里。",
+      "海鸟和鱼相爱，原来真的会有奇迹。",
+      "我把月亮戳碎了变成星星，铺好等你来。",
+    ];
+    let lastQuote = -1;
+    function pickQuote() {
+      let k;
+      do { k = (Math.random() * QUOTES.length) | 0; } while (k === lastQuote && QUOTES.length > 1);
+      lastQuote = k;
+      return QUOTES[k];
+    }
+    document.querySelector('.subtitle').textContent = pickQuote();
+
+    /* =========================================================
+       9. 主题：日间 / 夜间（默认日间，localStorage 记住选择）
+       ========================================================= */
+    const themeToggle = document.getElementById('themeToggle');
+    function applyTheme(isLight) {
+      document.body.classList.toggle('light', isLight);
+      starMat.uniforms.uOpacity.value = isLight ? 0.15 : 1.0;   // 白天弱化星空
+      heartMat.uniforms.uDarken.value = isLight ? 1.0 : 0.0;    // 亮色加深字色
+      heartMat.uniforms.uEmissive.value = isLight ? 1.0 : 0.3;  // 夜间降低发光，避免中心过曝刺眼
+      heart.material = isLight ? heartMatLight : heartMat;      // 亮色用 NormalBlending 让字清晰
+    }
+    const savedTheme = localStorage.getItem('heart-theme');
+    const initLight = savedTheme ? savedTheme === 'light' : true;   // 无记录时默认日间
+    themeToggle.checked = initLight;
+    applyTheme(initLight);
+    themeToggle.addEventListener('change', e => {
+      applyTheme(e.target.checked);
+      localStorage.setItem('heart-theme', e.target.checked ? 'light' : 'dark');
+    });
+
+    /* —— 全站主题桥接：被 love-h5/heart.html 容器通过 postMessage 驱动 —— */
+    window.addEventListener('message', e => {
+      const t = e.data && e.data.type === 'set-theme' && e.data.theme;
+      if (t === 'light' || t === 'dark') {
+        themeToggle.checked = (t === 'light');
+        applyTheme(t === 'light');
+        localStorage.setItem('heart-theme', t);
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,74 @@
+/* ============================================================
+   马卡龙主题系统 —— 3 套配色，通过 [data-theme] 切换
+   防 FOUC：index.html 的 <head> 内联脚本会在 CSS 加载前
+   先把 data-theme 设到 <html> 上。
+   ============================================================ */
+
+:root,
+[data-theme="sakura"] {
+  --bg-1: #fff5f7;
+  --bg-2: #ffe4ec;
+  --bg-3: #ffd1dc;
+  --primary: #ff7aa2;
+  --primary-deep: #e85a86;
+  --primary-soft: #ffb6c8;
+  --accent: #ff9eb5;
+  --text: #5a3d4a;
+  --text-soft: #8a6b78;
+  --card: #ffffff;
+  --card-shadow: rgba(255, 122, 162, 0.18);
+  --border: rgba(255, 122, 162, 0.25);
+  --bubble-me: linear-gradient(135deg, #ff8fb0, #ff6f95);
+  --bubble-peer: #ffffff;
+  --chip: rgba(255, 122, 162, 0.12);
+  --name: "樱花粉";
+}
+
+[data-theme="mint"] {
+  --bg-1: #f0fbf6;
+  --bg-2: #d7f2e3;
+  --bg-3: #b8e6cc;
+  --primary: #5bb89e;
+  --primary-deep: #3fa286;
+  --primary-soft: #a4ddc9;
+  --accent: #7fd0b0;
+  --text: #2f4a40;
+  --text-soft: #5e786d;
+  --card: #ffffff;
+  --card-shadow: rgba(91, 184, 158, 0.18);
+  --border: rgba(91, 184, 158, 0.25);
+  --bubble-me: linear-gradient(135deg, #6fc4ab, #46a98c);
+  --bubble-peer: #ffffff;
+  --chip: rgba(91, 184, 158, 0.12);
+  --name: "薄荷绿";
+}
+
+[data-theme="lavender"] {
+  --bg-1: #f6f2fc;
+  --bg-2: #e6dcf5;
+  --bg-3: #d2c2ec;
+  --primary: #9b7fd4;
+  --primary-deep: #7d61c0;
+  --primary-soft: #c3b0e8;
+  --accent: #b59ce0;
+  --text: #3d3553;
+  --text-soft: #6b6188;
+  --card: #ffffff;
+  --card-shadow: rgba(155, 127, 212, 0.18);
+  --border: rgba(155, 127, 212, 0.25);
+  --bubble-me: linear-gradient(135deg, #a98fd8, #8b6cc6);
+  --bubble-peer: #ffffff;
+  --chip: rgba(155, 127, 212, 0.12);
+  --name: "薰衣草紫";
+}
+
+/* 全局共享变量（不随主题变） */
+:root {
+  --radius: 18px;
+  --radius-sm: 12px;
+  --radius-pill: 999px;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-top: env(safe-area-inset-top, 0px);
+  --maxw: 480px;
+  --transition: 0.25s ease;
+}
