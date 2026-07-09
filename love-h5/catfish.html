@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<meta name="theme-color" content="#ffd1dc" />
+<title>猫猫吃鱼 🐱🐟</title>
+<!-- 防 FOUC：与主站同主题（hash 不变，仍读 lh5-theme） -->
+<script>(function(){try{var t=localStorage.getItem('lh5-theme');if(!t||['sakura','mint','lavender'].indexOf(t)<0)t='sakura';document.documentElement.setAttribute('data-theme',t);}catch(e){document.documentElement.setAttribute('data-theme','sakura');}})();</script>
+<link rel="stylesheet" href="./css/theme.css" />
+<link rel="stylesheet" href="./css/catfish.css" />
+</head>
+<body>
+
+<!-- 顶部 HUD（双方头像 + 分数 + 模式/倒计时 + 返回主题浮层） -->
+<div class="cf-hud">
+  <button class="cf-back" id="cfBack">‹</button>
+  <div class="cf-players">
+    <div class="cf-p" id="cfBoy">
+      <span class="cf-avatar">👦</span>
+      <span class="cf-score" id="cfScoreBoy">0</span>
+    </div>
+    <div class="cf-center" id="cfCenter">准备中…</div>
+    <div class="cf-p" id="cfGirl">
+      <span class="cf-avatar">👧</span>
+      <span class="cf-score" id="cfScoreGirl">0</span>
+    </div>
+  </div>
+  <button class="cf-fab" id="cfFab">🎨</button>
+  <div class="cf-pop" id="cfPop">
+    <div class="cf-opt" data-theme="sakura"><span class="cf-sw" style="background:linear-gradient(135deg,#ff7aa2,#ffd1dc)"></span>樱花</div>
+    <div class="cf-opt" data-theme="mint"><span class="cf-sw" style="background:linear-gradient(135deg,#5bb89e,#b8e6cc)"></span>薄荷</div>
+    <div class="cf-opt" data-theme="lavender"><span class="cf-sw" style="background:linear-gradient(135deg,#9b7fd4,#d2c2ec)"></span>薰衣草</div>
+  </div>
+</div>
+
+<!-- 选模式遮罩 -->
+<div class="cf-modal" id="cfModal">
+  <div class="cf-modal-card">
+    <div class="cf-modal-title">🐱 猫猫吃鱼 · 选模式</div>
+    <div class="cf-modes">
+      <div class="cf-mode" data-mode="versus">
+        <div class="cf-mode-ic">⚔️</div><div class="cf-mode-n">对战</div>
+        <div class="cf-mode-d">限时内分高者赢</div>
+      </div>
+      <div class="cf-mode" data-mode="coop">
+        <div class="cf-mode-ic">🤝</div><div class="cf-mode-n">合作</div>
+        <div class="cf-mode-d">一起凑够目标</div>
+      </div>
+      <div class="cf-mode" data-mode="turn">
+        <div class="cf-mode-ic">🔁</div><div class="cf-mode-n">回合</div>
+        <div class="cf-mode-d">轮流吃，分高者赢</div>
+      </div>
+    </div>
+    <div class="cf-wait muted small" id="cfWait">选择模式后等待对方加入…</div>
+    <button class="cf-cancel" id="cfCancel">回首页</button>
+  </div>
+</div>
+
+<!-- 结算遮罩 -->
+<div class="cf-modal" id="cfResult" style="display:none">
+  <div class="cf-modal-card">
+    <div class="cf-modal-title" id="cfResultTitle">结束 🎉</div>
+    <div class="cf-result-body" id="cfResultBody"></div>
+    <button class="cf-again" id="cfAgain">再来一局</button>
+    <button class="cf-home" id="cfHome">回首页</button>
+  </div>
+</div>
+
+<canvas id="cfCanvas"></canvas>
+
+<script type="module" src="./js/game/catfish/main.js"></script>
+</body>
+</html>

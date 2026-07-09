@@ -1,0 +1,131 @@
+/* ============================================================
+   猫猫吃鱼 · 游戏页样式（与主站主题变量同源）
+   ============================================================ */
+
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+  color: var(--text);
+  background: linear-gradient(160deg, var(--bg-1) 0%, var(--bg-2) 55%, var(--bg-3) 100%);
+  background-attachment: fixed;
+  font-size: 15px;
+  user-select: none;
+  touch-action: none;
+}
+
+#cfCanvas {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  z-index: 1;
+}
+
+/* —— 顶部 HUD —— */
+.cf-hud {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: calc(10px + var(--safe-top)) 14px 10px;
+  backdrop-filter: blur(12px);
+  background: color-mix(in srgb, var(--bg-1) 72%, transparent);
+  border-bottom: 1px solid var(--border);
+}
+.cf-back, .cf-fab {
+  width: 38px; height: 38px; border-radius: 50%; border: none;
+  display: grid; place-items: center; font-size: 18px;
+  background: var(--card); box-shadow: 0 2px 10px var(--card-shadow);
+  cursor: pointer; flex: none;
+}
+.cf-back:active, .cf-fab:active { transform: scale(0.92); }
+
+.cf-players { flex: 1; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.cf-p { display: flex; align-items: center; gap: 8px; }
+.cf-p .cf-avatar {
+  width: 38px; height: 38px; border-radius: 50%;
+  display: grid; place-items: center; font-size: 22px;
+  background: var(--chip); flex: none;
+}
+.cf-p .cf-avatar.offline { opacity: 0.4; }
+.cf-p .cf-score { font-size: 20px; font-weight: 800; color: var(--primary); min-width: 28px; text-align: center; }
+#cfGirl { flex-direction: row-reverse; }
+#cfGirl .cf-score { text-align: center; }
+.cf-center {
+  font-size: 13px; font-weight: 700; color: var(--text);
+  padding: 5px 12px; border-radius: var(--radius-pill);
+  background: var(--chip); text-align: center; min-width: 92px;
+}
+
+/* —— 主题切换浮层（独立于主站，同 key） —— */
+.cf-pop {
+  position: fixed; right: 14px; top: 64px;
+  z-index: 11; background: var(--card); border-radius: var(--radius);
+  box-shadow: 0 8px 30px var(--card-shadow); padding: 10px;
+  display: none; flex-direction: column; gap: 6px; min-width: 140px;
+}
+.cf-pop.show { display: flex; }
+.cf-opt {
+  display: flex; align-items: center; gap: 10px; padding: 9px 12px;
+  border-radius: var(--radius-sm); font-weight: 500; cursor: pointer;
+}
+.cf-opt:active, .cf-opt.active { background: var(--chip); }
+.cf-sw { width: 22px; height: 22px; border-radius: 50%; flex: none; }
+
+/* —— 模态遮罩 —— */
+.cf-modal {
+  position: fixed; inset: 0; z-index: 50;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0,0,0,0.32); backdrop-filter: blur(3px);
+  padding: 24px;
+}
+.cf-modal-card {
+  background: var(--card); border-radius: var(--radius);
+  box-shadow: 0 12px 40px var(--card-shadow);
+  padding: 24px 20px; width: 100%; max-width: 360px;
+  text-align: center;
+}
+.cf-modal-title { font-size: 20px; font-weight: 800; margin-bottom: 16px; }
+.cf-modes { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+.cf-mode {
+  padding: 16px 8px; border-radius: var(--radius-sm);
+  border: 2px solid var(--border); cursor: pointer;
+  transition: transform .1s, border-color var(--transition);
+}
+.cf-mode:active { transform: scale(0.95); }
+.cf-mode.sel { border-color: var(--primary); background: var(--chip); }
+.cf-mode-ic { font-size: 28px; }
+.cf-mode-n { font-weight: 700; margin-top: 6px; }
+.cf-mode-d { font-size: 11px; color: var(--text-soft); margin-top: 3px; }
+.cf-wait { margin-top: 16px; line-height: 1.6; }
+
+.cf-cancel, .cf-again, .cf-home {
+  margin-top: 16px; padding: 11px 22px; border-radius: var(--radius-pill);
+  border: none; font-weight: 600; font-size: 15px; width: 100%; cursor: pointer;
+}
+.cf-cancel, .cf-home { background: var(--card); color: var(--text); box-shadow: 0 2px 10px var(--card-shadow); }
+.cf-again {
+  background: linear-gradient(135deg, var(--primary), var(--primary-deep));
+  color: #fff; box-shadow: 0 6px 18px var(--card-shadow);
+}
+.cf-again:active, .cf-home:active, .cf-cancel:active { transform: scale(0.97); }
+
+.cf-result-body {
+  display: flex; flex-direction: column; gap: 10px; margin-top: 6px;
+  padding: 14px; background: var(--chip); border-radius: var(--radius-sm);
+}
+.cf-result-row { display: flex; justify-content: space-between; align-items: center; font-size: 15px; }
+.cf-result-row.win { font-weight: 800; color: var(--primary); }
+
+/* —— Toast —— */
+.cf-toast {
+  position: fixed; left: 50%; top: 70px; transform: translateX(-50%);
+  z-index: 60; background: rgba(0,0,0,0.78); color: #fff;
+  padding: 9px 16px; border-radius: var(--radius-pill); font-size: 13px;
+  pointer-events: none; animation: cfTIn .25s ease;
+}
+@keyframes cfTIn { from { opacity: 0; transform: translate(-50%,-8px); } to { opacity: 1; transform: translate(-50%,0); } }

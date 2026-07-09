@@ -56,6 +56,11 @@ async function boot() {
   initSwitcher();
   defineViews();
   bindOnboarding();
+
+  // 监听 catfish / heart iframe 发来的 go-home 消息
+  window.addEventListener("message", e => {
+    if (e.data && e.data.type === "cf-go-home") router.go("home");
+  });
   await Store.init();
 
   if (room.isSetup()) {
