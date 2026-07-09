@@ -12,7 +12,7 @@ const CARDS = [
   { go: "days", ic: "📅", nt: "在一起", nd: "天数·纪念日", span: false },
   { go: "wishlist", ic: "✅", nt: "心愿清单", nd: "一起打卡", span: false },
   { go: "truthbox", ic: "🎲", nt: "真心话", nd: "随机抽题", span: false },
-  { go: "catfish", ic: "🐱", nt: "猫猫吃鱼", nd: "双人联机", span: false },
+  { go: "lobby", ic: "🎮", nt: "游戏大厅", nd: "双人小游戏", span: false },
   { go: "heart", ic: "💝", nt: "3D 爱心", nd: "My Heart Is Yours", span: true },
 ];
 

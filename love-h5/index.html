@@ -15,6 +15,19 @@
 </head>
 <body>
 
+<!-- 启动 loading：刷新时先盖住，避免闪过登录页；boot 完成后淡出 -->
+<div id="splash" class="splash">
+  <div class="splash-logo">💑</div>
+  <div class="splash-title">我们的小窝</div>
+  <div class="splash-spin"></div>
+</div>
+
+<!-- 进入页面时的数据 loading（盖住顶栏下方内容区，非整页转场） -->
+<div id="viewLoading" class="view-loading" style="display:none">
+  <div class="splash-logo">💑</div>
+  <div class="splash-spin"></div>
+</div>
+
 <!-- 引导：房间号 + 身份 -->
 <div id="onboarding" class="onboarding">
   <div class="logo">💑</div>
@@ -58,6 +71,7 @@
   <section id="view-days" class="view"></section>
   <section id="view-wishlist" class="view"></section>
   <section id="view-truthbox" class="view"></section>
+  <section id="view-lobby" class="view"></section>
 
   <div id="iframeHost"></div>
 </div>

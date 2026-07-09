@@ -20,6 +20,17 @@ let mode = "local";        // 'supabase' | 'local'
 let code = "";             // 当前房间号
 let sb = null;             // { client }
 
+/* —— 全局「读取中」计数：Supabase 模式下每次订阅的首次读取 +1/-1，
+     用于进入页面时显示 loading 覆盖（数据到了自动消失）。本地模式同步，不计。 —— */
+let loadingCount = 0;
+const loadingCbs = new Set();
+function bumpLoading(d) {
+  loadingCount = Math.max(0, loadingCount + d);
+  const on = loadingCount > 0;
+  loadingCbs.forEach(cb => cb(on));
+}
+export function onLoadingChange(cb) { loadingCbs.add(cb); cb(loadingCount > 0); return () => loadingCbs.delete(cb); }
+
 export const Store = {
   get mode() { return mode; },
   get roomCode() { return code; },
@@ -156,7 +167,8 @@ function sbOnValue(path, cb) {
       cb(payload.eventType === "DELETE" ? null : (payload.new?.value ?? null));
     })
     .subscribe();
-  sbGet(path).then(v => cb(v));   // 立即回读当前值
+  bumpLoading(1);
+  sbGet(path).then(v => { cb(v); }).finally(() => bumpLoading(-1));   // 立即回读当前值（含 loading 计数）
   return () => {
     set.delete(cb);
     if (!set.size) sbSubs.delete(path);

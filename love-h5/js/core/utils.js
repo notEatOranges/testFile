@@ -123,7 +123,7 @@ export function toast(msg, ms = 1800) {
 }
 
 /** 按钮通用 loading：执行 fn 期间按钮转圈 + 禁用，结束（无论成败）恢复。
- *  fn 可以是同步或异步；返回 fn 的返回值。 */
+ *  fn 可以是同步或异步；返回 fn 的返回值。本身就是「点击节流」——异步期间禁用防重复提交。 */
 export function withLoading(btn, fn, loadingText = "处理中…") {
   if (!btn) return fn();
   const html = btn.innerHTML;
@@ -133,4 +133,13 @@ export function withLoading(btn, fn, loadingText = "处理中…") {
   let r;
   try { r = fn(); } catch (e) { restore(); throw e; }
   return Promise.resolve(r).then(v => { restore(); return v; }, e => { restore(); throw e; });
+}
+
+/** 防抖：延迟 wait ms 执行，期间再调用则重置。用于输入联想/自动保存等。 */
+export function debounce(fn, wait = 300) {
+  let t = null;
+  return function (...args) {
+    if (t) clearTimeout(t);
+    t = setTimeout(() => { t = null; fn.apply(this, args); }, wait);
+  };
 }

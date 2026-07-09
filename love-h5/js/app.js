@@ -2,7 +2,7 @@
    入口编排：初始化主题/数据/路由，处理引导（房间号+身份）
    ============================================================ */
 
-import { Store } from "./core/store.js";
+import { Store, onLoadingChange } from "./core/store.js";
 import * as room from "./core/room.js";
 import { initSwitcher } from "./core/theme.js";
 import * as router from "./core/router.js";
@@ -15,6 +15,7 @@ import * as mood from "./views/mood.js";
 import * as days from "./views/days.js";
 import * as wishlist from "./views/wishlist.js";
 import * as truthbox from "./views/truthbox.js";
+import * as lobby from "./views/lobby.js";
 
 function defineViews() {
   router.define("home",     { title: "我们的小窝", onEnter: home.mount,     onLeave: home.unmount });
@@ -23,6 +24,7 @@ function defineViews() {
   router.define("days",     { title: "在一起",     onEnter: days.mount,     onLeave: days.unmount });
   router.define("wishlist", { title: "心愿清单",   onEnter: wishlist.mount, onLeave: wishlist.unmount });
   router.define("truthbox", { title: "真心话",     onEnter: truthbox.mount, onLeave: truthbox.unmount });
+  router.define("lobby",    { title: "游戏大厅",   onEnter: lobby.mount,    onLeave: lobby.unmount });
   router.define("heart",    { title: "3D 爱心",    iframe: "./heart.html",   heart: true });
   router.define("catfish",  { title: "猫猫吃鱼",   iframe: "./catfish.html" });
 }
@@ -150,28 +152,48 @@ function enterApp() {
   router.start();
 }
 
+/** 淡出并移除启动 loading */
+function hideSplash() {
+  const s = document.getElementById("splash");
+  if (!s) return;
+  s.classList.add("hide");
+  setTimeout(() => s.remove(), 400);
+}
+
 async function boot() {
-  initSwitcher();
-  defineViews();
-  bindOnboarding();
+  try {
+    initSwitcher();
+    defineViews();
+    bindOnboarding();
 
-  // 监听 catfish / heart iframe 发来的 go-home 消息
-  window.addEventListener("message", e => {
-    if (e.data && e.data.type === "cf-go-home") router.go("home");
-  });
-  await Store.init();
+    // 监听 catfish / heart iframe 发来的 go-home 消息
+    window.addEventListener("message", e => {
+      if (e.data && e.data.type === "cf-go-home") router.go("home");
+    });
+    await Store.init();
 
-  if (room.isSetup()) {
-    const ok = await room.enter(room.getRoom(), room.getRole());
-    if (ok) {
-      enterApp();
-    } else {
-      // 该身份已被别人占用：清掉记忆，留在引导页让用户重选
-      room.clearSetup();
-      toast("该身份已有人，请重新选择");
+    // 进入各页面：有未完成的订阅读取时显示 loading 覆盖（数据到了自动消失）
+    onLoadingChange(on => {
+      const el = document.getElementById("viewLoading");
+      if (el) el.style.display = on ? "" : "none";
+    });
+
+    if (room.isSetup()) {
+      const ok = await room.enter(room.getRoom(), room.getRole());
+      if (ok) {
+        enterApp();
+      } else {
+        // 该身份已被别人占用：清掉记忆，留在引导页让用户重选
+        room.clearSetup();
+        toast("该身份已有人，请重新选择");
+      }
     }
+    // 否则保持引导页可见
+  } catch (e) {
+    console.error("[love-h5] 启动失败:", e);
+  } finally {
+    hideSplash();   // 无论成败都淡出启动页，避免卡白屏 / 闪登录页
   }
-  // 否则保持引导页可见
 }
 
 boot();
