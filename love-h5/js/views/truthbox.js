@@ -1,7 +1,7 @@
 /* 真心话盲盒：truthbox/q={question,pickedBy,pickedTs}; truthbox/answer/{role}={text,ts} */
 import { Store } from "../core/store.js";
 import { getRole, getPeer } from "../core/room.js";
-import { TRUTH_QUESTIONS, roleFull, escapeHtml, fmtDateTime, toast } from "../core/utils.js";
+import { TRUTH_QUESTIONS, roleFull, escapeHtml, fmtDateTime, toast, withLoading } from "../core/utils.js";
 
 let uq = null, ua = null, ub = null;
 const pickQ = () => TRUTH_QUESTIONS[Math.floor(Math.random() * TRUTH_QUESTIONS.length)];
@@ -31,19 +31,23 @@ export function mount() {
     e.innerHTML = `<div class="truth-answer"><div class="who"><img src="${avatar(getPeer())}" alt=""/>${roleFull(getPeer())} · ${fmtDateTime(a.ts)}</div><div>${escapeHtml(a.text)}</div></div>`;
   });
 
-  document.getElementById("newQ").onclick = async () => {
-    const q = pickQ();
-    await Store.set("truthbox/q", { question: q, pickedBy: role, pickedTs: Store.now() });
-    await Store.set("truthbox/answer/boy", null);
-    await Store.set("truthbox/answer/girl", null);
-    document.getElementById("myAns").value = "";
-    toast("新题已抽 🔥");
+  document.getElementById("newQ").onclick = function () {
+    withLoading(this, async () => {
+      const q = pickQ();
+      await Store.set("truthbox/q", { question: q, pickedBy: role, pickedTs: Store.now() });
+      await Store.set("truthbox/answer/boy", null);
+      await Store.set("truthbox/answer/girl", null);
+      document.getElementById("myAns").value = "";
+      toast("新题已抽 🔥");
+    }, "抽题中…");
   };
-  document.getElementById("saveAns").onclick = async () => {
+  document.getElementById("saveAns").onclick = function () {
     const t = document.getElementById("myAns").value.trim();
     if (!t) { toast("写点什么～"); return; }
-    await Store.update(`truthbox/answer/${role}`, { text: t, ts: Store.now() });
-    toast("已提交 💕");
+    withLoading(this, async () => {
+      await Store.update(`truthbox/answer/${role}`, { text: t, ts: Store.now() });
+      toast("已提交 💕");
+    }, "提交中…");
   };
 }
 

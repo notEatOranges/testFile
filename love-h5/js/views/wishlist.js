@@ -1,7 +1,7 @@
 /* 共同心愿清单：wishlist={id:{text,done,createdBy,completedBy,ts,doneTs}} */
 import { Store } from "../core/store.js";
 import { getRole } from "../core/room.js";
-import { escapeHtml, toast } from "../core/utils.js";
+import { escapeHtml, toast, withLoading } from "../core/utils.js";
 
 let unsub = null;
 
@@ -14,15 +14,16 @@ export function mount() {
       <button id="wishAdd" class="btn btn-primary">加</button>
     </div>`;
 
-  const add = async () => {
+  const doAdd = async () => {
     const inp = document.getElementById("wishInput");
     const t = inp.value.trim();
     if (!t) return;
     inp.value = "";
     await Store.push("wishlist", { text: t, done: false, createdBy: getRole(), completedBy: null, ts: Store.now(), doneTs: null });
   };
-  document.getElementById("wishAdd").onclick = add;
-  document.getElementById("wishInput").addEventListener("keydown", e => { if (e.key === "Enter") add(); });
+  const addBtn = document.getElementById("wishAdd");
+  addBtn.onclick = function () { withLoading(this, doAdd, "添加中…"); };
+  document.getElementById("wishInput").addEventListener("keydown", e => { if (e.key === "Enter") withLoading(addBtn, doAdd, "添加中…"); });
 
   unsub = Store.onList("wishlist", items => renderList(items));
 }

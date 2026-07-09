@@ -1,7 +1,7 @@
 /* 每日心情 + 悄悄话：value = mood/{today} = {boy:{emoji,whisper,ts}, girl:{...}} */
 import { Store } from "../core/store.js";
 import { getRole, getPeer } from "../core/room.js";
-import { todayStr, MOODS, roleFull, escapeHtml, toast } from "../core/utils.js";
+import { todayStr, MOODS, roleFull, escapeHtml, toast, withLoading } from "../core/utils.js";
 
 let unsub = null, picked = null;
 
@@ -43,11 +43,13 @@ export function mount() {
     document.getElementById("myEmoji").textContent = picked;
     document.getElementById("myLabel").textContent = (MOODS.find(m => m.emoji === picked) || {}).label || "";
   });
-  document.getElementById("moodSave").onclick = async () => {
+  document.getElementById("moodSave").onclick = function () {
     if (!picked) { toast("先选个心情呀～"); return; }
     const w = document.getElementById("whisper").value.trim();
-    await Store.update(`mood/${todayStr()}`, { [role]: { emoji: picked, whisper: w, ts: Store.now() } });
-    toast("已保存 💕 ta 能看到啦");
+    withLoading(this, async () => {
+      await Store.update(`mood/${todayStr()}`, { [role]: { emoji: picked, whisper: w, ts: Store.now() } });
+      toast("已保存 💕 ta 能看到啦");
+    }, "保存中…");
   };
   unsub = Store.onValue(`mood/${todayStr()}`, data => {
     if (data && data[role]) showMine(data[role]);

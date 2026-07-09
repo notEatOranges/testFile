@@ -65,13 +65,18 @@ export const Store = {
     localWrite(path, val ?? null);
   },
   async update(path, partial) {
-    if (mode === "supabase") return sb.client.rpc("merge_kv", { p_room: code, p_path: path, p_val: partial });
+    if (mode === "supabase") {
+      await sb.client.rpc("merge_kv", { p_room: code, p_path: path, p_val: partial });
+      sbEmit(path);
+      return;
+    }
     localWrite(path, { ...(getPath(path) || {}), ...partial });
   },
   async push(path, val) {
     if (mode === "supabase") {
       const id = uid("k");
       await sb.client.rpc("push_kv", { p_room: code, p_path: path, p_key: id, p_val: val });
+      sbEmit(path);
       return id;
     }
     const list = getPath(path) || {};
@@ -117,6 +122,16 @@ function toList(obj) {
 }
 
 /* ====================== Supabase 实现 ====================== */
+const sbSubs = new Map();   // path → Set<cb>：写入后主动重新拉取并通知本端订阅（不依赖 realtime）
+
+/** 写入后：对路径相交的订阅重新拉取并回调，保证「自己写自己立刻可见」 */
+function sbEmit(writtenPath) {
+  for (const [p, cbs] of sbSubs) {
+    if (writtenPath === p || writtenPath.startsWith(p + "/") || p.startsWith(writtenPath + "/")) {
+      sbGet(p).then(v => cbs.forEach(cb => cb(v))).catch(() => {});
+    }
+  }
+}
 async function sbGet(path) {
   const { data } = await sb.client.from(KV_TABLE)
     .select("value").eq("room", code).eq("path", path).maybeSingle();
@@ -125,11 +140,16 @@ async function sbGet(path) {
 async function sbSet(path, value) {
   await sb.client.from(KV_TABLE)
     .upsert({ room: code, path, value, ts: Date.now() }, { onConflict: "room,path" });
+  sbEmit(path);
 }
 async function sbRemove(path) {
   await sb.client.from(KV_TABLE).delete().eq("room", code).eq("path", path);
+  sbEmit(path);
 }
 function sbOnValue(path, cb) {
+  let set = sbSubs.get(path);
+  if (!set) { set = new Set(); sbSubs.set(path, set); }
+  set.add(cb);
   const filter = `room=eq.${code},path=eq.${path}`;
   const ch = sb.client.channel(`kv:${code}:${path}`)
     .on("postgres_changes", { event: "*", schema: "public", table: KV_TABLE, filter }, payload => {
@@ -137,7 +157,11 @@ function sbOnValue(path, cb) {
     })
     .subscribe();
   sbGet(path).then(v => cb(v));   // 立即回读当前值
-  return () => { try { sb.client.removeChannel(ch); } catch {} };
+  return () => {
+    set.delete(cb);
+    if (!set.size) sbSubs.delete(path);
+    try { sb.client.removeChannel(ch); } catch {}
+  };
 }
 
 /* ====================== 本地实现：内存树（与后端无关，预览用） ====================== */

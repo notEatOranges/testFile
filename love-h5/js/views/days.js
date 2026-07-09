@@ -1,6 +1,6 @@
 /* 在一起天数 + 纪念日倒计时：anniversary={startDate}, anniversary/events={id:{title,date,ts}} */
 import { Store } from "../core/store.js";
-import { daysBetween, daysUntil, escapeHtml, toast } from "../core/utils.js";
+import { daysBetween, daysUntil, escapeHtml, toast, withLoading } from "../core/utils.js";
 
 let u1 = null, u2 = null;
 
@@ -17,26 +17,30 @@ export function mount() {
       <button class="btn btn-primary btn-block mt8" id="evAdd">添加</button>
       <div class="section-title" style="margin-top:18px">💑 在一起的日子</div>
       <input id="startDate" class="input" type="date" />
-      <button class="btn btn-ghost btn-block mt8" id="startSave">保存起始日</button>
+      <button class="btn btn-primary btn-block mt8" id="startSave">保存起始日</button>
     </div>`;
 
   u1 = Store.onValue("anniversary", data => renderHero(data && data.startDate));
   u2 = Store.onList("anniversary/events", items => renderEvents(items));
 
-  document.getElementById("evAdd").onclick = async () => {
+  document.getElementById("evAdd").onclick = function () {
     const t = document.getElementById("evTitle").value.trim();
     const d = document.getElementById("evDate").value;
     if (!t || !d) { toast("填完整～"); return; }
-    await Store.push("anniversary/events", { title: t, date: d, ts: Store.now() });
-    document.getElementById("evTitle").value = "";
-    document.getElementById("evDate").value = "";
-    toast("已添加 🎉");
+    withLoading(this, async () => {
+      await Store.push("anniversary/events", { title: t, date: d, ts: Store.now() });
+      document.getElementById("evTitle").value = "";
+      document.getElementById("evDate").value = "";
+      toast("已添加 🎉");
+    }, "添加中…");
   };
-  document.getElementById("startSave").onclick = async () => {
+  document.getElementById("startSave").onclick = function () {
     const d = document.getElementById("startDate").value;
     if (!d) { toast("选个日期～"); return; }
-    await Store.update("anniversary", { startDate: d });
-    toast("已设置 ♥");
+    withLoading(this, async () => {
+      await Store.update("anniversary", { startDate: d });
+      toast("已设置 ♥");
+    }, "保存中…");
   };
 }
 
