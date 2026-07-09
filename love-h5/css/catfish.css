@@ -53,8 +53,6 @@ body {
 }
 .cf-p .cf-avatar.offline { opacity: 0.4; }
 .cf-p .cf-score { font-size: 20px; font-weight: 800; color: var(--primary); min-width: 28px; text-align: center; }
-#cfGirl { flex-direction: row-reverse; }
-#cfGirl .cf-score { text-align: center; }
 .cf-center {
   font-size: 13px; font-weight: 700; color: var(--text);
   padding: 5px 12px; border-radius: var(--radius-pill);
