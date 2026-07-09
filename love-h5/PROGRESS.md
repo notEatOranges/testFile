@@ -102,21 +102,34 @@ love-h5/
 
 ## 🐛 已知 Bug / 待办（按优先级）
 
-### B1 · 游戏联机未跑通（gameId = null 根因） ⚠️⚠️
-**现象**：sync.js 模块级 `gameId` 变量在 evaluate_script import 时返回 null。localStorage 里实际数据路径是 `games/catfish/null/players/girl`（gameId 为 null 而非 uid）。导致所有联机读写（broadcastPos / claimFish / joinGame）路径错误，双方无法同步。
+### B1 · 游戏联机未跑通（gameId = null 根因定位） ⚠️⚠️
 
-**根因分析**（排查中）：
-1. main.js `boot() → startFlow() → ensureGame()` 调用 sync.js 的 ensureGame，后者内部 `readLatest()` 用 `Store.onValue` 读取 `games/catfish/latest`。
-2.首次进入时 latest 不存在，应进入分支 `gameId = uid('g')` 并写 latest。但 localStorage 里 latest = `{}`（空对象），说明 `Store.set` 写入了空 latest 而非含 id 的 latest。
-3. 可能原因：`ensureGame` 内的 `readLatest` 返回 `undefined` → 条件 `cur && cur.id` 为 false → 走 else → `gameId = uid('g')` → `Store.set(...)` → **但 Store.set 本地模式 directly sets the value**。如果 set 的事务（upsert）还没写进去就返回，或异步时序问题，导致实际写的 latest 为空对象。
-4. `ensureGame` 前面有 `await Store.update('games/catfish/latest', {})`，这句把 latest 写成空对象！覆盖了后面的 set！
+**现象**：sync.js 模块级 `gameId` 变量为 null。localStorage 里实际数据路径是 `games/catfish/null/players/girl`。导致所有联机读写路径错误，双方无法同步。
 
-**修复方向**：sync.js `ensureGame` 删掉那条 `Store.update(latest, {})`，直接用 `readLatest` → 判断有无 id → 建或加入。`readLatest` 的 Promise 模式也需要重新评估（`Store.onValue` 回调同步触发一次再被 unsubscribe 关掉）。
+**根因已定位**：`sync.js` 的 `ensureGame()` 函数第 1 行写了 `await Store.update(`${GROOT}/latest`, {})` —— 这行把 `latest` 强行覆盖为空对象。随后 `readLatest()` 读到这个空对象 `{}`，条件 `cur && cur.id` 为 false，走到 else 分支设 `gameId = uid('g')` + `Store.set(latest, {id, ts})`。但 `Store.update(latest, {})` 先覆盖、`Store.set` 立即再写——**推测 update 写了空对象后 set 因为某些竞态/覆盖偏离没生效**，导致 latest 最终是 `{}`。
 
-### B2 · 男女头像位置交换（用户要求）
-用户说：**女生头像放 HUD 左边，男生放右边**，让布局呈 ♥ 爱心形状。
-**位置**：`catfish.html` 的 `.cf-players` 里两个 `.cf-p` 元素的顺序 + `catfish.css` 的 `#cfGirl` 样式。
-**修复**：HTML 里 boy 放右边、CSS 调方向。简单。
+**修复**（一行删除）：
+```diff
+ async function ensureGame() {
+-  await Store.update(`${GROOT}/latest`, {});   // ← 删掉这行！
+   const cur = await readLatest();
+   if (cur && cur.id) { gameId = cur.id; }
+   else { gameId = uid('g'); await Store.set(`${GROOT}/latest`, { id: gameId, ts: Store.now() }); }
+   return gameId;
+ }
+```
+
+另外 `readLatest()` 的实现用 `new Promise(resolve => Store.onValue(...))` 在本地模式下 onValue 会同步立即调用一次 cb 再返回 unsubscribe，所以 `off()` call + resolve 是正确的。但如果 `readLatest` 无法 resolve（云端模式异步），考虑加个 `setTimeout` 兜底。
+
+**修复完验证**：
+1. 删掉那行
+2. `python -m http.server 5517` → chrome 开两个 tab（普通+无痕）http://127.0.0.1:5517/love-h5/
+3. 各登录同房间号不同身份
+4. 第 1 个 tab 点"猫猫吃鱼"选模式；第 2 个 tab 同操作
+5. 验证：modal 消失、两只猫在 canvas、能移动吃鱼、HUD 分数变动
+
+### B2 · 男女头像位置 ✅ 已修复（2026-07-09）
+女生放 HUD 左边、男生放右边，形成 ♥ 爱心形状。catfish.html DOM 顺序 + catfish.css 已调。
 
 ### B3 · heart.html 容器页待建
 router.js 已引用 `./heart.html`，heart-3d.html 副本已有主题桥接。只需建 heart.html：顶部 44px 返回+主题浮层，下方 `<iframe src="./heart-3d.html">` 全屏。几十行。

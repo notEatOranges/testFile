@@ -24,13 +24,11 @@ let unsubs = [];        // 所有 onValue 订阅，离开时统一 off
 
 export function gamePath(sub = "") { return sub ? `${GROOT}/${gameId}/${sub}` : `${GROOT}/${gameId}`; }
 
-/** 开局：拿一个 gameId。对等无主冲突，谁先 push 谁给 id；双方都监听同一个 latest 指针。 */
+/** 开局：拿一个 gameId。latest 指针存当前 gameId，谁进入都读它。
+   如果没有（没人开过），自己建一个。 */
 export async function ensureGame() {
   myRole = getRole();
   peer = getPeer();
-  // 用「最近一局」语义：latest 固定路径存当前 gameId，谁进入都读它。
-  // 如果没有（first 没人开过），自己建一个。
-  let snap = await Store.update(`${GROOT}/latest`, {});  // 触发订阅，确保 cb 收到
   const cur = await readLatest();
   if (cur && cur.id) {
     gameId = cur.id;
