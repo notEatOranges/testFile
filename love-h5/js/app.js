@@ -27,6 +27,10 @@ function defineViews() {
   router.define("lobby",    { title: "游戏大厅",   onEnter: lobby.mount,    onLeave: lobby.unmount });
   router.define("heart",    { title: "3D 爱心",    iframe: "./heart.html",   heart: true });
   router.define("catfish",  { title: "猫猫吃鱼",   iframe: "./catfish.html" });
+  router.define("snake",    { title: "贪吃蛇",     iframe: "./snake.html" });
+  router.define("memory",   { title: "记忆配对",   iframe: "./memory.html" });
+  router.define("quiz",     { title: "默契问答",   iframe: "./quiz.html" });
+  router.define("trapcat",  { title: "围住神经猫", iframe: "./trapcat.html" });
 }
 
 let pickedRole = null;

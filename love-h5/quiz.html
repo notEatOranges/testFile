@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<title>默契问答 💬</title>
+<script>(function(){try{var t=localStorage.getItem('lh5-theme');if(!t||['sakura','mint','lavender','peach','babyblue','lemon','berry','cocoa'].indexOf(t)<0)t='sakura';document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+<link rel="stylesheet" href="./css/theme.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css" />
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body { height:100%; }
+  body { font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif; color:var(--text);
+    background:linear-gradient(160deg,var(--bg-1),var(--bg-3)); user-select:none; }
+  .top { position:sticky; top:0; z-index:10; display:flex; align-items:center; gap:10px;
+    padding:calc(10px + var(--safe-top)) 14px 10px; background:color-mix(in srgb,var(--bg-1) 78%,transparent);
+    backdrop-filter:blur(12px); border-bottom:1px solid var(--border); }
+  .top button { width:38px; height:38px; border-radius:50%; border:none; background:var(--card);
+    box-shadow:0 2px 10px var(--card-shadow); display:grid; place-items:center; font-size:20px; cursor:pointer; }
+  .top .tt { font-weight:800; font-size:17px; }
+  .pad { padding:16px 16px calc(28px + var(--safe-bottom)); max-width:520px; margin:0 auto; }
+  .q { background:var(--card); border-radius:var(--radius); box-shadow:0 3px 14px var(--card-shadow);
+    padding:14px 16px; margin-bottom:12px; }
+  .q .qt { font-weight:700; font-size:15px; margin-bottom:10px; }
+  .opts { display:grid; gap:7px; }
+  .opt { display:flex; align-items:center; gap:9px; padding:9px 12px; border:1.5px solid var(--border);
+    border-radius:var(--radius-sm); cursor:pointer; font-size:14px; transition:border var(--transition),background var(--transition); }
+  .opt.sel { border-color:var(--primary); background:color-mix(in srgb,var(--primary) 12%,var(--card)); }
+  .opt .dot { width:18px; height:18px; border-radius:50%; border:2px solid var(--border); flex:none; display:grid; place-items:center; }
+  .opt.sel .dot { border-color:var(--primary); background:var(--primary); color:#fff; font-size:11px; }
+  .opt.sel .dot:after { content:"✓"; }
+  .btn { width:100%; padding:13px; border:none; border-radius:var(--radius-pill); font-weight:700; font-size:15px;
+    background:linear-gradient(135deg,var(--primary),var(--primary-deep)); color:#fff; box-shadow:0 6px 18px var(--card-shadow); cursor:pointer; margin-top:6px; }
+  .btn:disabled { opacity:0.6; }
+  .score-card { background:linear-gradient(135deg,var(--primary-soft),var(--accent)); color:#fff; border-radius:var(--radius);
+    padding:20px; text-align:center; box-shadow:0 6px 22px var(--card-shadow); margin-bottom:14px; }
+  .score-card .big { font-size:44px; font-weight:800; line-height:1; }
+  .score-card .lbl { font-size:13px; opacity:.92; margin-top:6px; }
+  .compare { background:var(--card); border-radius:var(--radius); box-shadow:0 3px 14px var(--card-shadow); padding:14px 16px; margin-bottom:12px; font-size:13px; }
+  .compare .row { display:flex; justify-content:space-between; gap:10px; padding:7px 0; border-bottom:1px solid var(--border); }
+  .compare .row:last-child { border-bottom:none; }
+  .compare .me,.compare .ta { flex:1; text-align:center; }
+  .compare .me b,.compare .ta b { display:block; font-size:11px; color:var(--text-soft); margin-bottom:2px; font-weight:600; }
+  .match { color:var(--primary); font-weight:800; }
+  .muted { color:var(--text-soft); font-size:13px; text-align:center; padding:18px; }
+  .spin { display:inline-block; animation:sp .8s linear infinite; }
+  @keyframes sp { to { transform:rotate(360deg); } }
+</style>
+</head>
+<body>
+<div class="top">
+  <button id="back" aria-label="返回"><i class="ri-arrow-left-s-line"></i></button>
+  <div class="tt">默契问答</div>
+</div>
+<div class="pad" id="root"></div>
+<script type="module">
+import { Store } from "./js/core/store.js";
+import { getRole, getPeer } from "./js/core/room.js";
+import { toast } from "./js/core/utils.js";
+
+document.getElementById("back").onclick = function(){
+  if (window.parent && window.parent !== window) window.parent.postMessage({type:"cf-go-home"},"*");
+  else location.replace("./index.html");
+};
+
+const role = getRole(), peer = getPeer();
+const ROLE_NAME = { boy:"男生", girl:"女生" };
+const QUESTIONS = [
+  { q:"周末最想一起做什么？", o:["宅家看剧","出门逛街","去旅行","一起运动"] },
+  { q:"谁更爱撒娇？", o:["我","ta","差不多","都不"] },
+  { q:"最喜欢的表达爱的方式？", o:["抱抱亲亲","说情话","送礼物","默默陪伴"] },
+  { q:"吵架后谁先低头？", o:["我","ta","轮流","先冷战"] },
+  { q:"理想约会餐？", o:["火锅","日料","西餐","路边摊"] },
+  { q:"谁更爱睡懒觉？", o:["我","ta","一样能睡","都早起"] },
+];
+
+const root = document.getElementById("root");
+let picks = {};   // {qIndex: optionIndex}
+let lastData = null, unsub = null;
+
+function renderForm(){
+  root.innerHTML = QUESTIONS.map((q,i)=>`
+    <div class="q">
+      <div class="qt">${i+1}. ${q.q}</div>
+      <div class="opts" data-i="${i}">
+        ${q.o.map((o,j)=>`<div class="opt${picks[i]===j?' sel':''}" data-j="${j}"><span class="dot"></span>${o}</div>`).join("")}
+      </div>
+    </div>`).join("") + `<button class="btn" id="submit">提交答案</button>`;
+  root.querySelectorAll(".opts").forEach(box=>{
+    const i = +box.dataset.i;
+    box.querySelectorAll(".opt").forEach(op=>op.onclick=()=>{ picks[i] = +op.dataset.j; op.parentElement.querySelectorAll(".opt").forEach(x=>x.classList.remove("sel")); op.classList.add("sel"); });
+  });
+  document.getElementById("submit").onclick = submit;
+}
+
+async function submit(){
+  if (Object.keys(picks).length < QUESTIONS.length) { toast("每题都选一下～"); return; }
+  const btn = document.getElementById("submit");
+  btn.disabled = true; btn.innerHTML = '<span class="spin"><i class="ri-loader-4-line"></i></span> 提交中…';
+  try {
+    await Store.update("quiz", { [role]: { answers: picks, ts: Store.now() } });
+    toast("已提交 💕 等 ta 也答完就能看默契分");
+  } catch(e){ toast("提交失败，重试～"); }
+  btn.disabled = false; btn.textContent = "提交答案";
+}
+
+function renderResult(data){
+  const me = data && data[role], ta = data && data[peer];
+  if (!me) { renderForm(); return; }            // 我还没答 → 表单
+  if (!ta) {                                     // 我答了，对方没答
+    root.innerHTML = `<div class="score-card"><div class="big">⏳</div><div class="lbl">等 ${ROLE_NAME[peer]} 答完就能看默契分啦</div></div>
+      <button class="btn" id="redo">重答</button>`;
+    document.getElementById("redo").onclick = ()=>{ picks = {}; renderForm(); };
+    return;
+  }
+  // 都答了 → 算分
+  let same = 0; const rows = QUESTIONS.map((q,i)=>{
+    const a = me.answers[i], b = ta.answers[i]; const m = a===b; if(m) same++;
+    return `<div class="row"><div class="me"><b>我</b>${q.o[a]}</div>${m?'<span class="match">✓</span>':'<span>✗</span>'}<div class="ta"><b>ta</b>${q.o[b]}</div></div>`;
+  }).join("");
+  const pct = Math.round(same / QUESTIONS.length * 100);
+  const title = pct>=80?"心有灵犀 💞":pct>=50?"还挺默契 🙂":"继续磨合 💪";
+  root.innerHTML = `<div class="score-card"><div class="big">${pct}%</div><div class="lbl">${title} · ${same}/${QUESTIONS.length} 题一致</div></div>
+    <div class="compare">${rows}</div>
+    <button class="btn" id="redo">重新作答</button>`;
+  document.getElementById("redo").onclick = ()=>{ picks = JSON.parse(JSON.stringify(me.answers)); renderForm(); };
+}
+
+unsub = Store.onValue("quiz", data => { lastData = data; renderResult(data); });
+// 兜底：若订阅没立即回填
+setTimeout(()=>{ if(!lastData) renderResult(null); }, 500);
+</script>
+</body>
+</html>

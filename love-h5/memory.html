@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<title>记忆配对 🃏</title>
+<script>(function(){try{var t=localStorage.getItem('lh5-theme');if(!t||['sakura','mint','lavender','peach','babyblue','lemon','berry','cocoa'].indexOf(t)<0)t='sakura';document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+<link rel="stylesheet" href="./css/theme.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css" />
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body { height:100%; overflow:hidden; }
+  body { font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif; color:var(--text);
+    background:linear-gradient(160deg,var(--bg-1),var(--bg-3)); user-select:none; }
+  .top { position:fixed; top:0; left:0; right:0; z-index:10; display:flex; align-items:center; gap:10px;
+    padding:calc(10px + var(--safe-top)) 14px 10px; background:color-mix(in srgb,var(--bg-1) 75%,transparent);
+    backdrop-filter:blur(12px); border-bottom:1px solid var(--border); }
+  .top button { width:38px; height:38px; border-radius:50%; border:none; background:var(--card);
+    box-shadow:0 2px 10px var(--card-shadow); display:grid; place-items:center; font-size:20px; cursor:pointer; }
+  .top .tt { font-weight:800; font-size:17px; }
+  .stat { margin-left:auto; display:flex; gap:14px; font-size:13px; color:var(--text-soft); font-weight:700; }
+  .stat b { color:var(--primary); font-size:16px; }
+  .wrap { position:fixed; top:calc(56px + var(--safe-top)); left:0; right:0; bottom:0;
+    display:flex; align-items:center; justify-content:center; padding:14px; }
+  .grid { display:grid; grid-template-columns:repeat(4,1fr); gap:9px; width:100%; max-width:380px; }
+  .card { aspect-ratio:1; border-radius:var(--radius); perspective:600px; cursor:pointer; }
+  .inner { position:relative; width:100%; height:100%; transition:transform .4s; transform-style:preserve-3d; }
+  .card.flip .inner, .card.done .inner { transform:rotateY(180deg); }
+  .face { position:absolute; inset:0; border-radius:var(--radius); display:grid; place-items:center;
+    font-size:30px; backface-visibility:hidden; -webkit-backface-visibility:hidden; box-shadow:0 3px 12px var(--card-shadow); }
+  .front { background:linear-gradient(135deg,var(--primary),var(--primary-deep)); color:#fff; font-size:24px; }
+  .back { background:var(--card); transform:rotateY(180deg); }
+  .card.done .back { background:color-mix(in srgb,var(--primary) 14%,var(--card)); }
+  .overlay { position:fixed; inset:0; z-index:20; display:flex; align-items:center; justify-content:center;
+    background:rgba(0,0,0,0.35); backdrop-filter:blur(3px); }
+  .card-modal { background:var(--card); border-radius:var(--radius); box-shadow:0 12px 40px var(--card-shadow);
+    padding:26px 22px; width:78%; max-width:300px; text-align:center; }
+  .card-modal h2 { font-size:20px; margin-bottom:8px; }
+  .card-modal p { color:var(--text-soft); font-size:14px; margin-bottom:14px; }
+  .big { font-size:28px; font-weight:800; color:var(--primary); margin:4px 0 16px; }
+  .btn { width:100%; padding:12px; border:none; border-radius:var(--radius-pill); font-weight:700; font-size:15px;
+    background:linear-gradient(135deg,var(--primary),var(--primary-deep)); color:#fff; box-shadow:0 6px 18px var(--card-shadow); cursor:pointer; }
+</style>
+</head>
+<body>
+<div class="top">
+  <button id="back" aria-label="返回"><i class="ri-arrow-left-s-line"></i></button>
+  <div class="tt">记忆配对</div>
+  <div class="stat"><span>步数 <b id="moves">0</b></span><span><b id="pairs">0</b>/8</span></div>
+</div>
+<div class="wrap"><div class="grid" id="grid"></div></div>
+<div class="overlay" id="win" style="display:none"><div class="card-modal">
+  <h2>🎉 全部配对！</h2><div class="big" id="result"></div>
+  <button class="btn" id="again">再来一局</button>
+</div></div>
+<script>
+document.getElementById("back").onclick = function(){
+  if (window.parent && window.parent !== window) window.parent.postMessage({type:"cf-go-home"},"*");
+  else location.replace("./index.html");
+};
+(function(){
+  var EMOJIS = ["💕","🌹","🐱","💑","💋","🎁","🌟","🍰"];
+  var grid = document.getElementById("grid"), movesEl = document.getElementById("moves"), pairsEl = document.getElementById("pairs");
+  var first = null, lock = false, moves = 0, pairs = 0, t0 = 0, timer = null;
+  function shuffle(a){ for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
+  function build(){
+    grid.innerHTML = ""; moves=0; pairs=0; movesEl.textContent="0"; pairsEl.textContent="0";
+    first=null; lock=false;
+    var deck = shuffle(EMOJIS.concat(EMOJIS)).map(function(e,i){ return {id:i, e:e}; });
+    deck.forEach(function(c){
+      var el = document.createElement("div"); el.className="card"; el.dataset.e=c.e;
+      el.innerHTML = '<div class="inner"><div class="face front">❤</div><div class="face back">'+c.e+'</div></div>';
+      el.onclick = function(){ flip(el); };
+      grid.appendChild(el);
+    });
+    t0 = Date.now();
+  }
+  function flip(el){
+    if(lock || el.classList.contains("flip") || el.classList.contains("done")) return;
+    el.classList.add("flip");
+    if(!first){ first = el; return; }
+    moves++; movesEl.textContent = moves;
+    if(first.dataset.e === el.dataset.e){
+      first.classList.add("done"); el.classList.add("done");
+      first=null; pairs++; pairsEl.textContent=pairs;
+      if(pairs===EMOJIS.length){ var sec=Math.round((Date.now()-t0)/1000); document.getElementById("result").textContent=sec+" 秒 · "+moves+" 步"; document.getElementById("win").style.display="flex"; }
+    } else {
+      lock = true; var a = first; first = null;
+      setTimeout(function(){ a.classList.remove("flip"); el.classList.remove("flip"); lock=false; }, 650);
+    }
+  }
+  document.getElementById("again").onclick = function(){ document.getElementById("win").style.display="none"; build(); };
+  build();
+})();
+</script>
+</body>
+</html>
