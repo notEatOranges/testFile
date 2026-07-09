@@ -31,6 +31,10 @@ function defineViews() {
   router.define("memory",   { title: "记忆配对",   iframe: "./memory.html" });
   router.define("quiz",     { title: "默契问答",   iframe: "./quiz.html" });
   router.define("trapcat",  { title: "围住神经猫", iframe: "./trapcat.html" });
+  router.define("tetris",   { title: "俄罗斯方块", iframe: "./tetris.html" });
+  router.define("flyer",    { title: "飞行器",     iframe: "./flyer.html" });
+  router.define("synctap",  { title: "心动节拍",   iframe: "./synctap.html" });
+  router.define("draw",     { title: "你画我猜",   iframe: "./draw.html" });
 }
 
 let pickedRole = null;
@@ -170,9 +174,9 @@ async function boot() {
     defineViews();
     bindOnboarding();
 
-    // 监听 catfish / heart iframe 发来的 go-home 消息
+    // 监听游戏 iframe 发来的退出消息 → 回游戏大厅（不是首页）
     window.addEventListener("message", e => {
-      if (e.data && e.data.type === "cf-go-home") router.go("home");
+      if (e.data && e.data.type === "cf-go-home") router.go("lobby");
     });
     await Store.init();
 

@@ -1,6 +1,7 @@
 /* 在一起天数 + 纪念日倒计时：anniversary={startDate}, anniversary/events={id:{title,date,ts}} */
 import { Store } from "../core/store.js";
 import { daysBetween, daysUntil, escapeHtml, toast, withLoading } from "../core/utils.js";
+import { showConfirm } from "../core/modal.js";
 
 let u1 = null, u2 = null;
 
@@ -61,8 +62,18 @@ function renderEvents(items) {
     return `<div class="anniv-card">
       <div class="count ${past ? "past" : ""}">${Math.abs(n)}<div style="font-size:11px">${past ? "天前" : "天后"}</div></div>
       <div><div class="ttl">${escapeHtml(e.title)}</div><div class="dt">${e.date}</div></div>
+      <button class="anniv-del" data-id="${e.id}" aria-label="删除"><i class="ri-delete-bin-line"></i></button>
     </div>`;
   }).join("");
+  el.querySelectorAll(".anniv-del").forEach(btn => btn.onclick = async function () {
+    const id = btn.dataset.id;
+    const card = btn.closest(".anniv-card");
+    const title = card && card.querySelector(".ttl") ? card.querySelector(".ttl").textContent : "该纪念日";
+    const ok = await showConfirm({ title: "删除纪念日", message: `确定删除「${title}」吗？`, okText: "删除", cancelText: "取消", danger: true });
+    if (!ok) return;
+    await withLoading(this, () => Store.transaction("anniversary/events", cur => { if (cur && cur[id]) delete cur[id]; return cur; }), "");
+    toast("已删除");
+  });
 }
 
 export function unmount() { u1 && u1(); u2 && u2(); u1 = u2 = null; }

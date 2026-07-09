@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<title>你画我猜 🎨</title>
+<script>(function(){try{var t=localStorage.getItem('lh5-theme');if(!t||['sakura','mint','lavender','peach','babyblue','lemon','berry','cocoa'].indexOf(t)<0)t='sakura';document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+<link rel="stylesheet" href="./css/theme.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css" />
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body { height:100%; overflow:hidden; }
+  body { font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif; color:var(--text);
+    background:linear-gradient(160deg,var(--bg-1),var(--bg-3)); user-select:none; touch-action:none; }
+  .top { position:fixed; top:0; left:0; right:0; z-index:10; display:flex; align-items:center; gap:10px;
+    padding:calc(10px + var(--safe-top)) 14px 10px; background:color-mix(in srgb,var(--bg-1) 75%,transparent);
+    backdrop-filter:blur(12px); border-bottom:1px solid var(--border); }
+  .top button { width:38px; height:38px; border-radius:50%; border:none; background:var(--card);
+    box-shadow:0 2px 10px var(--card-shadow); display:grid; place-items:center; font-size:20px; cursor:pointer; }
+  .top .tt { font-weight:800; font-size:17px; }
+  .top .right { margin-left:auto; display:flex; gap:8px; }
+  .top .right button { width:auto; padding:0 14px; border-radius:var(--radius-pill); font-size:13px; font-weight:700; color:var(--primary); }
+  canvas#board { position:fixed; top:calc(56px + var(--safe-top)); left:0; right:0; bottom:calc(72px + var(--safe-bottom));
+    width:100%; background:var(--card); box-shadow:inset 0 0 0 1px var(--border); }
+  .tools { position:fixed; left:0; right:0; bottom:0; height:calc(72px + var(--safe-bottom)); padding-bottom:var(--safe-bottom);
+    display:flex; align-items:center; gap:12px; padding:0 14px; background:color-mix(in srgb,var(--bg-1) 85%,transparent);
+    backdrop-filter:blur(10px); border-top:1px solid var(--border); }
+  .swatches { display:flex; gap:8px; }
+  .sw { width:26px; height:26px; border-radius:50%; border:2px solid var(--border); cursor:pointer; }
+  .sw.sel { border-color:var(--text); transform:scale(1.1); }
+  .sizes { display:flex; gap:8px; align-items:center; }
+  .sz { width:28px; height:28px; border-radius:50%; display:grid; place-items:center; cursor:pointer; }
+  .sz.sel { background:var(--chip); }
+  .sz i { background:var(--text); border-radius:50%; }
+  .tool-btn { margin-left:auto; padding:8px 14px; border-radius:var(--radius-pill); background:var(--card); border:none;
+    box-shadow:0 2px 10px var(--card-shadow); font-weight:700; font-size:13px; color:var(--primary-deep); cursor:pointer; }
+</style>
+</head>
+<body>
+<div class="top">
+  <button id="back" aria-label="返回"><i class="ri-arrow-left-s-line"></i></button>
+  <div class="tt">你画我猜</div>
+  <div class="right"><button id="eraseBtn"><i class="ri-eraser-line"></i> 橡皮</button></div>
+</div>
+<canvas id="board"></canvas>
+<div class="tools">
+  <div class="swatches" id="swatches"></div>
+  <div class="sizes" id="sizes"></div>
+  <button class="tool-btn" id="clearBtn">清空</button>
+</div>
+<script>
+document.getElementById("back").onclick = function(){
+  if (window.parent && window.parent !== window) window.parent.postMessage({type:"cf-go-home"},"*");
+  else location.replace("./index.html");
+};
+(function(){
+  var COLORS=["#ff7aa2","#5bb89e","#9b7fd4","#6db4e8","#e8b94d","#e87090","#3d3553","#ffffff"];
+  var SIZES=[3,6,10];
+  var cur={ color: COLORS[0], size: SIZES[1], erase:false };
+  var bd=document.getElementById("board"), ctx=bd.getContext("2d");
+  function resize(){ var dpr=Math.min(devicePixelRatio||1,2);
+    var w=bd.clientWidth, h=bd.clientHeight; var img=bd.width?ctx.getImageData(0,0,bd.width,bd.height):null;
+    bd.width=w*dpr; bd.height=h*dpr; ctx.setTransform(dpr,0,0,dpr,0,0); ctx.lineCap="round"; ctx.lineJoin="round";
+    if(img){ /* resize 丢失，简化：不还原 */ } fillBg(); }
+  function fillBg(){ ctx.save(); ctx.fillStyle=getComputedStyle(document.documentElement).getPropertyValue("--card").trim()||"#fff";
+    ctx.fillRect(0,0,bd.clientWidth,bd.clientHeight); ctx.restore(); }
+  // 构建 UI
+  var swEl=document.getElementById("swatches");
+  COLORS.forEach(function(c,i){ var d=document.createElement("div"); d.className="sw"+(i===0?" sel":""); d.style.background=c;
+    d.onclick=function(){ cur.color=c; cur.erase=false; swEl.querySelectorAll(".sw").forEach(x=>x.classList.remove("sel")); d.classList.add("sel"); sizesUpdate(); eraseUpdate(); }; swEl.appendChild(d); });
+  var szEl=document.getElementById("sizes");
+  function sizesUpdate(){ szEl.innerHTML=""; SIZES.forEach(function(s){ var d=document.createElement("div"); d.className="sz"+(s===cur.size?" sel":"");
+    var dot=document.createElement("i"); dot.style.width=s*1.6+"px"; dot.style.height=s*1.6+"px"; d.appendChild(dot);
+    d.onclick=function(){ cur.size=s; sizesUpdate(); }; szEl.appendChild(d); }); }
+  sizesUpdate();
+  var eraseBtn=document.getElementById("eraseBtn");
+  function eraseUpdate(){ eraseBtn.style.opacity = cur.erase?1:0.5; }
+  eraseBtn.style.opacity=0.5;
+  eraseBtn.onclick=function(){ cur.erase=!cur.erase; eraseUpdate(); if(cur.erase) swEl.querySelectorAll(".sw").forEach(x=>x.classList.remove("sel")); };
+  document.getElementById("clearBtn").onclick=fillBg;
+  // 绘制
+  var drawing=false, lx,ly;
+  function pos(e){ var r=bd.getBoundingClientRect(); return {x:e.clientX-r.left, y:e.clientY-r.top}; }
+  function down(e){ e.preventDefault(); drawing=true; var p=pos(e); lx=p.x; ly=p.y; }
+  function move(e){ if(!drawing) return; e.preventDefault(); var p=pos(e);
+    ctx.strokeStyle = cur.erase ? (getComputedStyle(document.documentElement).getPropertyValue("--card").trim()||"#fff") : cur.color;
+    ctx.lineWidth = cur.erase ? cur.size*3 : cur.size;
+    ctx.beginPath(); ctx.moveTo(lx,ly); ctx.lineTo(p.x,p.y); ctx.stroke(); lx=p.x; ly=p.y; }
+  function up(){ drawing=false; }
+  bd.addEventListener("pointerdown",down); bd.addEventListener("pointermove",move);
+  addEventListener("pointerup",up); addEventListener("pointercancel",up);
+  resize(); addEventListener("resize",resize);
+})();
+</script>
+</body>
+</html>

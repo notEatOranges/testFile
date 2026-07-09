@@ -60,6 +60,11 @@ img { display: block; max-width: 100%; }
   color: var(--text); animation: fadeIn 0.2s ease;
 }
 .view-loading .splash-logo { font-size: 48px; margin-bottom: 16px; }
+/* logo SVG 尺寸（彩色小房子+心，替代 emoji） */
+.onboarding .logo svg { width: 76px; height: 76px; }
+.splash-logo svg { width: 66px; height: 66px; }
+.view-loading .splash-logo svg { width: 56px; height: 56px; }
+.logo svg, .splash-logo svg { display: block; }
 
 /* —— 顶部栏 —— */
 .topbar {

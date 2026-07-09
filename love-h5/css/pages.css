@@ -91,10 +91,14 @@
 .days-hero .unit { font-size: 16px; opacity: .95; }
 .days-hero .since { font-size: 12.5px; opacity: .9; margin-top: 10px; }
 .anniv-card { display: flex; align-items: center; gap: 12px; padding: 14px; background: var(--card); border-radius: var(--radius-sm); box-shadow: 0 3px 12px var(--card-shadow); margin-bottom: 10px; }
-.anniv-card .count { font-size: 26px; font-weight: 800; color: var(--primary); min-width: 54px; text-align: center; }
+.anniv-card .count { font-size: 26px; font-weight: 800; color: var(--primary); min-width: 54px; text-align: center; flex: none; }
 .anniv-card .count.past { color: var(--text-soft); }
+.anniv-card > div:not(.count) { flex: 1; min-width: 0; }
 .anniv-card .ttl { font-weight: 600; }
 .anniv-card .dt { font-size: 12px; color: var(--text-soft); }
+.anniv-del { flex: none; width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center;
+  color: var(--text-soft); background: transparent; font-size: 17px; cursor: pointer; }
+.anniv-del:active { background: var(--chip); color: var(--primary-deep); }
 
 /* —— 心愿清单（紧凑项 + 底部固定输入栏，圆角统一）—— */
 /* 整页填满：列表内部滚动，输入栏 flex:none 钉底（同聊天布局，比 sticky 稳） */

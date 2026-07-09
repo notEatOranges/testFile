@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<title>心动节拍 🎵</title>
+<script>(function(){try{var t=localStorage.getItem('lh5-theme');if(!t||['sakura','mint','lavender','peach','babyblue','lemon','berry','cocoa'].indexOf(t)<0)t='sakura';document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+<link rel="stylesheet" href="./css/theme.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/remixicon@4.5.0/fonts/remixicon.css" />
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body { height:100%; overflow:hidden; }
+  body { font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif; color:var(--text);
+    background:linear-gradient(160deg,var(--bg-1),var(--bg-3)); user-select:none; touch-action:none; }
+  .top { position:fixed; top:0; left:0; right:0; z-index:10; display:flex; align-items:center; gap:10px;
+    padding:calc(10px + var(--safe-top)) 14px 10px; background:color-mix(in srgb,var(--bg-1) 75%,transparent);
+    backdrop-filter:blur(12px); border-bottom:1px solid var(--border); }
+  .top button { width:38px; height:38px; border-radius:50%; border:none; background:var(--card);
+    box-shadow:0 2px 10px var(--card-shadow); display:grid; place-items:center; font-size:20px; cursor:pointer; }
+  .top .tt { font-weight:800; font-size:17px; }
+  .stat { margin-left:auto; display:flex; gap:14px; font-size:13px; color:var(--text-soft); font-weight:700; }
+  .stat b { color:var(--primary); font-size:16px; }
+  canvas { position:fixed; inset:0; width:100%; height:100%; display:block; }
+  .judge { position:fixed; left:50%; top:62%; transform:translate(-50%,0); z-index:6; font-size:26px; font-weight:800;
+    color:var(--primary); pointer-events:none; opacity:0; transition:opacity .15s; }
+  .overlay { position:fixed; inset:0; z-index:20; display:flex; align-items:center; justify-content:center;
+    background:rgba(0,0,0,0.35); backdrop-filter:blur(3px); }
+  .card-modal { background:var(--card); border-radius:var(--radius); box-shadow:0 12px 40px var(--card-shadow);
+    padding:26px 22px; width:78%; max-width:300px; text-align:center; }
+  .card-modal h2 { font-size:20px; margin-bottom:8px; }
+  .card-modal p { color:var(--text-soft); font-size:13.5px; margin-bottom:14px; }
+  .big { font-size:30px; font-weight:800; color:var(--primary); margin:4px 0 16px; }
+  .btn { width:100%; padding:12px; border:none; border-radius:var(--radius-pill); font-weight:700; font-size:15px;
+    background:linear-gradient(135deg,var(--primary),var(--primary-deep)); color:#fff; box-shadow:0 6px 18px var(--card-shadow); cursor:pointer; }
+</style>
+</head>
+<body>
+<div class="top">
+  <button id="back" aria-label="返回"><i class="ri-arrow-left-s-line"></i></button>
+  <div class="tt">心动节拍</div>
+  <div class="stat"><span>连击 <b id="combo">0</b></span><span><b id="score">0</b></span></div>
+</div>
+<canvas id="c"></canvas>
+<div class="judge" id="judge"></div>
+<div class="overlay" id="start"><div class="card-modal">
+  <h2>🎵 心动节拍</h2><p>❤️ 从上落到底部判定线时点击屏幕。越准连击越高！</p>
+  <button class="btn" id="go">开始</button>
+</div></div>
+<div class="overlay" id="over" style="display:none"><div class="card-modal">
+  <h2>💔 漏太多啦</h2><div class="big" id="final">0</div>
+  <button class="btn" id="again">再来</button>
+  <button class="btn" style="background:var(--card);color:var(--text-soft);box-shadow:0 2px 10px var(--card-shadow);margin-top:8px" onclick="document.getElementById('back').click()">退出游戏</button>
+</div></div>
+<script>
+document.getElementById("back").onclick = function(){
+  if (window.parent && window.parent !== window) window.parent.postMessage({type:"cf-go-home"},"*");
+  else location.replace("./index.html");
+};
+(function(){
+  var cv=document.getElementById("c"), ctx=cv.getContext("2d");
+  var W,H,LINE; function resize(){ var dpr=Math.min(devicePixelRatio||1,2); W=cv.clientWidth;H=cv.clientHeight;
+    cv.width=W*dpr;cv.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0); LINE=H*0.78; }
+  resize(); addEventListener("resize",resize);
+  function color(v,f){ return getComputedStyle(document.documentElement).getPropertyValue(v).trim()||f; }
+  function snap(){ return { primary:color("--primary","#ff7aa2"), primaryDeep:color("--primary-deep","#e85a86"),
+    accent:color("--accent","#ff9eb5"), card:color("--card","#fff"), text:color("--text","#333") }; }
+  var th=snap();
+  var beats=[], lastSpawn=0, interval=850, fall=0, score=0, combo=0, maxMiss=8, miss=0, alive=false, raf, lastTs=0;
+  var judge=document.getElementById("judge");
+  function spawn(){ beats.push({ y: -20, hit:false }); }
+  function showJudge(t,col){ judge.textContent=t; judge.style.color=col; judge.style.opacity=1; setTimeout(()=>judge.style.opacity=0,180); }
+  function frame(ts){
+    if(!lastTs)lastTs=ts; var dt=Math.min(0.05,(ts-lastTs)/1000); lastTs=ts;
+    if(alive){
+      if(ts-lastSpawn>interval){ lastSpawn=ts; spawn(); if(interval>480) interval-=6; }
+      beats.forEach(b=>{ if(!b.hit) b.y += (LINE+40)*dt; });   // ~下落
+      // 漏过判定线
+      beats.forEach(b=>{ if(!b.hit && b.y>LINE+34){ b.hit=true; b.miss=true; combo=0; miss++; document.getElementById("combo").textContent=0;
+        showJudge("✗","#999"); if(miss>=maxMiss) over(); } });
+      beats = beats.filter(b=>b.y<LINE+60);
+    }
+    draw(ts);
+    raf=requestAnimationFrame(frame);
+  }
+  function draw(ts){
+    ctx.clearRect(0,0,W,H);
+    // 判定线
+    ctx.strokeStyle=th.primaryDeep; ctx.lineWidth=3; ctx.globalAlpha=0.7;
+    ctx.beginPath(); ctx.moveTo(0,LINE); ctx.lineTo(W,LINE); ctx.stroke(); ctx.globalAlpha=1;
+    // 心跳脉冲
+    var pulse = 1 + 0.04*Math.sin(ts/200);
+    beats.forEach(b=>{ var r=18*pulse;
+      ctx.beginPath(); ctx.arc(W/2,b.y,r,0,Math.PI*2); ctx.fillStyle = b.miss? "rgba(150,150,150,0.4)":th.primary; ctx.fill();
+      ctx.font=(r*1.3)+"px serif"; ctx.textAlign="center"; ctx.textBaseline="middle"; ctx.globalAlpha=b.miss?0.5:1;
+      ctx.fillText("❤️",W/2,b.y); ctx.globalAlpha=1; });
+  }
+  function tap(){
+    if(!alive) return;
+    // 找最接近判定线的未击中节拍
+    var best=null, bd=1e9; beats.forEach(b=>{ if(b.hit) return; var d=Math.abs(b.y-LINE); if(d<bd){bd=d;best=b;} });
+    if(!best){ return; }
+    best.hit=true;
+    if(bd<14){ combo++; score+=10+combo; showJudge("完美!",th.primaryDeep); }
+    else if(bd<30){ combo++; score+=6+combo; showJudge("很好",th.primary); }
+    else if(bd<46){ score+=2; showJudge("一般",th.accent); }
+    else { best.miss=true; combo=0; miss++; showJudge("✗","#999"); if(miss>=maxMiss) over(); }
+    document.getElementById("combo").textContent=combo; document.getElementById("score").textContent=score;
+  }
+  function over(){ alive=false; cancelAnimationFrame(raf); document.getElementById("final").textContent=score; document.getElementById("over").style.display="flex"; }
+  function start(){ document.getElementById("start").style.display="none"; document.getElementById("over").style.display="none";
+    th=snap(); beats=[]; score=0; combo=0; miss=0; interval=850; lastSpawn=0; lastTs=0;
+    document.getElementById("score").textContent=0; document.getElementById("combo").textContent=0; alive=true; raf=requestAnimationFrame(frame); }
+  document.getElementById("go").onclick=start; document.getElementById("again").onclick=start;
+  cv.addEventListener("pointerdown",function(e){ e.preventDefault(); tap(); });
+  addEventListener("keydown",function(e){ if(e.key===" "){ e.preventDefault(); tap(); } });
+  // 初始静态渲染
+  raf=requestAnimationFrame(frame); alive=false;
+})();
+</script>
+</body>
+</html>
