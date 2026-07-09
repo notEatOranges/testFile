@@ -3,7 +3,7 @@
 > **接手 Claude 必读**：这份文件是 === 唯一上下文 ===。读完就知道做到了哪、bug 是什么、下一步该干嘛。全程中文。换电脑：
 > 1. `git clone` 本仓库到新电脑；
 > 2. 打开本文件看「当前进度」；
-> 3. 本地预览 `python -m http.server 5517 --bind 127.0.0.1` → `http://127.0.0.1:5517/love-h5/`。
+> 3. 本地预览：`cd love-h5 && python -m http.server 5517 --bind 127.0.0.1`（Windows 上 python 是商店占位就用 `npx http-server -p 5517 -a 127.0.0.1 .`）→ 浏览器开 `http://127.0.0.1:5517/`。双人模拟：**同浏览器**再开一个**普通**标签页（不是无痕），同一房间号、选对方身份。
 > 4. 接上我的 Todo 继续干。
 
 ---
@@ -46,20 +46,21 @@
 - [x] **阶段 2 · 数据层**：store.js 本地+Supabase 双实现 ✅；room.js（房间/身份/心跳/onDisconnect）✅；supabase-config.js ✅。
 - [x] **阶段 1 续 · 骨架(HTML/路由/主题)**：index.html(SPA+引导) ✅；router.js(hash 路由+iframe) ✅；theme.js(切换+postMessage) ✅；app.js(入口编排) ✅。
 - [x] **阶段 3 · 功能页**：home / chat / mood / days / wishlist / truthbox 全部 6 页 ✅。本地预览跨 tab 可模拟双人。
-- [~] **阶段 4 · 猫猫吃鱼**：catfish.html + css/catfish.css + game/catfish/{main,engine,sync,input,modes}.js 全部 7 个文件已写（~850 行）。**有 bug，联机没跑通，见下方 bug 清单**。
-- [ ] **阶段 5 · heart 接入**：heart.html 容器页待写（router 已预留 `./heart.html`，heart-3d 副本已就绪）。
-- [ ] **阶段 6 · 主题贯通**：游戏 Canvas 取色已做（engine.js snapTheme），heart iframe 主题桥接 postMessage 已有，**heart.html 写完即贯通**。
-- [ ] **阶段 7 · 文档**：SETUP.md(Supabase 配置 + SQL 建表 + 安全规则)、README.md(预览/部署) 待写。
-- [ ] **阶段 8 · 验证**：本地服务 + chrome-devtools 截图 + 移动端真机回归。
+- [x] **阶段 4 · 猫猫吃鱼**：catfish.html + css/catfish.css + game/catfish/{main,engine,sync,input,modes}.js 全部 7 个文件（~860 行）。**联机已跑通**（2 tab 实测：加入同局→选同模式→开局→45s 倒计时→吃鱼同步→结算正确），见下方 bug 清单的 B1/B7 修复记录。
+- [x] **阶段 5 · heart 接入**：heart.html 容器页已建（顶栏返回+主题浮层 + 全屏 heart-3d iframe + 两层 postMessage 主题中继）。实测：router 加载 heart.html（data-heart=1）→ 内层 heart-3d.html iframe → 500×844 canvas 正常渲染。
+- [x] **阶段 6 · 主题贯通**：游戏 Canvas 取色（engine.js snapTheme）+ heart 两层 iframe 主题桥接均已就位。
+- [x] **阶段 7 · 文档**：SETUP.md（Supabase/MemFire 配置 + kv 建表 DDL + RLS + merge_kv/push_kv 原子函数 SQL）、README.md（预览/双人模拟/部署/目录）已写。
+- [~] **阶段 8 · 验证**：本地服务 + chrome-devtools 双 tab 实测游戏全流程 ✅、heart 加载 ✅。**移动端真机回归未做**（需真机）。
 
 ---
 
-## 已建文件清单（28 个文件，约 3075 行源码）
+## 已建文件清单（31 个文件，约 3200 行源码）
 
 ```
 love-h5/
 ├── index.html                  ✅ SPA:引导+6个<section>+主题fab+iframeHost
-├── catfish.html                ⚠️  游戏宿主页(Canvas+HUD+选模式/结算弹窗)
+├── catfish.html                ✅ 游戏宿主页(Canvas+HUD+选模式/结算弹窗)
+├── heart.html                  ✅ 3D爱心容器(顶栏+全屏heart-3d iframe+两层主题中继)
 ├── heart-3d.html               ✅ 副本(648行,已加postMessage主题桥接)
 │
 ├── assets/images/              ✅ boy.jpg girl.jpg tomcat.jpg
@@ -88,102 +89,107 @@ love-h5/
 │   │   ├── wishlist.js         ✅ 心愿清单(添加/勾完成/删除)
 │   │   └── truthbox.js         ✅ 真心话盲盒(抽题/我答/看ta答)
 │   └── game/catfish/
-│       ├── main.js             ⚠️  编排:选模式→双方ready→开局→结算→再来
-│       ├── engine.js           ⚠️  Canvas2D渲染+主循环+碰撞+状态机+主题取色
-│       ├── sync.js             ⚠️  联机协议(位置广播12fps/claim鱼/setStatus)
+│       ├── main.js             ✅ 编排:选模式→双方ready→开局→结算→再来
+│       ├── engine.js           ✅ Canvas2D渲染+主循环+碰撞+状态机+主题取色
+│       ├── sync.js             ✅ 联机协议(位置广播12fps/claim鱼/setStatus)
 │       ├── input.js            ✅ 整画布虚拟摇杆(触摸+鼠标)
 │       └── modes.js            ✅ 三模式规则:versus/coop/turn(纯函数)
 │
-├── PROGRESS.md                 ← 你正在看的这份
-└── 待建: heart.html README.md SETUP.md
+├── README.md                   ✅ 预览/双人模拟/部署/目录说明
+├── SETUP.md                    ✅ Supabase/MemFire配置+建表DDL+RLS+原子函数SQL
+└── PROGRESS.md                 ← 你正在看的这份
 ```
 
 ---
 
 ## 🐛 已知 Bug / 待办（按优先级）
 
-### B1 · 游戏联机未跑通（gameId = null 根因定位） ⚠️⚠️
+### B1 · 游戏联机未跑通（gameId = null） ✅ 已修复（2026-07-09）
 
-**现象**：sync.js 模块级 `gameId` 变量为 null。localStorage 里实际数据路径是 `games/catfish/null/players/girl`。导致所有联机读写路径错误，双方无法同步。
+**现象**：sync.js 模块级 `gameId` 为 null，localStorage 里出现 `games/catfish/null/...` 路径，双方无法同步。
 
-**根因已定位**：`sync.js` 的 `ensureGame()` 函数第 1 行写了 `await Store.update(`${GROOT}/latest`, {})` —— 这行把 `latest` 强行覆盖为空对象。随后 `readLatest()` 读到这个空对象 `{}`，条件 `cur && cur.id` 为 false，走到 else 分支设 `gameId = uid('g')` + `Store.set(latest, {id, ts})`。但 `Store.update(latest, {})` 先覆盖、`Store.set` 立即再写——**推测 update 写了空对象后 set 因为某些竞态/覆盖偏离没生效**，导致 latest 最终是 `{}`。
+**真正根因**（之前误诊为 `ensureGame` 里那行 `Store.update(latest,{})`，那行确实该删、也已删，但**不是**主因）：`readLatest()` 里
+```js
+const off = Store.onValue(path, v => { off(); resolve(v); });
+```
+本地模式 `onValue` 会**同步**立即回调，此刻 `const off =` 赋值尚未完成（TDZ），cb 里引用 `off` 抛 `ReferenceError: Cannot access 'off' before initialization` → Promise reject → `ensureGame()` 抛错 → `gameId` 永远 null → 后续全路径变成 `games/catfish/null/...`。
 
-**修复**（一行删除）：
-```diff
- async function ensureGame() {
--  await Store.update(`${GROOT}/latest`, {});   // ← 删掉这行！
-   const cur = await readLatest();
-   if (cur && cur.id) { gameId = cur.id; }
-   else { gameId = uid('g'); await Store.set(`${GROOT}/latest`, { id: gameId, ts: Store.now() }); }
-   return gameId;
- }
+**修复**（`sync.js` 的 `readLatest`）：把解订阅 + resolve 推迟到微任务，此时 `off` 已赋值：
+```js
+function readLatest() {
+  return new Promise(resolve => {
+    const off = Store.onValue(`${GROOT}/latest`, v => {
+      queueMicrotask(() => { try { off(); } catch {} resolve(v); });
+    });
+  });
+}
 ```
 
-另外 `readLatest()` 的实现用 `new Promise(resolve => Store.onValue(...))` 在本地模式下 onValue 会同步立即调用一次 cb 再返回 unsubscribe，所以 `off()` call + resolve 是正确的。但如果 `readLatest` 无法 resolve（云端模式异步），考虑加个 `setTimeout` 兜底。
+**实测验证（chrome-devtools 双 tab，本地模式）**：boy 建局 `g_xxx` → girl 读 latest 加入**同一局** → 双方选对战 → modal 消失、两只猫渲染、分数实时同步累加 → 45s 倒计时正确（实测 elapsed ≈ 真实时间，非倍速）→ 结算弹窗「女生赢 / 男生 8 · 女生 24」正确。✅
 
-**修复完验证**：
-1. 删掉那行
-2. `python -m http.server 5517` → chrome 开两个 tab（普通+无痕）http://127.0.0.1:5517/love-h5/
-3. 各登录同房间号不同身份
-4. 第 1 个 tab 点"猫猫吃鱼"选模式；第 2 个 tab 同操作
-5. 验证：modal 消失、两只猫在 canvas、能移动吃鱼、HUD 分数变动
+> 旧版 PROGRESS 说的「`Store.update(latest,{})` 覆盖」那行也已删除（它确实是多余且有害的），但单删它不够——必须配合上面的 TDZ 修复联机才真正跑通。
 
 ### B2 · 男女头像位置 ✅ 已修复（2026-07-09）
 女生放 HUD 左边、男生放右边，形成 ♥ 爱心形状。catfish.html DOM 顺序 + catfish.css 已调。
 
-### B3 · heart.html 容器页待建
-router.js 已引用 `./heart.html`，heart-3d.html 副本已有主题桥接。只需建 heart.html：顶部 44px 返回+主题浮层，下方 `<iframe src="./heart-3d.html">` 全屏。几十行。
+### B3 · heart.html 容器页 ✅ 已建（2026-07-09）
+heart.html 已建：顶栏（返回 + 标题 + 主题浮层）+ 全屏 `<iframe src="./heart-3d.html">` + 两层 postMessage 主题中继（主站 theme.js → heart.html → heart-3d）。实测 router 加载 heart.html（`data-heart=1`）→ 内层 heart-3d.html iframe → 500×844 canvas 正常渲染。
 
-### B4 · SETUP.md + README.md 待写
-SETUP.md 需写：Supabase/MemFire 注册 → 建项目 → 建 kv 表（DDL: room/path/value/ts + 唯一约束）+ 安全规则 + 原子函数 push_kv/merge_kv 的 SQL + 填 supabase-config.js。
-README.md：本地预览步骤 + 双人模拟 + 部署 GitHub Pages + 目录说明。
+### B4 · SETUP.md + README.md ✅ 已写（2026-07-09）
+SETUP.md：Supabase/MemFire 注册 → 建项目 → kv 建表 DDL（room/path/value(jsonb)/ts + 唯一约束）→ RLS 策略 → `merge_kv`/`push_kv` 原子函数 SQL（security definer）→ 开 realtime → 填 supabase-config.js。
+README.md：本地预览（python / node 两种）+ 双人模拟（**必须同浏览器两个普通 tab，不能普通+无痕**）+ 部署 GitHub Pages + 目录说明。
 
-### B5 · 回合模式 turn switching 未联调
-回合制在 engine.js 帧循环里判断 turn 切换 + bumpTurnSwitches，sync.js 有 setTurn / bumpTurnSwitches。但联机验证未做——这是 B1 修复后的后续。
+### B5 · 回合模式（turn）联机未验证 ⚠️
+对战(versus)模式已双 tab 实测全流程通过。回合制在 engine.js 帧循环里判断 turn 切换 + `bumpTurnSwitches`，sync.js 有 `setTurn`/`bumpTurnSwitches`，但**联机未实测**。已知潜在问题：`setTurn` 里 `switchedAt` 用 `Store.now()`（Date.now），而 engine 内 `game.now` 是 rAF 时间戳，两者时基不同——回合超时判断 `(game.now - t.switchedAt)` 跨端可能不准。后续接手请实测 turn 模式并统一时基。
 
-### B6 · 女生头像 + iframe 加载失败 404
-router.js 定义的 `heart` view 引用 `./heart.html`（404）、`catfish` 引用 `./catfish.html`（已建，正常）。heart.html 不存在所以 heart 路由会 404。
+### B6 · heart 路由 404 ✅ 已修（2026-07-09）
+heart.html 已建（见 B3），`#/heart` 不再 404。
+
+### B7 · drawCat 空值崩溃（联机第二根因） ✅ 已修复（2026-07-09）
+engine.js 渲染 `drawCat("girl", game.players.girl)`，但对方未加入时 `onPeer(null)` 会把 `players[peer]` 置 null → `p.x` 抛 `Cannot read properties of null` → rAF 主循环中断 → 即使开局画布也冻结。修复：渲染前判空，缺席的猫不画。与 B1 的 TDZ 并列，是「联机跑不通」的第二个根因。
+
+### B8 · gameId 并发竞态（次要，未修） ⚠️ 低优先
+两 tab **几乎同时** `ensureGame()` 时，可能都读到 `latest` 为空、各自生成不同 gameId → 永远同步不上。正常使用（一人先开、另一人后加入）不会触发。彻底修法：改用确定性 gameId（如固定 `"session"`，每房间一局），可去掉 latest 指针。当前未改，留作后续。
+
+### B9 · 双人模拟的身份共享（设计限制，非 bug）
+`lh5_role` 存 localStorage，同浏览器两 tab 共享 → 只能「先开男 tab、再开女 tab、中途不刷新」地模拟。且**普通 tab 与无痕 tab 不共享** localStorage/BroadcastChannel，模拟必须用两个普通 tab（或两个无痕）。真机异地无此问题（README 已说明）。
 
 ---
 
 ## 下一步（给接手 Claude）
 
-### 优先顺序
+主要功能已完成并实测。剩余收尾：
 
-1. **立即修复 B1**（gameId bug）：编辑 `sync.js` → 删掉 `ensureGame` 函数的 `Store.update(latest, {})` 那行 → 保证首次进入 gameId 正确生成 uid → 本地模式两 tab 验证双方就绪→开局→吃鱼→结算。
-   - 关键文件：`love-h5/js/game/catfish/sync.js`
-   - 验证：开两个 tab（同一浏览器，同房间不同身份），选同模式，看 modal 消失、canvas 两只猫在动。
-
-2. **修 B2**（男女头像位置）：`catfish.html` + `catfish.css` 调换顺序。
-
-3. **建 heart.html**（阶段 5）：~30 行，router 已有定义。
-
-4. **写 SETUP.md + README.md**（阶段 7）。
-
-5. **验证**（阶段 8）：chrome-devtools 截图全流程。
+1. **回合模式 turn 联机实测 + 时基统一**（B5）：开两 tab 选「回合」，看轮流吃鱼、换人、6 回合结算是否正确；修 `switchedAt` 时基不一致。
+2. **真机回归**（阶段 8）：配好 Supabase 后，两台真机异地实测实时对话 + 游戏 + 心情同步；移动端虚拟摇杆手感、刘海安全区。
+3. **（可选）gameId 确定性化**（B8）：消除并发竞态。
+4. **（可选）a11y**：游戏内 form 字段缺 label（控制台有 issue 提示），可补 `aria-label`。
 
 ### 本地预览命令
 ```bash
 cd love-h5
 python -m http.server 5517 --bind 127.0.0.1
+# 或（Windows 上 python 是商店占位时）：npx http-server -p 5517 -a 127.0.0.1 .
 # 浏览器打开 http://127.0.0.1:5517/
 # 输房间号 → 选身份 → 进入首页
-# 双人模拟：同浏览器开第二个标签页（无痕/隐身），输同一房间号、选对方身份
+# 双人模拟：【同浏览器】再开一个普通标签页，同一房间号、选对方身份（先开男、再开女，勿中途刷新）
 ```
 
 ### chrome-devtools MCP 可用
-用 `new_page` 打开 `http://127.0.0.1:5517/`，`take_screenshot` / `evaluate_script` 交互验证。
+用 `new_page` 打开 `http://127.0.0.1:5517/`，`take_screenshot` / `evaluate_script` 交互验证。注意两 tab 需在同一浏览器实例（共享 localStorage/BroadcastChannel）。
 
 ---
 
 ## 给接手 Claude 的提示
 - 全程中文（用户、代码注释、文档）。
-- store.js 是核心抽象，不要改它的对外 API。本地模式已稳定。
+- store.js 是核心抽象，不要改它的对外 API。本地模式已稳定，云端模式按 SETUP.md 建好 `kv` 表 + `merge_kv`/`push_kv` 函数即可。
 - 游戏联机位置广播节流 ~12fps（throttle 80ms），不要去掉。
+- `readLatest()` 那种「`const off = onValue(cb); cb 里用 off`」的 TDZ 陷阱别再踩——同步回调里引用外层 `const` 必须延迟（queueMicrotask）。
+- 两 tab 本地模拟：同浏览器、两个普通 tab、先男后女、勿刷新（见 B9）。
 - 后端选型是 Supabase（不是 LeanCloud 不是 Firebase），supabase-config.js 已建，store.js 云端实现已完成。
 - 每个阶段做完更新本 PROGRESS.md。
 - PLAN 原始文档在 `C:\Users\Orange\.claude\plans\cached-humming-gizmo.md`（记录了初始设计，实际实现有演进）。
 
 ---
 
-> 最后更新：2026-07-09 · 阶段 4 游戏代码已写完，B1 待修 · 换电脑可无缝继续
+> 最后更新：2026-07-09 · 阶段 4 联机跑通(B1/B7 修复并实测)、阶段 5 heart.html 已建、阶段 7 文档已写 · 剩 B5 回合联调 + 真机回归 · 换电脑可无缝继续

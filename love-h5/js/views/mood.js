@@ -16,7 +16,7 @@ function renderPeer(p) {
   const el = document.getElementById("peerMood");
   if (!p || !p.emoji) { el.innerHTML = `<div class="muted small">ta 还没设置今日心情</div>`; return; }
   el.innerHTML = `
-    <div class="peer-mood"><span class="pe-emoji">${p.emoji}</span><span class="pe-name">${roleFull(getPeer())} 的今日</span></div>
+    <div class="peer-mood"><span class="pe-emoji">${p.emoji}</span><img class="pe-av" src="./assets/images/${getPeer()}.jpg" alt=""/><span class="pe-name">${roleFull(getPeer())} 的今日</span></div>
     ${p.whisper ? `<div style="margin-top:6px;line-height:1.55">${escapeHtml(p.whisper)}</div>` : `<div class="muted small">ta 没留悄悄话</div>`}`;
 }
 

@@ -1,3 +1,10 @@
+/*
+ * @Author: 
+ * @LastEditors: Please set LastEditors
+ * @Date: 2026-07-09 19:42:53
+ * @LastEditTime: 2026-07-09 20:58:48
+ * @FilePath: /testFile/love-h5/js/config/supabase-config.js
+ */
 /* ============================================================
    后端配置 —— Supabase（默认）/ MemFire（国产兼容备选）
    未填写时，站点自动进入「本地预览模式」（localStorage +
@@ -10,8 +17,8 @@
    ============================================================ */
 
 export const supabaseConfig = {
-  url:     "https://xxx.supabase.co",          // ← 项目 URL
-  anonKey: "在此粘贴 anon public key",          // ← Project API keys 里的 anon public
+  url:     "https://vbzlduvsepeuegpkveqv.supabase.co",          // ← 项目 URL
+  anonKey: "sb_publishable_istzqrsTbc3a0LwqlK68_A_vXrwsN1o",          // ← Project API keys 里的 anon public
 };
 
 // Supabase JS SDK（ESM）。jsDelivr 国内可访问；esm.sh 是备选。

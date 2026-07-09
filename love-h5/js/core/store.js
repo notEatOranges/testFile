@@ -53,6 +53,12 @@ export const Store = {
   onValue(path, cb) { return mode === "supabase" ? sbOnValue(path, cb) : localOnValue(path, cb); },
   onList(path, cb) { return this.onValue(path, snap => cb(toList(snap))); },
 
+  /* —— 一次性读（用于进入前容量检查等；不订阅）—— */
+  async getOnce(path) {
+    if (mode === "supabase") return sbGet(path);
+    return clone(getPath(path));   // 本地模式：同步返回当前快照
+  },
+
   /* —— 写 —— */
   async set(path, val) {
     if (mode === "supabase") return sbSet(path, val ?? null);

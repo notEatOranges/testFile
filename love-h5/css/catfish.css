@@ -48,8 +48,9 @@ body {
 .cf-p { display: flex; align-items: center; gap: 8px; }
 .cf-p .cf-avatar {
   width: 38px; height: 38px; border-radius: 50%;
-  display: grid; place-items: center; font-size: 22px;
-  background: var(--chip); flex: none;
+  object-fit: cover; flex: none;
+  border: 2px solid var(--card);
+  box-shadow: 0 2px 8px var(--card-shadow);
 }
 .cf-p .cf-avatar.offline { opacity: 0.4; }
 .cf-p .cf-score { font-size: 20px; font-weight: 800; color: var(--primary); min-width: 28px; text-align: center; }

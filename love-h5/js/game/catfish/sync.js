@@ -41,7 +41,13 @@ export async function ensureGame() {
 
 function readLatest() {
   return new Promise(resolve => {
-    const off = Store.onValue(`${GROOT}/latest`, v => { off(); resolve(v); });
+    const off = Store.onValue(`${GROOT}/latest`, v => {
+      // 本地模式 onValue 会【同步】立即回调一次，此刻 `const off =` 赋值
+      // 尚未完成（TDZ），直接调 off() 会抛 ReferenceError，导致 ensureGame
+      // reject、gameId 永远为 null —— 这是联机跑不通的真正根因。
+      // 推迟到微任务再解订阅 + resolve：此时 off 已赋值。
+      queueMicrotask(() => { try { off(); } catch {} resolve(v); });
+    });
   });
 }
 

@@ -51,8 +51,11 @@ function apply() {
 
   const titleEl = document.getElementById("topTitle");
   const backBtn = document.getElementById("backBtn");
+  const exitBtn = document.getElementById("exitBtn");
   if (titleEl) titleEl.textContent = view.title || "";
   if (backBtn) backBtn.style.display = name === "home" ? "none" : "";
+  // 退出按钮只在首页显示（子页用返回箭头）
+  if (exitBtn) exitBtn.style.display = name === "home" ? "" : "none";
 
   current = name;
   if (view.onEnter) {

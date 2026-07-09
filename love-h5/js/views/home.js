@@ -22,9 +22,9 @@ export function mount() {
   const connected = Store.mode === "supabase";
   el.innerHTML = `
     <div class="home-head">
-      <div class="hi">${role === "boy" ? "嗨，男生" : "嗨，女生"} 👋</div>
+      <div class="hi"><img class="hi-av" src="./assets/images/${role}.jpg" alt=""/>嗨，${roleFull(role)} 👋</div>
       <span class="room-tag">${connected ? "☁️" : "🔌"} ${connected ? "已连接" : "本地预览"} · 房间 ${getRoom()}</span>
-      <div class="presence"><span class="dot" id="peerDot"></span><span id="peerStatus">${roleFull(getPeer())}状态…</span></div>
+      <div class="presence"><span class="dot" id="peerDot"></span><img class="peer-av" src="./assets/images/${getPeer()}.jpg" alt=""/><span id="peerStatus">${roleFull(getPeer())}状态…</span></div>
     </div>
     <div class="grid-cards">
       ${CARDS.map(c => `

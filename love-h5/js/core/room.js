@@ -5,10 +5,12 @@
    ============================================================ */
 
 import { Store } from "./store.js";
-import { peerRole } from "./utils.js";
+import { peerRole, uid } from "./utils.js";
 
 const ROOM_KEY = "lh5_room";
 const ROLE_KEY = "lh5_role";
+const SESSION_KEY = "lh5_session";          // 会话 id（sessionStorage：刷新保留、新标签页不同）
+const HISTORY_KEY = "lh5_room_history";     // 历史房间记录（localStorage：长久保存）
 const HEARTBEAT_MS = 12000;
 const ONLINE_TIMEOUT = 30000;
 
@@ -20,21 +22,37 @@ export function getPeer() { return peerRole(getRole()); }
 export function isSetup() { return !!(getRoom() && getRole()); }
 export function clearSetup() { localStorage.removeItem(ROOM_KEY); localStorage.removeItem(ROLE_KEY); }
 
-/** 进入房间：写在线标记 + 注册断线清理 + 启动心跳 */
+/** 本标签页的会话 id：刷新不变、换标签页/换设备不同。用于「自己刷新不被自己残留在线挡住」。 */
+function sid() {
+  let s = sessionStorage.getItem(SESSION_KEY);
+  if (!s) { s = uid("s"); sessionStorage.setItem(SESSION_KEY, s); }
+  return s;
+}
+
+/** 进入房间：先查该身份是否已被【别人】占用（满 2 人限制），再写在线标记 + 心跳。
+ *  返回 true=成功，false=该身份已有人（调用方提示）。 */
 export async function enter(room, role) {
+  Store.setRoom(room);   // 先指向目标房间，members 路径才落对
+
+  // 容量检查：该角色当前是否被「另一个会话」占用
+  const me = await Store.getOnce(`members/${role}`);
+  if (isOnline(me) && me.sid !== sid()) return false;
+
   localStorage.setItem(ROOM_KEY, room);
   localStorage.setItem(ROLE_KEY, role);
-  Store.setRoom(room);
 
   const base = `members/${role}`;
-  await Store.update(base, { online: true, lastSeen: Store.now(), joinedAt: Store.now() });
+  await Store.update(base, { online: true, lastSeen: Store.now(), joinedAt: Store.now(), sid: sid() });
   Store.onDisconnectSet(`${base}/online`, false);
   Store.onDisconnectSet(`${base}/lastSeen`, Store.now());
 
   if (heartbeatTimer) clearInterval(heartbeatTimer);
   heartbeatTimer = setInterval(() => {
-    Store.update(base, { online: true, lastSeen: Store.now() });
+    Store.update(base, { online: true, lastSeen: Store.now(), sid: sid() });
   }, HEARTBEAT_MS);
+
+  addRoomHistory(room, role);
+  return true;
 }
 
 /** 主动离开（切换房间/退出） */
@@ -55,4 +73,21 @@ export function onPeerPresence(cb) {
 export function isOnline(p) {
   if (!p || p.online === false) return false;
   return (Store.now() - (p.lastSeen || 0)) < ONLINE_TIMEOUT;
+}
+
+/* ====================== 历史房间记录（长久保存） ====================== */
+/** [{room, role, ts}]，最新在前，按 room 去重，上限 10 */
+export function getRoomHistory() {
+  try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]"); }
+  catch { return []; }
+}
+export function clearRoomHistory() { localStorage.removeItem(HISTORY_KEY); }
+export function addRoomHistory(room, role) {
+  const h = getRoomHistory().filter(x => x.room !== room);   // 去重
+  h.unshift({ room, role, ts: Date.now() });
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(h.slice(0, 10)));
+}
+/** 删除指定房间的一条历史 */
+export function removeRoomHistory(room) {
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(getRoomHistory().filter(x => x.room !== room)));
 }

@@ -22,7 +22,7 @@ export function mount() {
   uq = Store.onValue("truthbox/q", q => {
     const e = document.getElementById("truthQ");
     if (!q) { e.innerHTML = `<div class="truth-q"><div class="q-label">真心话</div><div class="q-text">点下面抽一题吧 🔥</div></div>`; return; }
-    e.innerHTML = `<div class="truth-q"><div class="q-label">真心话 · ${roleFull(q.pickedBy)} 抽的</div><div class="q-text">${escapeHtml(q.question)}</div></div>`;
+    e.innerHTML = `<div class="truth-q"><div class="q-label"><img class="q-av" src="./assets/images/${q.pickedBy}.jpg" alt=""/>真心话 · ${roleFull(q.pickedBy)} 抽的</div><div class="q-text">${escapeHtml(q.question)}</div></div>`;
   });
   ua = Store.onValue(`truthbox/answer/${role}`, a => { if (a) document.getElementById("myAns").value = a.text; });
   ub = Store.onValue(`truthbox/answer/${getPeer()}`, a => {

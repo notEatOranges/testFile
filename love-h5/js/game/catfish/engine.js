@@ -262,8 +262,9 @@ function frame(ts) {
   ctx.clearRect(0, 0, W, H);
   drawBg(ts);
   for (const id in game.fish) drawFish(id, game.fish[id]);
-  drawCat("boy", game.players.boy);
-  drawCat("girl", game.players.girl);
+  // 对方未加入/已断线时 players[role] 可能为 null，跳过绘制避免崩溃
+  if (game.players.boy) drawCat("boy", game.players.boy);
+  if (game.players.girl) drawCat("girl", game.players.girl);
 
   if (game.status === "playing") raf = requestAnimationFrame(frame);
   else raf = requestAnimationFrame(frame);  // 即使 waiting/ended 也持续渲染背景与对方位置

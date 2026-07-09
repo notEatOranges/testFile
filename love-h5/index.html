@@ -29,6 +29,9 @@
   </div>
 
   <button id="enterBtn" class="btn btn-primary btn-block mt16">进入 ♥</button>
+
+  <div id="roomHistory" class="room-history" style="display:none"></div>
+
   <div class="small muted" style="text-align:center;margin-top:14px;line-height:1.6">
     未配置后端＝本地预览模式（同手机多标签页可模拟双人）。<br/>
     异地实时需配置 Supabase / MemFire，见 <b>SETUP.md</b>。
@@ -40,7 +43,7 @@
   <div class="topbar">
     <button id="backBtn" class="icon-btn" style="display:none">‹</button>
     <div class="title" id="topTitle">我们的小窝</div>
-    <span style="width:38px"></span>
+    <button id="exitBtn" class="icon-btn" title="退出房间" style="display:none">⏻</button>
   </div>
 
   <section id="view-home" class="view active"></section>

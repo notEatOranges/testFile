@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<meta name="theme-color" content="#ffd1dc" />
+<title>3D 爱心 ♥</title>
+<!-- 防 FOUC：与主站同主题（hash 不变，仍读 lh5-theme） -->
+<script>(function(){try{var t=localStorage.getItem('lh5-theme');if(!t||['sakura','mint','lavender'].indexOf(t)<0)t='sakura';document.documentElement.setAttribute('data-theme',t);}catch(e){document.documentElement.setAttribute('data-theme','sakura');}})();</script>
+<link rel="stylesheet" href="./css/theme.css" />
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; overflow: hidden; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: linear-gradient(160deg, var(--bg-1) 0%, var(--bg-2) 55%, var(--bg-3) 100%);
+    color: var(--text);
+    user-select: none;
+  }
+
+  /* —— 顶部栏（44px + 安全区） —— */
+  .h-top {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 10;
+    display: flex; align-items: center; gap: 10px;
+    height: calc(44px + var(--safe-top));
+    padding: var(--safe-top) 14px 0;
+    backdrop-filter: blur(12px);
+    background: color-mix(in srgb, var(--bg-1) 72%, transparent);
+    border-bottom: 1px solid var(--border);
+  }
+  .h-back, .h-fab {
+    width: 38px; height: 38px; border-radius: 50%; border: none;
+    display: grid; place-items: center; font-size: 18px;
+    background: var(--card); box-shadow: 0 2px 10px var(--card-shadow);
+    cursor: pointer; flex: none;
+  }
+  .h-back:active, .h-fab:active { transform: scale(0.92); }
+  .h-title { flex: 1; font-size: 17px; font-weight: 800; color: var(--text); }
+
+  /* —— 主题切换浮层（独立于主站，同 key） —— */
+  .h-pop {
+    position: fixed; right: 14px; top: calc(52px + var(--safe-top));
+    z-index: 11; background: var(--card); border-radius: var(--radius);
+    box-shadow: 0 8px 30px var(--card-shadow); padding: 10px;
+    display: none; flex-direction: column; gap: 6px; min-width: 140px;
+  }
+  .h-pop.show { display: flex; }
+  .h-opt {
+    display: flex; align-items: center; gap: 10px; padding: 9px 12px;
+    border-radius: var(--radius-sm); font-weight: 500; cursor: pointer;
+  }
+  .h-opt:active, .h-opt.active { background: var(--chip); }
+  .h-sw { width: 22px; height: 22px; border-radius: 50%; flex: none; }
+
+  /* —— 内层 3D 爱心 iframe —— */
+  .h-frame {
+    position: fixed; inset: 0; width: 100%; height: 100%;
+    border: 0; z-index: 1; background: transparent;
+  }
+</style>
+</head>
+<body>
+
+<div class="h-top">
+  <button class="h-back" id="hBack">‹</button>
+  <div class="h-title">3D 爱心 ♥</div>
+  <button class="h-fab" id="hFab">🎨</button>
+  <div class="h-pop" id="hPop">
+    <div class="h-opt" data-theme="sakura"><span class="h-sw" style="background:linear-gradient(135deg,#ff7aa2,#ffd1dc)"></span>樱花</div>
+    <div class="h-opt" data-theme="mint"><span class="h-sw" style="background:linear-gradient(135deg,#5bb89e,#b8e6cc)"></span>薄荷</div>
+    <div class="h-opt" data-theme="lavender"><span class="h-sw" style="background:linear-gradient(135deg,#9b7fd4,#d2c2ec)"></span>薰衣草</div>
+  </div>
+</div>
+
+<iframe class="h-frame" id="hFrame" src="./heart-3d.html" allow="autoplay; fullscreen"></iframe>
+
+<script>
+  (function () {
+    var frame = document.getElementById("hFrame");
+
+    /* 返回：通知主站路由回首页（与 catfish 同协议） */
+    document.getElementById("hBack").onclick = function () {
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: "cf-go-home" }, "*");
+      } else {
+        location.replace("./index.html");
+      }
+    };
+
+    /* —— 两层 iframe 主题中继 ——
+       主站 theme.js 把 {type:'set-theme', theme:'light'} 发给本 iframe，
+       本页再转发给内层 heart-3d.html（它才是真正监听该消息的一层）。 */
+    window.addEventListener("message", function (e) {
+      var d = e.data;
+      if (d && d.type === "set-theme" && (d.theme === "light" || d.theme === "dark")) {
+        try { frame.contentWindow.postMessage(d, "*"); } catch (err) {}
+      }
+    });
+
+    /* 内层加载完成后，先发一次当前主题（始终映射为亮色，与主站 broadcastToHeart 一致） */
+    frame.addEventListener("load", function () {
+      try { frame.contentWindow.postMessage({ type: "set-theme", theme: "light" }, "*"); } catch (err) {}
+    });
+
+    /* —— 主题切换器（同 key lh5-theme，切换后整页 reload 生效） —— */
+    var fab = document.getElementById("hFab"), pop = document.getElementById("hPop");
+    fab.addEventListener("click", function (e) { e.stopPropagation(); pop.classList.toggle("show"); });
+    document.addEventListener("click", function () { pop.classList.remove("show"); });
+    pop.addEventListener("click", function (e) { e.stopPropagation(); });
+    var cur = (function () {
+      try { var t = localStorage.getItem("lh5-theme"); return (["sakura","mint","lavender"].indexOf(t) >= 0) ? t : "sakura"; }
+      catch (e) { return "sakura"; }
+    })();
+    pop.querySelectorAll(".h-opt").forEach(function (el) {
+      el.classList.toggle("active", el.dataset.theme === cur);
+      el.addEventListener("click", function () {
+        localStorage.setItem("lh5-theme", el.dataset.theme);
+        document.documentElement.setAttribute("data-theme", el.dataset.theme);
+        pop.classList.remove("show");
+        setTimeout(function () { location.reload(); }, 60);
+      });
+    });
+  })();
+</script>
+</body>
+</html>
