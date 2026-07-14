@@ -1,8 +1,10 @@
 <view class="theme-{{theme}} love-page main-page">
 
-  <view wx:if="{{booting}}" class="booting">
-    <t-loading theme="circular" size="56rpx" />
-    <view class="booting-text muted small">正在进入小窝…</view>
+  <view wx:if="{{booting}}" class="splash">
+    <view class="splash-logo"><t-icon name="heart-filled" size="88rpx" /></view>
+    <view class="splash-title">我们的小窝</view>
+    <view class="splash-sub muted">两人世界 · 只属于你俩</view>
+    <view class="splash-loading"><t-loading theme="circular" size="40rpx" /></view>
   </view>
 
   <block wx:else>
@@ -13,18 +15,6 @@
           <view class="hi-title">{{nick || roleFull}}，欢迎回来</view>
           <view class="hi-sub muted small">空间码 {{roomCode}}</view>
         </view>
-        <view class="head-actions">
-          <view class="action-btn" bindtap="pickTheme"><t-icon name="palette" size="36rpx" /></view>
-          <view class="action-btn" bindtap="logout"><t-icon name="logout" size="36rpx" /></view>
-        </view>
-      </view>
-
-      <view wx:if="{{inviteCode}}" class="invite-bar" bindtap="copyInvite">
-        <view class="invite-info">
-          <view class="invite-label muted small">邀请码（发给 ta 加入）</view>
-          <view class="invite-code">{{inviteCode}}</view>
-        </view>
-        <view class="invite-copy"><t-icon name="file-copy" size="32rpx" /></view>
       </view>
 
       <view class="presence">
@@ -51,19 +41,4 @@
       <view class="notify-arrow"><t-icon name="chevron-right" size="36rpx" /></view>
     </view>
   </block>
-
-  <!-- 主题切换半屏弹层（8 套马卡龙色块实时预览） -->
-  <view class="theme-mask {{themeSheet ? 'show' : ''}}" bindtap="closeTheme"></view>
-  <view class="theme-sheet {{themeSheet ? 'show' : ''}}">
-    <view class="sheet-handle"></view>
-    <view class="sheet-title">选择主题</view>
-    <view class="sheet-sub muted small">8 套马卡龙配色，点击即时切换</view>
-    <view class="theme-grid">
-      <view wx:for="{{themeList}}" wx:key="key" class="theme-chip {{theme === item.key ? 'sel' : ''}}" data-key="{{item.key}}" bindtap="selectTheme">
-        <view class="chip-color" style="background: linear-gradient(135deg, {{item.primary}}, {{item.primaryDeep}})"></view>
-        <view class="chip-name">{{item.name}}</view>
-        <view wx:if="{{theme === item.key}}" class="chip-check"><t-icon name="check" size="24rpx" /></view>
-      </view>
-    </view>
-  </view>
 </view>

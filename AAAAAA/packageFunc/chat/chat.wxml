@@ -1,0 +1,54 @@
+<view class="theme-{{theme}} chat-page">
+
+  <view class="poke-tip {{pokeTip ? 'show' : ''}}">
+    <t-icon name="fingertap" size="40rpx" />
+    <text>{{pokeText}}</text>
+  </view>
+
+  <scroll-view class="chat-list" scroll-y enhanced scroll-into-view="{{scrollTo}}" scroll-with-animation>
+    <view wx:for="{{messages}}" wx:key="uid">
+      <view wx:if="{{item.showTime}}" class="chat-time">{{item.timeText}}</view>
+      <view wx:if="{{item.poke}}" class="chat-poke-row">
+        <view class="chat-poke"><t-icon name="fingertap" size="28rpx" /> {{item.pokeText}}</view>
+      </view>
+      <view wx:else id="m-{{item.uid}}" class="bubble-row {{item.mine ? 'me' : 'peer'}} {{item.emojiOnly ? 'emoji-only' : ''}} {{item.showAvatar ? '' : 'cont'}}">
+        <image wx:if="{{item.showAvatar}}" class="avatar" src="{{item.avatar}}" mode="aspectFill" bindtap="onAvatarTap" />
+        <view wx:else class="avatar avatar-ph"></view>
+
+        <view wx:if="{{item.mine && item.status === 'sending'}}" class="bubble-status"><t-loading theme="circular" size="24rpx" /></view>
+        <view wx:elif="{{item.mine && item.status === 'failed'}}" class="bubble-status failed"><t-icon name="error-circle" size="30rpx" /></view>
+        <view wx:else class="bubble-placeholder"></view>
+
+        <view wx:if="{{item.emojiOnly}}" class="bubble emoji-bubble"><text class="emoji-big">{{item.text}}</text></view>
+        <view wx:else class="bubble">
+          <text class="bubble-text">{{item.text}}</text>
+          <text class="bubble-time">{{item.timeShort}}</text>
+        </view>
+      </view>
+    </view>
+    <view wx:if="{{!messages.length}}" class="chat-empty muted">还没有消息，先和 ta 说句话吧</view>
+  </scroll-view>
+
+  <view class="chat-emoji" wx:if="{{emojiOpen}}">
+    <view wx:for="{{emojis}}" wx:key="*this" class="emoji-cell" data-e="{{item}}" bindtap="pickEmoji">{{item}}</view>
+  </view>
+
+  <view class="chat-input-bar">
+    <view class="emoji-btn" bindtap="toggleEmoji"><t-icon name="smile" size="36rpx" /></view>
+    <view class="poke-btn" bindtap="openPoke"><t-icon name="fingertap" size="36rpx" /></view>
+    <input class="chat-input" placeholder="说点什么～ 双击头像可戳一戳" value="{{input}}" bindinput="onInput" bindconfirm="send" confirm-type="send" />
+    <view class="send-btn {{input ? 'on' : ''}}" bindtap="send">发送</view>
+  </view>
+
+  <!-- 戳一戳：自定义戳语输入浮层 -->
+  <view class="poke-mask {{pokeOpen ? 'show' : ''}}" bindtap="closePoke"></view>
+  <view class="poke-sheet {{pokeOpen ? 'show' : ''}}" catchtap="noop">
+    <view class="poke-title">戳一戳 ta</view>
+    <view class="poke-sub muted small">留空就是轻轻戳一下</view>
+    <input class="poke-input" placeholder="说点什么，如：并说想你" value="{{pokeSuffix}}" bindinput="onPokeInput" confirm-type="done" bindconfirm="confirmPoke" />
+    <view class="poke-actions">
+      <view class="poke-cancel" bindtap="closePoke">取消</view>
+      <view class="poke-ok" bindtap="confirmPoke">戳 ta</view>
+    </view>
+  </view>
+</view>
