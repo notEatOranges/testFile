@@ -1,5 +1,9 @@
 <view class="theme-{{theme}} chat-page">
 
+  <!-- 聊天背景（couple 共享）：预设渐变 或 自定义图 -->
+  <view wx:if="{{bgStyle}}" class="chat-bg" style="background:{{bgStyle}}"></view>
+  <image wx:elif="{{bgSrc}}" class="chat-bg" src="{{bgSrc}}" mode="scaleToFill" />
+
   <view class="poke-tip {{pokeTip ? 'show' : ''}}">
     <t-icon name="heart" size="40rpx" />
     <text>{{pokeText}}</text>
@@ -25,16 +29,36 @@
           <view wx:else class="bubble-placeholder"></view>
 
           <!-- 内容按 kind 分支 -->
-          <image wx:if="{{item.kind === 'image' || item.kind === 'sticker'}}"
-            class="media-img {{item.kind === 'sticker' ? 'sticker-img' : 'bubble-img'}}"
-            src="{{item.src}}" mode="widthFix" lazy-load
+          <!-- 表情包：小图，无气泡无进度 -->
+          <image wx:if="{{item.kind === 'sticker'}}"
+            class="media-img sticker-img" src="{{item.src}}" mode="widthFix" lazy-load
             data-src="{{item.src}}" bindtap="previewImage" bindlongpress="collectSticker" />
+
+          <!-- 图片：带上传进度蒙层 -->
+          <view wx:elif="{{item.kind === 'image'}}" class="img-wrap">
+            <image class="media-img bubble-img" src="{{item.src}}" mode="widthFix" lazy-load
+              data-src="{{item.src}}" bindtap="previewImage" bindlongpress="collectSticker" />
+            <view wx:if="{{item.status === 'sending' && item.progress != null}}" class="upload-progress">
+              <t-loading theme="circular" size="32rpx" />
+              <text class="up-pct">{{item.progress}}%</text>
+            </view>
+          </view>
+
+          <!-- 语音：点击播放，playing 时声波动画 -->
+          <view wx:elif="{{item.kind === 'voice'}}" class="bubble voice-bubble {{item.playing ? 'playing' : ''}}"
+            data-uid="{{item.uid}}" data-voice="{{item.src}}" bindtap="playVoice">
+            <view class="voice-dur">{{item.durText}}</view>
+            <view class="voice-bars {{item.playing ? 'on' : ''}}">
+              <view class="vbar"></view><view class="vbar"></view><view class="vbar"></view>
+            </view>
+            <t-icon name="{{item.playing ? 'pause' : 'sound'}}" size="36rpx" />
+          </view>
 
           <view wx:elif="{{item.kind === 'file'}}" class="bubble file-bubble" data-fid="{{item.fileID}}" bindtap="openFile">
             <view class="file-ext">{{item.ext}}</view>
             <view class="file-info">
               <text class="file-name">{{item.name}}</text>
-              <text class="file-size muted small">{{item.sizeText}}</text>
+              <text class="file-size muted small">{{item.status === 'sending' && item.progress != null ? item.progress + '%' : item.sizeText}}</text>
             </view>
           </view>
 
@@ -50,7 +74,34 @@
     </view>
   </scroll-view>
 
-  <!-- 表情 / 表情包 面板 -->
+  <!-- 输入栏 -->
+  <view class="chat-input-bar" style="padding-bottom: {{kbHeight ? (kbHeight + 24) + 'rpx' : 'calc(16rpx + env(safe-area-inset-bottom))'}}">
+    <!-- 全屏入口：仅当输入较多内容时，浮现于输入框上方（微信式） -->
+    <view wx:if="{{longInput && !voiceMode}}" class="expand-icon" catchtap="openFullInput"><t-icon name="fullscreen-2" size="36rpx" /></view>
+
+    <view class="voice-btn" bindtap="toggleVoice"><t-icon name="{{voiceMode ? 'keyboard' : 'microphone'}}" size="44rpx" /></view>
+
+    <!-- 语音模式：按住说话 -->
+    <view wx:if="{{voiceMode}}" class="talk-btn {{willCancel ? 'cancel' : ''}}"
+      bindtouchstart="onTalkStart" bindtouchmove="onTalkMove" bindtouchend="onTalkEnd" bindtouchcancel="onTalkEnd">
+      {{recording ? (willCancel ? '松开手指 取消' : '松开 发送') : '按住 说话'}}
+    </view>
+
+    <!-- 文本模式：只留 语音 / 表情 / + 三个直接入口；戳一戳等收进 + 面板 -->
+    <block wx:else>
+      <textarea class="chat-input" hidden="{{fullInput || msgView || imgView}}"
+        style="height:{{inputHeight}}rpx"
+        value="{{input}}"
+        disable-default-padding adjust-position="{{false}}" show-confirm-bar="{{false}}" cursor-spacing="20"
+        bindfocus="onInputFocus" bindkeyboardheightchange="onKbHeight" bindinput="onInput" />
+      <view class="emoji-btn" bindtap="toggleEmoji"><t-icon name="smile" size="44rpx" /></view>
+      <view wx:if="{{input}}" class="send-btn on" bindtap="send">发送</view>
+      <view class="plus-btn" bindtap="openPlus"><t-icon name="add" size="44rpx" /></view>
+    </block>
+  </view>
+
+  <!-- 面板区：紧贴输入栏下方，顶起输入栏（微信式交互） -->
+  <!-- 表情 / 表情包 -->
   <view class="chat-panel" wx:if="{{emojiOpen}}">
     <t-tabs value="{{emojiTab}}" bind:change="onEmojiTab">
       <t-tab-panel value="0" label="表情">
@@ -72,22 +123,15 @@
     </t-tabs>
   </view>
 
-  <!-- 输入栏 -->
-  <view class="chat-input-bar" style="padding-bottom: {{kbHeight ? (kbHeight + 24) + 'rpx' : 'calc(16rpx + env(safe-area-inset-bottom))'}}">
-    <view class="emoji-btn" bindtap="toggleEmoji"><t-icon name="smile" size="44rpx" /></view>
-    <view class="poke-btn" bindtap="sendPoke"><t-icon name="heart" size="44rpx" /></view>
-    <view class="plus-btn" bindtap="openPlus"><t-icon name="add" size="44rpx" /></view>
-    <textarea class="chat-input" hidden="{{fullInput || msgView || imgView}}"
-      style="height:{{inputHeight}}rpx"
-      value="{{input}}"
-      disable-default-padding adjust-position="{{false}}" show-confirm-bar="{{false}}" cursor-spacing="20"
-      bindfocus="onInputFocus" bindkeyboardheightchange="onKbHeight" bindinput="onInput" />
-    <text class="expand-btn" bindtap="openFullInput">全屏</text>
-    <view class="send-btn {{input ? 'on' : ''}}" bindtap="send">发送</view>
+  <!-- 「+」操作面板（底部内联） -->
+  <view class="chat-panel plus-panel" wx:if="{{plusOpen}}">
+    <view class="plus-grid">
+      <view wx:for="{{plusItems}}" wx:key="label" class="plus-cell" data-label="{{item.label}}" bindtap="onPlusItem">
+        <view class="plus-icon"><t-icon name="{{item.icon}}" size="48rpx" /></view>
+        <text class="plus-label">{{item.label}}</text>
+      </view>
+    </view>
   </view>
-
-  <!-- 「+」操作菜单 -->
-  <t-action-sheet visible="{{plusOpen}}" theme="grid" items="{{plusItems}}" bind:selected="onPlusPick" bind:visible-change="onPlusChange" />
 
   <!-- 图片全屏预览 -->
   <t-image-viewer visible="{{imgView}}" images="{{imgViewList}}" bind:close="onImgViewClose" />
@@ -113,6 +157,28 @@
         <view class="msg-view-btn" catchtap="copyMsgView">复制</view>
         <view class="msg-view-btn primary" catchtap="closeMsgView">关闭</view>
       </view>
+    </view>
+  </view>
+
+  <!-- 录音浮层 -->
+  <view class="rec-mask {{recording ? 'show' : ''}}">
+    <view class="rec-box">
+      <view class="rec-icon {{willCancel ? 'cancel' : ''}}"><t-icon name="microphone" size="72rpx" /></view>
+      <text class="rec-text">{{willCancel ? '松开手指，取消发送' : '手指上滑，取消发送'}}</text>
+    </view>
+  </view>
+
+  <!-- 聊天背景选择面板 -->
+  <view class="bg-mask {{bgPanel ? 'show' : ''}}" bindtap="closeBgPanel"></view>
+  <view class="bg-panel {{bgPanel ? 'show' : ''}}" catchtap>
+    <view class="bg-panel-title">聊天背景<text class="bg-panel-hint muted">两人共享</text></view>
+    <view class="bg-grid">
+      <view wx:for="{{bgPresets}}" wx:key="key" class="bg-tile"
+        style="background:{{item.css}}" data-key="{{item.key}}" bindtap="pickBgPreset">
+        <text class="bg-tile-label">{{item.label}}</text>
+      </view>
+      <view class="bg-tile bg-custom" bindtap="chooseBgImage"><t-icon name="image-1" size="44rpx" /><text class="bg-tile-label">自定义</text></view>
+      <view class="bg-tile bg-none" bindtap="clearBg"><t-icon name="close" size="44rpx" /><text class="bg-tile-label">无</text></view>
     </view>
   </view>
 </view>

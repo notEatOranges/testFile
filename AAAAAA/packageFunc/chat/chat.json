@@ -4,9 +4,9 @@
   "navigationBarBackgroundColor": "#fff5f7",
   "navigationBarTextStyle": "black",
   "usingComponents": {
-    "t-action-sheet": "tdesign-miniprogram/action-sheet/action-sheet",
     "t-tabs": "tdesign-miniprogram/tabs/tabs",
     "t-tab-panel": "tdesign-miniprogram/tab-panel/tab-panel",
-    "t-image-viewer": "tdesign-miniprogram/image-viewer/image-viewer"
+    "t-image-viewer": "tdesign-miniprogram/image-viewer/image-viewer",
+    "t-loading": "tdesign-miniprogram/loading/loading"
   }
 }

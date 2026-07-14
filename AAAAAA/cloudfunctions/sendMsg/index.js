@@ -56,8 +56,8 @@ exports.main = async (event) => {
   const key = `k_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
   const val = { sender: senderRole, ts: ts || Date.now() };
   if (text != null) val.text = String(text);
-  if (media && media.fileID) {                 // 图片/文件消息
-    val.type = media.kind;                      // 'image' | 'file'
+  if (media && media.fileID) {                 // 图片/文件/语音消息
+    val.type = media.kind;                      // 'image' | 'file' | 'voice'
     val.fileID = media.fileID;
     if (media.kind === 'image') {
       if (media.sticker) val.sticker = true;
@@ -66,6 +66,8 @@ exports.main = async (event) => {
     } else if (media.kind === 'file') {
       if (media.name != null) val.name = media.name;
       if (media.size != null) val.size = media.size;
+    } else if (media.kind === 'voice') {
+      if (media.duration != null) val.duration = media.duration; // 毫秒
     }
   }
   const kvCol = db.collection(KV);
@@ -97,7 +99,7 @@ exports.main = async (event) => {
         [KW.stime]: { value: fmtTime(val.ts) },                 // 发送时间
         [KW.title]: { value: '新消息' },                          // 消息标题
         [KW.ptime]: { value: fmtTime(val.ts) },                 // 发布时间
-        [KW.content]: { value: (text != null ? String(text) : (val.type === 'image' ? '[图片]' : val.type === 'file' ? '[文件]' : '')).slice(0, 20) }      // 消息内容（图片/文件用占位词）
+        [KW.content]: { value: (text != null ? String(text) : (val.type === 'image' ? '[图片]' : val.type === 'file' ? '[文件]' : val.type === 'voice' ? '[语音]' : '')).slice(0, 20) }      // 消息内容（图片/文件/语音用占位词）
       }
     });
   } catch (err) {

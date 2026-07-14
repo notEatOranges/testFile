@@ -4,10 +4,10 @@
   background: linear-gradient(160deg, var(--bg-1), var(--bg-2));
 }
 /* chat-list 不留右 padding（滚动条贴屏右）；内层 chat-inner 留右 padding 给内容 */
-.chat-list { flex: 1; min-height: 0; padding: 16rpx 0 24rpx 24rpx; box-sizing: border-box; }
+.chat-list { flex: 1; min-height: 0; padding: 16rpx 0 24rpx 24rpx; box-sizing: border-box; position: relative; z-index: 1; }
 .chat-inner { padding-right: 40rpx; }
 
-.chat-time { text-align: center; font-size: 22rpx; color: var(--text-soft); margin: 20rpx 0; }
+.chat-time { text-align: center; font-size: 22rpx; color: var(--text-soft); margin: 20rpx 0; text-shadow: 0 2rpx 6rpx rgba(255,255,255,.4); }
 
 /* 戳一戳记录：居中灰条 */
 .chat-poke-row { display: flex; justify-content: center; margin: 14rpx 0; }
@@ -64,7 +64,7 @@
 .emoji-bubble { line-height: 1.2; }
 .emoji-big { font-size: 96rpx; }
 
-.chat-empty { text-align: center; padding: 140rpx 0; font-size: 26rpx; }
+.chat-empty { text-align: center; padding: 140rpx 0; font-size: 26rpx; text-shadow: 0 2rpx 6rpx rgba(255,255,255,.4); }
 
 /* 收到戳一戳的顶部提示 */
 .poke-tip {
@@ -91,14 +91,22 @@
   display: flex; align-items: center; gap: 8rpx;
   padding: 16rpx 20rpx calc(16rpx + env(safe-area-inset-bottom));
   background: var(--card); border-top: 1rpx solid var(--border); box-sizing: border-box;
+  position: relative; z-index: 2;
 }
 .emoji-btn { color: var(--text-soft); padding: 4rpx; line-height: 1; }
-.poke-btn { color: var(--primary); padding: 4rpx; line-height: 1; }
 .chat-input {
   flex: 1; box-sizing: border-box; min-height: 72rpx; padding: 14rpx 24rpx;
   background: var(--chip); border-radius: 28rpx; font-size: 30rpx; line-height: 1.5; color: var(--text);
 }
-.expand-btn { color: var(--text-soft); font-size: 26rpx; padding: 0 10rpx; line-height: 1; white-space: nowrap; }
+/* 全屏入口：仅长内容时浮现于输入框上方 */
+.expand-icon {
+  position: absolute; right: 28rpx; top: -52rpx;
+  width: 60rpx; height: 60rpx; border-radius: 50%;
+  background: var(--card); box-shadow: 0 4rpx 16rpx var(--card-shadow);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text-soft); z-index: 4;
+}
+.expand-icon:active { opacity: .7; }
 .send-btn {
   padding: 0 32rpx; height: 72rpx; line-height: 72rpx; border-radius: 36rpx;
   background: var(--primary-soft); color: #fff; font-size: 28rpx;
@@ -144,8 +152,12 @@
 /* 媒体消息在气泡行里的对齐：和文本气泡同样的 order */
 .bubble-row .media-img { order: 3; }
 .bubble-row.me .media-img { order: 2; }
+.bubble-row .img-wrap { order: 3; }
+.bubble-row.me .img-wrap { order: 2; }
 .bubble-row .file-bubble { order: 3; }
 .bubble-row.me .file-bubble { order: 2; }
+.bubble-row .voice-bubble { order: 3; }   /* voice-bubble 本身带 .bubble，order 与文本气泡一致 */
+.bubble-row.me .voice-bubble { order: 2; }
 
 /* 图片气泡 */
 .bubble-img { max-width: 320rpx; border-radius: 16rpx; background: var(--chip); }
@@ -164,11 +176,101 @@
 .file-name { display: block; font-size: 28rpx; color: var(--text); word-break: break-all; line-height: 1.3; }
 .file-size { margin-top: 6rpx; display: block; }
 
-/* 表情 / 表情包 面板 */
-.chat-panel { background: var(--card); border-top: 1rpx solid var(--border); box-sizing: border-box; }
+/* 面板区（表情 / +）：紧贴输入栏下方，顶起输入栏 */
+.chat-panel { background: var(--card); border-top: 1rpx solid var(--border); box-sizing: border-box; position: relative; z-index: 2; padding-bottom: env(safe-area-inset-bottom); }
 .panel-scroll { height: 340rpx; box-sizing: border-box; padding: 8rpx 16rpx; }
 .emoji-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 8rpx; }
 .sticker-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16rpx; padding: 8rpx; }
 .sticker-thumb { width: 100%; height: 140rpx; background: var(--chip); border-radius: 12rpx; }
 .sticker-thumb:active { opacity: 0.7; }
 .sticker-empty { text-align: center; padding: 60rpx 24rpx; font-size: 26rpx; line-height: 1.6; }
+
+/* ============ 聊天背景 ============ */
+.chat-bg { position: absolute; left: 0; top: 0; right: 0; bottom: 0; z-index: 0; }
+
+/* ============ 图片上传进度蒙层 ============ */
+.img-wrap { position: relative; display: inline-block; }
+.upload-progress {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  display: flex; flex-direction: column; align-items: center; gap: 6rpx;
+  background: rgba(0,0,0,.5); border-radius: 16rpx; padding: 12rpx 18rpx; color: #fff;
+}
+.up-pct { font-size: 22rpx; }
+
+/* ============ 语音气泡 ============ */
+.voice-bubble { display: flex; align-items: center; gap: 10rpx; min-width: 120rpx; }
+.bubble-row.me .voice-bubble { flex-direction: row-reverse; }
+.voice-dur { font-size: 26rpx; white-space: nowrap; }
+.voice-bars { display: flex; align-items: center; gap: 4rpx; height: 36rpx; }
+.voice-bars .vbar { width: 6rpx; height: 12rpx; border-radius: 3rpx; background: currentColor; opacity: .5; }
+.voice-bars.on .vbar { animation: voiceBar .9s ease-in-out infinite; }
+.voice-bars.on .vbar:nth-child(2) { animation-delay: .2s; }
+.voice-bars.on .vbar:nth-child(3) { animation-delay: .4s; }
+@keyframes voiceBar {
+  0%, 100% { height: 10rpx; opacity: .5; }
+  50% { height: 32rpx; opacity: 1; }
+}
+
+/* ============ 输入栏：语音切换 / 按住说话 ============ */
+.voice-btn { color: var(--text-soft); padding: 4rpx; line-height: 1; flex-shrink: 0; }
+.talk-btn {
+  flex: 1; height: 72rpx; line-height: 72rpx; text-align: center;
+  background: var(--chip); border-radius: 28rpx; font-size: 28rpx; color: var(--text);
+}
+.talk-btn.cancel { background: rgba(232,90,134,.18); color: var(--primary-deep); }
+
+/* ============ 录音浮层 ============ */
+.rec-mask {
+  position: fixed; left: 0; top: 0; right: 0; bottom: 0; z-index: 80;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(0,0,0,.4); opacity: 0; pointer-events: none; transition: opacity .2s;
+}
+.rec-mask.show { opacity: 1; }
+.rec-box {
+  display: flex; flex-direction: column; align-items: center; gap: 18rpx;
+  background: rgba(0,0,0,.7); border-radius: 24rpx; padding: 36rpx 48rpx; color: #fff;
+}
+.rec-icon { width: 120rpx; height: 120rpx; border-radius: 50%; background: rgba(255,255,255,.15);
+  display: flex; align-items: center; justify-content: center; }
+.rec-icon.cancel { background: rgba(232,90,134,.5); }
+.rec-text { font-size: 26rpx; }
+
+/* ============ 聊天背景选择面板 ============ */
+.bg-mask {
+  position: fixed; left: 0; top: 0; right: 0; bottom: 0; z-index: 50;
+  background: rgba(0,0,0,.4); opacity: 0; pointer-events: none; transition: opacity .2s;
+}
+.bg-mask.show { opacity: 1; pointer-events: auto; }
+.bg-panel {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 51;
+  background: var(--card); border-radius: 28rpx 28rpx 0 0; padding: 24rpx 24rpx calc(24rpx + env(safe-area-inset-bottom));
+  transform: translateY(100%); transition: transform .25s; box-shadow: 0 -8rpx 30rpx rgba(0,0,0,.12);
+}
+.bg-panel.show { transform: translateY(0); }
+.bg-panel-title { font-size: 30rpx; font-weight: 600; color: var(--text); margin-bottom: 20rpx; display: flex; align-items: center; gap: 12rpx; }
+.bg-panel-hint { font-size: 22rpx; font-weight: 400; }
+.bg-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16rpx; }
+.bg-tile {
+  position: relative; height: 150rpx; border-radius: 16rpx; overflow: hidden;
+  display: flex; align-items: flex-end; justify-content: center;
+  box-shadow: 0 2rpx 8rpx rgba(0,0,0,.1);
+}
+.bg-tile:active { opacity: .8; }
+.bg-tile-label { font-size: 22rpx; color: #fff; padding: 8rpx 12rpx; text-shadow: 0 1rpx 4rpx rgba(0,0,0,.5); }
+.bg-custom, .bg-none {
+  background: var(--chip); color: var(--text-soft);
+  flex-direction: column; align-items: center; justify-content: center; gap: 6rpx;
+}
+.bg-custom .bg-tile-label, .bg-none .bg-tile-label { color: var(--text-soft); text-shadow: none; }
+
+/* ============ 「+」操作面板（底部内联，顶起输入栏） ============ */
+.plus-panel { padding: 28rpx 16rpx; }
+.plus-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 28rpx 0; }
+.plus-cell { display: flex; flex-direction: column; align-items: center; gap: 12rpx; }
+.plus-cell:active { opacity: .7; }
+.plus-icon {
+  width: 96rpx; height: 96rpx; border-radius: 24rpx;
+  background: var(--chip); color: var(--primary);
+  display: flex; align-items: center; justify-content: center;
+}
+.plus-label { font-size: 24rpx; color: var(--text); }

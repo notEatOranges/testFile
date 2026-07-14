@@ -51,33 +51,72 @@ async function kvGet(path) {
   return v;
 }
 
+/* —— watch 断线自动重连 —— */
+const FATAL_TOLERANCE = 12;   // 连续重连上限，超过则放弃（避免无限轮询）
+
+function clearRetry(s) {
+  if (s.retryTimer) { clearTimeout(s.retryTimer); s.retryTimer = null; }
+}
+
+// 建实时监听（抽出独立函数，便于 onError 后重建）
+function buildWatcher(s, path) {
+  try {
+    s.watcher = getDB().collection(KV).where({ room: code, path }).watch({
+      onChange(snap) {
+        s.retryCount = 0;                       // 收到快照=链路健康，重置退避计数
+        const v = snap.docs.length ? snap.docs[0].value : null;
+        cache.set(path, v);
+        s.cbs.forEach(fn => fn(v));
+      },
+      onError(err) {
+        console.warn('[store] watch err', path, err);
+        scheduleReconnect(s, path);
+      }
+    });
+  } catch (e) {
+    console.warn('[store] watch 建立失败', path, e);
+    scheduleReconnect(s, path);
+  }
+}
+
+// 指数退避重连：1s→2s→4s…上限 30s；重建前先 kvGet 回补断线期间漏掉的写入
+function scheduleReconnect(s, path) {
+  if (s.cbs.size === 0) return;                 // 已无订阅者，不必重连
+  if (s.retryCount >= FATAL_TOLERANCE) { console.warn('[store] 重连次数超限，放弃', path); return; }
+  if (s.rebuilding) return;                      // 已在排队，去重
+  s.rebuilding = true;
+  const delay = Math.min(30000, 1000 * Math.pow(2, s.retryCount));
+  s.retryCount++;
+  clearRetry(s);
+  s.retryTimer = setTimeout(() => {
+    s.rebuilding = false;
+    if (s.cbs.size === 0) return;               // 等待期间被退订
+    if (s.watcher && s.watcher.close) { try { s.watcher.close(); } catch (e) {} }
+    s.watcher = null;
+    kvGet(path).then(v => s.cbs.forEach(fn => fn(v))).catch(() => {}); // 乐观回补
+    buildWatcher(s, path);
+  }, delay);
+}
+
 function kvOnValue(path, cb) {
   let s = subs.get(path);
   const isFirst = !s;
-  if (!s) { s = { cbs: new Set(), watcher: null }; subs.set(path, s); }
+  if (!s) { s = { cbs: new Set(), watcher: null, rebuilding: false, retryTimer: null, retryCount: 0 }; subs.set(path, s); }
   s.cbs.add(cb);
 
   if (isFirst) {
     bumpLoading(1);
     // 立即回读当前值（进入页面即有数据，不等 watch 首次推送）
     kvGet(path).then(v => s.cbs.forEach(fn => fn(v))).finally(() => bumpLoading(-1));
-    // 建实时监听，接管后续变化
-    try {
-      s.watcher = getDB().collection(KV).where({ room: code, path }).watch({
-        onChange(snap) {
-          const v = snap.docs.length ? snap.docs[0].value : null;
-          cache.set(path, v);
-          s.cbs.forEach(fn => fn(v));
-        },
-        onError(err) { console.warn('[store] watch err', path, err); }
-      });
-    } catch (e) { console.warn('[store] watch 建立失败', path, e); }
+    // 建实时监听，接管后续变化（断线由 buildWatcher→scheduleReconnect 自动重建）
+    buildWatcher(s, path);
   } else if (cache.has(path)) {
     cb(cache.get(path));   // 复用已有 watcher，立即用缓存回调一次
   }
   return () => {
     s.cbs.delete(cb);
     if (s.cbs.size === 0) {
+      clearRetry(s);
       if (s.watcher && s.watcher.close) { try { s.watcher.close(); } catch (e) {} }
       subs.delete(path);
     }
@@ -99,7 +138,10 @@ const Store = {
 
   /** 切房间：关闭所有旧 watcher（旧 watcher 锁定旧 room 的查询，不关会串数据） */
   setRoom(c) {
-    for (const [, s] of subs) { if (s.watcher && s.watcher.close) { try { s.watcher.close(); } catch (e) {} } }
+    for (const [, s] of subs) {
+      clearRetry(s);
+      if (s.watcher && s.watcher.close) { try { s.watcher.close(); } catch (e) {} }
+    }
     subs.clear();
     cache.clear();
     code = c;
