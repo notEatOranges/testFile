@@ -1,0 +1,32 @@
+<view class="theme-{{theme}} love-page t-page">
+
+  <view class="t-top">
+    <view class="t-score"><text class="lbl">分数</text><text class="val">{{score}}</text></view>
+    <view class="t-meta">
+      <text>第 {{level}} 关</text>
+      <text>{{lines}} 行</text>
+      <text>最高 {{best}}</text>
+    </view>
+  </view>
+
+  <view class="t-board-wrap">
+    <canvas type="2d" id="board" class="t-board"></canvas>
+    <view wx:if="{{over}}" class="over-mask">
+      <view class="over-text">游戏结束</view>
+      <view class="over-score">{{score}} 分</view>
+      <view class="over-btn" bindtap="restart">再来一局</view>
+    </view>
+    <view wx:if="{{paused && !over}}" class="over-mask">
+      <view class="over-text">已暂停</view>
+      <view class="over-btn" bindtap="togglePause">继续</view>
+    </view>
+  </view>
+
+  <view class="t-ctrls">
+    <view class="t-btn" bindtap="left"><t-icon name="chevron-left" size="44rpx" /></view>
+    <view class="t-btn" bindtap="rotate"><t-icon name="refresh" size="40rpx" /></view>
+    <view class="t-btn" bindtap="softDrop"><t-icon name="chevron-down" size="44rpx" /></view>
+    <view class="t-btn" bindtap="right"><t-icon name="chevron-right" size="44rpx" /></view>
+    <view class="t-btn sm" bindtap="togglePause"><t-icon name="{{paused ? 'play' : 'pause'}}" size="40rpx" /></view>
+  </view>
+</view>
