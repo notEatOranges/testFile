@@ -23,7 +23,8 @@
       "root": "packageGames",
       "pages": [
         "game2048/game2048",
-        "tetris/tetris"
+        "tetris/tetris",
+        "drawguess/drawguess"
       ]
     }
   ],

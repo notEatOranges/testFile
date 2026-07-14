@@ -1,0 +1,34 @@
+.dg-page { padding-top: 24rpx; padding-bottom: calc(40rpx + env(safe-area-inset-bottom)); }
+
+/* 分数 */
+.dg-score { display: flex; align-items: center; justify-content: center; gap: 28rpx; margin-bottom: 32rpx; }
+.ds-item { display: flex; flex-direction: column; align-items: center; padding: 12rpx 32rpx; border-radius: 18rpx; background: var(--card); box-shadow: 0 6rpx 20rpx var(--card-shadow); }
+.ds-item .lbl { font-size: 24rpx; color: var(--text-soft); }
+.ds-item .val { font-size: 44rpx; font-weight: 800; color: var(--primary-deep); }
+.ds-vs { font-size: 26rpx; color: var(--text-soft); font-weight: 700; }
+
+/* 居中状态 */
+.dg-center { display: flex; flex-direction: column; align-items: center; gap: 16rpx; padding: 40rpx 0; text-align: center; }
+.dg-big-ic { width: 120rpx; height: 120rpx; border-radius: 50%; background: var(--chip); color: var(--primary); display: flex; align-items: center; justify-content: center; margin-bottom: 8rpx; }
+.dg-title { font-size: 36rpx; font-weight: 700; color: var(--text); }
+
+/* 画手：词条 + 画布 */
+.word-bar { display: flex; flex-direction: column; align-items: center; gap: 6rpx; margin-bottom: 18rpx; }
+.wb-tip { font-size: 24rpx; color: var(--text-soft); }
+.wb-word { font-size: 52rpx; font-weight: 800; color: var(--primary-deep); }
+.wb-hint { font-size: 24rpx; }
+.draw-canvas { width: 86vw; height: 86vw; max-width: 620rpx; max-height: 620rpx; background: #fff; border-radius: 16rpx; box-shadow: 0 8rpx 30rpx var(--card-shadow); }
+.color-row { display: flex; align-items: center; gap: 16rpx; margin: 20rpx 0; flex-wrap: wrap; justify-content: center; }
+.color-dot { width: 56rpx; height: 56rpx; border-radius: 50%; border: 4rpx solid #fff; box-shadow: 0 2rpx 8rpx rgba(0,0,0,.15); }
+.color-dot.sel { transform: scale(1.18); box-shadow: 0 0 0 4rpx var(--card), 0 0 0 8rpx var(--primary); }
+.clear-btn { display: flex; align-items: center; gap: 6rpx; color: var(--text-soft); font-size: 24rpx; padding: 8rpx 16rpx; }
+.dg-actions { display: flex; flex-direction: column; gap: 16rpx; }
+
+/* 猜手 */
+.guess-img { width: 86vw; max-width: 620rpx; border-radius: 16rpx; box-shadow: 0 8rpx 30rpx var(--card-shadow); background: #fff; }
+.dg-input { width: 100%; box-sizing: border-box; height: 88rpx; line-height: 88rpx; padding: 0 28rpx; background: var(--card); border-radius: 20rpx; font-size: 30rpx; color: var(--text); margin: 20rpx 0; box-shadow: 0 6rpx 20rpx var(--card-shadow); }
+
+/* 揭晓 */
+.reveal-img { width: 70vw; max-width: 500rpx; border-radius: 16rpx; box-shadow: 0 8rpx 30rpx var(--card-shadow); background: #fff; margin-bottom: 12rpx; }
+
+.ghost { --td-brand-color: var(--text-soft); }
