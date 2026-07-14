@@ -1,0 +1,113 @@
+<!--
+此文件为开发者工具生成，生成时间: 2026/7/14下午9:39:52
+使用方法：
+在 D:\Users\Administrator\Desktop\gitHub\testFile\AAAAAA\pages\me\me.wxml 引入模板
+
+```
+<import src="me.skeleton.wxml"/>
+<template is="skeleton" wx:if="{{loading}}" />
+```
+
+在 D:\Users\Administrator\Desktop\gitHub\testFile\AAAAAA\pages\me\me.wxss 中引入样式
+```
+@import "./me.skeleton.wxss";
+```
+
+更多详细信息可以参考文档：https://developers.weixin.qq.com/miniprogram/dev/devtools/skeleton.html
+-->
+<template name="skeleton">
+  <view class="sk-container">
+    <view class="theme-sakura love-page me-page sk-image">
+      <view class="me-profile love-card">
+        <image class="me-av sk-image" mode="aspectFill"></image>
+        <view class="me-info">
+          <view class="me-nick sk-transparent sk-text-14-2857-151 sk-text">undefined</view>
+          <view class="me-sub muted small sk-transparent sk-text-14-2857-510 sk-text">空间码 c_533NYAZ38G · 男生</view>
+        </view>
+      </view>
+      <view class="me-group love-card">
+        <view class="me-cell">
+          <view class="mc-ic">
+            <view class="t-icon icon--t-icon  " style="font-size: 20px;">
+              <label class="t-icon-user-add icon--t-icon-user-add t-icon-base icon--t-icon-base sk-pseudo sk-pseudo-circle"></label>
+            </view>
+          </view>
+          <view class="mc-text">
+            <view class="mc-title sk-transparent sk-text-14-2857-681 sk-text">邀请码</view>
+            <view class="mc-sub muted small sk-transparent sk-text-14-2857-415 sk-text">发给 ta 加入空间</view>
+          </view>
+          <view class="mc-code sk-transparent sk-text-14-2857-220 sk-text">C3T7Q5</view>
+        </view>
+        <view class="me-cell">
+          <view class="mc-ic">
+            <view class="t-icon icon--t-icon  " style="font-size: 20px;">
+              <label class="t-icon-palette icon--t-icon-palette t-icon-base icon--t-icon-base sk-pseudo sk-pseudo-circle"></label>
+            </view>
+          </view>
+          <view class="mc-text">
+            <view class="mc-title sk-transparent sk-text-14-2857-865 sk-text">换主题</view>
+          </view>
+          <view class="mc-arrow">
+            <view class="t-icon icon--t-icon  " style="font-size: 18px;">
+              <label class="t-icon-chevron-right icon--t-icon-chevron-right t-icon-base icon--t-icon-base sk-pseudo sk-pseudo-circle"></label>
+            </view>
+          </view>
+        </view>
+        <view class="me-cell">
+          <view class="mc-ic">
+            <view class="t-icon icon--t-icon  " style="font-size: 20px;">
+              <label class="t-icon-notification icon--t-icon-notification t-icon-base icon--t-icon-base sk-pseudo sk-pseudo-circle"></label>
+            </view>
+          </view>
+          <view class="mc-text">
+            <view class="mc-title sk-transparent sk-text-14-2857-852 sk-text">消息通知</view>
+          </view>
+          <view class="mc-arrow">
+            <view class="t-icon icon--t-icon  " style="font-size: 18px;">
+              <label class="t-icon-chevron-right icon--t-icon-chevron-right t-icon-base icon--t-icon-base sk-pseudo sk-pseudo-circle"></label>
+            </view>
+          </view>
+        </view>
+        <view class="me-cell">
+          <view class="mc-ic">
+            <view class="t-icon icon--t-icon  " style="font-size: 20px;">
+              <label class="t-icon-heart icon--t-icon-heart t-icon-base icon--t-icon-base sk-pseudo sk-pseudo-circle"></label>
+            </view>
+          </view>
+          <view class="mc-text">
+            <view class="mc-title sk-transparent sk-text-14-2857-132 sk-text">戳一戳后缀</view>
+          </view>
+          <view class="mc-val muted small sk-transparent sk-text-14-2857-348 sk-text">并说我想你了</view>
+          <view class="mc-arrow">
+            <view class="t-icon icon--t-icon  " style="font-size: 18px;">
+              <label class="t-icon-chevron-right icon--t-icon-chevron-right t-icon-base icon--t-icon-base sk-pseudo sk-pseudo-circle"></label>
+            </view>
+          </view>
+        </view>
+      </view>
+      <view class="me-group love-card">
+        <view class="me-cell danger">
+          <view class="mc-ic">
+            <view class="t-icon icon--t-icon  " style="font-size: 20px;">
+              <label class="t-icon-logout icon--t-icon-logout t-icon-base icon--t-icon-base sk-pseudo sk-pseudo-circle"></label>
+            </view>
+          </view>
+          <view class="mc-text">
+            <view class="mc-title sk-transparent sk-text-14-2857-222 sk-text">退出空间</view>
+          </view>
+        </view>
+      </view>
+      <view class="theme-mask"></view>
+      <view class="sf-mask"></view>
+      <view class="sf-sheet">
+        <view class="sf-title sk-transparent sk-text-14-2857-589 sk-text" style="background-position-x: 50%;">我的戳一戳后缀</view>
+        <view class="sf-sub muted small sk-transparent sk-text-14-2857-485 sk-text" style="background-position-x: 50%;">戳 ta 时会带上这句话，如「并说想你」</view>
+        <view class="sf-input sk-image" maxlength="12" placeholder="留空就是轻轻戳一下" value="true"></view>
+        <view class="sf-actions">
+          <view class="sf-cancel sk-transparent sk-text-14-2857-313 sk-text" style="background-position-x: 50%;">取消</view>
+          <view class="sf-ok sk-transparent sk-text-14-2857-961 sk-text" style="background-position-x: 50%;">保存</view>
+        </view>
+      </view>
+    </view>
+  </view>
+</template>

@@ -6,10 +6,19 @@ cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 const db = cloud.database();
 const COUPLES = 'couples', KV = 'kv';
 
-// TODO: 替换为微信公众平台申请到的「纪念日提醒」订阅模板 ID
+// 「纪念日提醒」订阅模板 ID（= utils/notify.js 的 TMPL_ANNIV，两处必须一致）
 const TMPL_ID = 'CZjK1A6V6fXOKaiJ-TdfJCdTBMloydYLZeaF9PPITw4';
 const MP_STATE = 'developer'; // 开发版 developer / 体验版 trial / 正式 formal
 const NOTIFY_DAYS = [0, 1];   // 0=当天, 1=提前一天
+
+// 「纪念日提醒」模板的 4 个关键词（已按公众平台模板编号 28259 的 {{}} 实名抄对，勿改）：
+//   {{thing5.DATA}}=纪念日名称  {{time6.DATA}}=纪念日时间  {{time7.DATA}}=下次时间  {{thing4.DATA}}=备注
+const KW = {
+  name: 'thing5',    // 纪念日名称
+  date: 'time6',     // 纪念日时间
+  next: 'time7',     // 下次时间
+  remark: 'thing4'   // 备注
+};
 
 const CST = 8 * 3600 * 1000;
 function pad(n) { return String(n).padStart(2, '0'); }
@@ -44,11 +53,11 @@ exports.main = async () => {
         try {
           await cloud.openapi.subscribeMessage.send({
             touser: oid, templateId: TMPL_ID, page: 'packageFunc/days/days', miniprogramState: MP_STATE, lang: 'zh_CN',
-            // ⚠️ key 必须与你申请的模板关键词一一对应（常见：thing1=名称 time2=日期 thing3=提示）
             data: {
-              thing1: { value: String(e.title || '纪念日').slice(0, 20) },
-              time2: { value: e.date },
-              thing3: { value: label }
+              [KW.name]: { value: String(e.title || '纪念日').slice(0, 20) }, // 纪念日名称
+              [KW.date]: { value: e.date },                                    // 纪念日时间
+              [KW.next]: { value: e.date },                                    // 下次时间
+              [KW.remark]: { value: label }                                    // 备注（就是今天/就在明天）
             }
           });
           pushed++;

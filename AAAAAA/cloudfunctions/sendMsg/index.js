@@ -13,16 +13,28 @@ cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
 const db = cloud.database();
 const KV = 'kv', COUPLES = 'couples', USERS = 'users';
 
-// TODO: 替换为微信公众平台申请到的「聊天消息」订阅模板 ID（与 utils/notify.js 的 TMPL_CHAT 一致）
+// 「聊天消息通知」订阅模板 ID（= utils/notify.js 的 TMPL_CHAT，两处必须一致）
 const TMPL_ID = 'Is1-N9RbFP4UwAtGEtlHIpIbJ1edVBul5vQdstGACJQ';
 // 开发版 developer / 体验版 trial / 正式上线改 formal
 const MP_STATE = 'trial';
+
+// 「聊天消息通知」模板的 5 个关键词（已按公众平台模板编号 32400 的 {{}} 实名抄对，勿改）：
+//   {{thing1.DATA}}=消息来自  {{time6.DATA}}=发送时间  {{thing8.DATA}}=消息标题
+//   {{time9.DATA}}=发布时间   {{thing10.DATA}}=消息内容
+const KW = {
+  from: 'thing1',     // 消息来自（发送者昵称）
+  stime: 'time6',     // 发送时间
+  title: 'thing8',    // 消息标题
+  ptime: 'time9',     // 发布时间
+  content: 'thing10'  // 消息内容
+};
 
 function peerRole(r) { return r === 'boy' ? 'girl' : 'boy'; }
 function pad(n) { return String(n).padStart(2, '0'); }
 function fmtTime(ts) {
   const d = new Date(ts);
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  // time 类型关键词按 YYYY-MM-DD HH:mm:ss 传，最稳
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
 }
 
 exports.main = async (event) => {
@@ -67,11 +79,12 @@ exports.main = async (event) => {
       page: 'packageFunc/chat/chat',
       miniprogramState: MP_STATE,
       lang: 'zh_CN',
-      // ⚠️ 下面 key 必须与你申请的模板关键词一一对应（常见：thing1=昵称 thing2=内容 time3=时间）
       data: {
-        thing1: { value: peerNick.slice(0, 20) },
-        thing2: { value: String(text).slice(0, 20) },
-        time3: { value: fmtTime(val.ts) }
+        [KW.from]: { value: peerNick.slice(0, 20) },            // 消息来自
+        [KW.stime]: { value: fmtTime(val.ts) },                 // 发送时间
+        [KW.title]: { value: '新消息' },                          // 消息标题
+        [KW.ptime]: { value: fmtTime(val.ts) },                 // 发布时间
+        [KW.content]: { value: String(text).slice(0, 20) }      // 消息内容
       }
     });
   } catch (err) {
