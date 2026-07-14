@@ -1,41 +1,90 @@
-<view class="theme-{{theme}} love-page">
+<view class="theme-{{theme}} love-page days-page">
 
+  <!-- 在一起天数 -->
   <view class="love-card days-hero">
     <view class="days-big"><text class="big-num">{{days}}</text><text class="unit">天</text></view>
     <view class="days-since muted small">{{sinceText}}</view>
+    <view class="start-row">
+      <picker mode="date" value="{{startDate}}" bindchange="onStart">
+        <view class="start-pick">{{startDate || '设置在一起的日子'}}</view>
+      </picker>
+      <view wx:if="{{startDate}}" class="start-save" bindtap="saveStart">保存</view>
+    </view>
   </view>
 
-  <view class="section-title">纪念日 / 倒数</view>
+  <!-- 纪念日列表 -->
+  <view class="section-title">重要的日子</view>
   <view class="event-list">
     <block wx:if="{{events.length}}">
-      <view wx:for="{{events}}" wx:key="id" class="love-card event-card">
-        <view class="event-count {{item.past ? 'past' : ''}}">
-          <text class="count-num">{{item.n}}</text><text class="count-unit">{{item.past ? '天前' : '天后'}}</text>
+      <view wx:for="{{events}}" wx:key="id" class="love-card event-card {{item.past ? 'past' : ''}}">
+        <view class="ev-icon {{item.past ? 'muted' : ''}}"><t-icon name="{{item.typeIcon}}" size="44rpx" /></view>
+        <view class="ev-count">
+          <text class="count-num">{{item.n == null ? '-' : (item.n < 0 ? -item.n : item.n)}}</text>
+          <text class="count-text">{{item.text}}</text>
         </view>
-        <view class="event-body">
-          <view class="event-title">{{item.title}}</view>
-          <view class="event-date muted small">{{item.date}}</view>
+        <view class="ev-body">
+          <view class="ev-title-row">
+            <text class="ev-title">{{item.title}}</text>
+            <text wx:if="{{item.recurName}}" class="ev-badge">{{item.recurName}}</text>
+          </view>
+          <view class="ev-meta muted small">
+            <text>{{item.typeName}} · {{item.date}}</text>
+          </view>
+          <view wx:if="{{item.note}}" class="ev-note">{{item.note}}</view>
+          <image wx:if="{{item.photo}}" class="ev-photo" src="{{item.photo}}" mode="aspectFill" />
         </view>
-        <view class="event-del" data-id="{{item.id}}" bindtap="delEvent"><t-icon name="delete" size="32rpx" /></view>
+        <view class="ev-del" data-id="{{item.id}}" bindtap="delEvent"><t-icon name="delete" size="32rpx" /></view>
       </view>
     </block>
-    <view wx:else class="empty muted">还没有纪念日，加一个吧</view>
+    <view wx:else class="empty muted">还没有重要的日子，点右下角加一个吧</view>
   </view>
 
-  <view class="section-title">添加纪念日</view>
-  <view class="love-card form-card">
-    <input class="form-input" placeholder="名称（如 领证 / 生日）" value="{{evTitle}}" bindinput="onEvTitle" />
-    <picker mode="date" value="{{evDate}}" bindchange="onEvDate">
-      <view class="form-input picker-row {{evDate ? '' : 'ph'}}">{{evDate || '选择日期'}}</view>
-    </picker>
-    <t-button theme="primary" block class="love-btn" loading="{{adding}}" bind:tap="addEvent">添加</t-button>
-  </view>
+  <!-- 悬浮添加按钮 -->
+  <view class="fab" bindtap="openAdd"><t-icon name="add" size="48rpx" /></view>
 
-  <view class="section-title">在一起的日子</view>
-  <view class="love-card form-card">
-    <picker mode="date" value="{{startDate}}" bindchange="onStart">
-      <view class="form-input picker-row {{startDate ? '' : 'ph'}}">{{startDate || '选择在一起的起始日'}}</view>
+  <!-- 添加半屏弹层 -->
+  <view class="sf-mask {{addOpen ? 'show' : ''}}" bindtap="closeAdd"></view>
+  <view class="add-sheet {{addOpen ? 'show' : ''}}" catchtap="noop">
+    <view class="sheet-handle"></view>
+    <view class="add-title">添加一个日子</view>
+
+    <input class="add-input" placeholder="名称（如 领证纪念日 / ta 的生日）" value="{{fTitle}}" bindinput="onFTitle" />
+    <picker mode="date" value="{{fDate}}" bindchange="onFDate">
+      <view class="add-input picker-row {{fDate ? '' : 'ph'}}">{{fDate || '选择日期'}}</view>
     </picker>
-    <t-button theme="primary" block class="love-btn" loading="{{savingStart}}" bind:tap="saveStart">保存起始日</t-button>
+
+    <view class="add-label">分类</view>
+    <view class="chip-row">
+      <view wx:for="{{typeList}}" wx:key="key" class="chip {{fType === item.key ? 'sel' : ''}}" data-k="{{item.key}}" bindtap="pickType">
+        <t-icon name="{{item.icon}}" size="28rpx" /><text>{{item.name}}</text>
+      </view>
+    </view>
+
+    <view class="add-label">重复</view>
+    <view class="chip-row">
+      <view wx:for="{{recurList}}" wx:key="key" class="chip {{fRecur === item.key ? 'sel' : ''}}" data-k="{{item.key}}" bindtap="pickRecur">{{item.name}}</view>
+    </view>
+
+    <view class="add-label">提醒（订阅消息，到日子推送）</view>
+    <view class="chip-row">
+      <view wx:for="{{advanceRender}}" wx:key="d" class="chip {{item.sel ? 'sel' : ''}}" data-d="{{item.d}}" bindtap="toggleAdvance">{{item.label}}</view>
+    </view>
+
+    <view class="add-label">备注（可选）</view>
+    <input class="add-input" placeholder="写点什么…" value="{{fNote}}" bindinput="onFNote" />
+
+    <view class="add-label">照片（可选）</view>
+    <view class="photo-row">
+      <view wx:if="{{fPhoto}}" class="photo-pick has" bindtap="pickPhoto">
+        <image class="ph-img" src="{{fPhoto}}" mode="aspectFill" />
+        <view class="ph-clear" catchtap="clearPhoto"><t-icon name="close" size="24rpx" /></view>
+      </view>
+      <view wx:else class="photo-pick" bindtap="pickPhoto"><t-icon name="add" size="40rpx" /></view>
+    </view>
+
+    <view class="add-actions">
+      <view class="add-cancel" bindtap="closeAdd">取消</view>
+      <view class="add-ok {{adding ? 'disabled' : ''}}" bindtap="addEvent">{{adding ? '保存中' : '添加'}}</view>
+    </view>
   </view>
 </view>
