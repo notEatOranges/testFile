@@ -13,10 +13,12 @@
 .bubble-status.failed { color: #e85a86; }
 .bubble { order: 3; max-width: 60%; padding: 18rpx 24rpx; border-radius: 24rpx; background: var(--card); box-shadow: 0 4rpx 16rpx var(--card-shadow); word-break: break-all; }
 
-/* 自己消息：头像靠右、气泡靠右（主色背景白字） */
+/* 自己消息：整行贴右（头像最右、气泡贴右、状态在气泡左）。
+   关键：order 只能改相对顺序，必须靠 justify-content 把整行推到右边 */
+.bubble-row.me { justify-content: flex-end; }
 .bubble-row.me .avatar { order: 3; }
-.bubble-row.me .bubble { order: 1; background: var(--primary); color: #fff; }
-.bubble-row.me .bubble-status { order: 2; }
+.bubble-row.me .bubble { order: 2; background: var(--primary); color: #fff; }
+.bubble-row.me .bubble-status { order: 1; }
 
 .bubble-text { font-size: 30rpx; line-height: 1.5; }
 .bubble-time { display: block; font-size: 20rpx; opacity: 0.6; margin-top: 6rpx; }
@@ -34,6 +36,8 @@
   border-top: 1rpx solid var(--border); padding: 16rpx; box-sizing: border-box;
   display: grid; grid-template-columns: repeat(8, 1fr); gap: 8rpx;
 }
+/* 隐藏表情面板滚动条（普通 view 用伪元素；scroll-view 在 wxml 用 enhanced+show-scrollbar）*/
+.chat-emoji::-webkit-scrollbar { width: 0; height: 0; display: none; }
 .emoji-cell { text-align: center; font-size: 48rpx; padding: 12rpx 0; border-radius: 12rpx; line-height: 1.2; }
 .emoji-cell:active { background: var(--chip); }
 
