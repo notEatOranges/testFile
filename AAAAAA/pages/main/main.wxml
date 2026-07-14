@@ -10,7 +10,7 @@
   <block wx:else>
     <view class="home-head love-card">
       <view class="hi-row">
-        <image class="hi-av" src="{{myAvatar || '/assets/images/{{role}}.jpg'}}" mode="aspectFill" />
+        <image class="hi-av" src="{{myAvatar || '/assets/images/' + role + '.jpg'}}" mode="aspectFill" />
         <view class="hi-text">
           <view class="hi-title">{{nick || roleFull}}，欢迎回来</view>
           <view class="hi-sub muted small">空间码 {{roomCode}}</view>
@@ -19,7 +19,7 @@
 
       <view class="presence">
         <view class="dot {{peerOnline ? 'on' : ''}}"></view>
-        <image class="peer-av" src="{{peerAvatar || '/assets/images/{{peer}}.jpg'}}" mode="aspectFill" />
+        <image class="peer-av" src="{{peerAvatar || '/assets/images/' + peer + '.jpg'}}" mode="aspectFill" />
         <view class="peer-status {{peerOnline ? 'on' : ''}}">{{peerOnline ? peerFull + ' 在线' : peerFull + ' 暂不在线'}}</view>
       </view>
     </view>
@@ -36,7 +36,7 @@
       <view class="notify-ic"><t-icon name="notification" size="40rpx" /></view>
       <view class="notify-text">
         <view class="notify-title">消息通知</view>
-        <view class="notify-sub muted small">开启后，ta 回复你 / 纪念日到了会提醒你</view>
+        <view class="notify-sub muted small">已攒 聊天{{quota.chat}} · 纪念日{{quota.anniv}}（点一下多攒一条）</view>
       </view>
       <view class="notify-arrow"><t-icon name="chevron-right" size="36rpx" /></view>
     </view>

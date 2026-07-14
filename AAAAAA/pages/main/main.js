@@ -3,6 +3,7 @@ const user = require('../../utils/user.js');
 const room = require('../../utils/room.js');
 const { roleFull, toast } = require('../../utils/util.js');
 const notify = require('../../utils/notify.js');
+const { Store } = require('../../utils/store.js');
 
 const CARDS = [
   { page: 'chat',     icon: 'chat',      nt: '悄悄对话', nd: '只属于你俩',  ready: true },
@@ -18,7 +19,7 @@ Page({
     theme: 'sakura', cards: CARDS, booting: true,
     role: 'boy', peer: 'girl', roleFull: '男生', peerFull: '女生',
     nick: '', myAvatar: '', peerAvatar: '',
-    roomCode: '', peerOnline: false
+    roomCode: '', peerOnline: false, quota: { chat: 0, anniv: 0 }
   },
 
   onLoad() {
@@ -27,7 +28,7 @@ Page({
   },
 
   onShow() {
-    this.setData({ theme: getApp().globalData.theme || 'sakura' });
+    this.setData({ theme: getApp().globalData.theme || 'sakura', quota: notify.getQuota() });
     if (typeof this.getTabBar === 'function' && this.getTabBar()) {
       this.getTabBar().setData({ selected: 0 });
     }
@@ -52,9 +53,21 @@ Page({
     if (!this._unsub) {
       this._unsub = room.onPeerPresence(p => this.setData({ peerOnline: room.isOnline(p) }));
     }
+    // 读对方昵称头像（对方写的 profile/{peer}）
+    if (!this._peerProfile) {
+      this._peerProfile = Store.onValue('profile/' + (room.getPeer() || 'girl'), v => {
+        this.setData({
+          peerAvatar: (v && v.avatar) || '',
+          peerFull: (v && v.nick) || roleFull(room.getPeer() || 'girl')
+        });
+      });
+    }
   },
 
-  onUnload() { if (this._unsub) { this._unsub(); this._unsub = null; } },
+  onUnload() {
+    if (this._unsub) { this._unsub(); this._unsub = null; }
+    if (this._peerProfile) { this._peerProfile(); this._peerProfile = null; }
+  },
 
   applyUser() {
     const role = room.getRole() || 'boy';
@@ -66,6 +79,8 @@ Page({
       nick: u.nick || '', myAvatar: u.avatar || '',
       roomCode: room.getRoom() || ''
     });
+    // 把自己的昵称头像写进 kv，让对方能读到（对方头像来源）
+    Store.update('profile/' + role, { nick: u.nick || '', avatar: u.avatar || '' });
   },
 
   goCard(e) {
@@ -77,7 +92,8 @@ Page({
   onNotifyTap() {
     notify.requestSubscribeMessage().then(res => {
       const ok = Object.keys(res).some(k => res[k] === 'accept');
-      toast(ok ? '已开启，ta 回复时提醒你' : '可稍后再开启');
+      this.setData({ quota: notify.getQuota() });
+      toast(ok ? '又攒了一条额度，ta 回复/纪念日能提醒你' : '可稍后再开启');
     });
   }
 });

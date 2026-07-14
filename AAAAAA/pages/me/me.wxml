@@ -1,7 +1,7 @@
 <view class="theme-{{theme}} love-page me-page">
 
   <view class="me-profile love-card">
-    <image class="me-av" src="{{avatar || '/assets/images/{{role}}.jpg'}}" mode="aspectFill" />
+    <image class="me-av" src="{{avatar || '/assets/images/' + role + '.jpg'}}" mode="aspectFill" />
     <view class="me-info">
       <view class="me-nick">{{nick || roleFull}}</view>
       <view class="me-sub muted small">空间码 {{roomCode}} · {{roleFull}}</view>
@@ -27,6 +27,12 @@
       <view class="mc-text"><view class="mc-title">消息通知</view></view>
       <view class="mc-arrow"><t-icon name="chevron-right" size="36rpx" /></view>
     </view>
+    <view class="me-cell" bindtap="openPokeSuffix">
+      <view class="mc-ic"><t-icon name="heart" size="40rpx" /></view>
+      <view class="mc-text"><view class="mc-title">戳一戳后缀</view></view>
+      <view class="mc-val muted small">{{pokeSuffix ? pokeSuffix : '未设置'}}</view>
+      <view class="mc-arrow"><t-icon name="chevron-right" size="36rpx" /></view>
+    </view>
   </view>
 
   <view class="me-group love-card">
@@ -48,6 +54,18 @@
         <view class="chip-name">{{item.name}}</view>
         <view wx:if="{{theme === item.key}}" class="chip-check"><t-icon name="check" size="24rpx" /></view>
       </view>
+    </view>
+  </view>
+
+  <!-- 戳一戳后缀输入浮层 -->
+  <view class="sf-mask {{suffixOpen ? 'show' : ''}}" bindtap="closeSuffix"></view>
+  <view class="sf-sheet {{suffixOpen ? 'show' : ''}}" catchtap="noop">
+    <view class="sf-title">我的戳一戳后缀</view>
+    <view class="sf-sub muted small">戳 ta 时会带上这句话，如「并说想你」</view>
+    <input class="sf-input" placeholder="留空就是轻轻戳一下" value="{{suffixInput}}" maxlength="12" bindinput="onSuffixInput" confirm-type="done" bindconfirm="confirmSuffix" />
+    <view class="sf-actions">
+      <view class="sf-cancel" bindtap="closeSuffix">取消</view>
+      <view class="sf-ok" bindtap="confirmSuffix">保存</view>
     </view>
   </view>
 </view>

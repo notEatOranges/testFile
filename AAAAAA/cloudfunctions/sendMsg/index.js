@@ -1,3 +1,10 @@
+/*
+ * @Author: 
+ * @LastEditors: 
+ * @Date: 2026-07-14 17:24:57
+ * @LastEditTime: 2026-07-14 18:29:17
+ * @FilePath: /AAAAAA/cloudfunctions/sendMsg/index.js
+ */
 // sendMsg —— 写 chat 消息 + 给对方发订阅消息通知
 // 取代 chat 场景下的 Store.push('chat')：既写 kv（保持 watch 兼容），又推订阅消息。
 // sender role 由 OPENID 反查 couples.members 确定，不信任客户端传入。
@@ -9,7 +16,7 @@ const KV = 'kv', COUPLES = 'couples', USERS = 'users';
 // TODO: 替换为微信公众平台申请到的「聊天消息」订阅模板 ID（与 utils/notify.js 的 TMPL_CHAT 一致）
 const TMPL_ID = 'Is1-N9RbFP4UwAtGEtlHIpIbJ1edVBul5vQdstGACJQ';
 // 开发版 developer / 体验版 trial / 正式上线改 formal
-const MP_STATE = 'developer';
+const MP_STATE = 'formal';
 
 function peerRole(r) { return r === 'boy' ? 'girl' : 'boy'; }
 function pad(n) { return String(n).padStart(2, '0'); }

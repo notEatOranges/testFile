@@ -1,7 +1,8 @@
 // chat —— 微信风格实时聊天
 // 乐观回显：发送即上屏（loading），sendMsg 成功转 sent，失败转 failed
 // 头像聚合：连续同 sender 只首条带头像；气泡带小箭头指向发送者
-// 戳一戳：双击头像 / 点按钮 → 自定义戳语 → 写入 chat 流（居中记录）+ 对方震动
+// 戳一戳：后缀在「我的」页预设（pokeSuffix/{role}）；双击头像/点按钮直接戳；
+//         写入 chat 流居中记录；被戳方头像抖动 + 震动
 const user = require('@utils/user.js');
 const room = require('@utils/room.js');
 const { Store } = require('@utils/store.js');
@@ -44,9 +45,12 @@ Page({
   data: {
     theme: 'sakura', messages: [], scrollTo: '',
     input: '', emojiOpen: false, emojis: EMOJIS,
-    myRole: 'boy', myAvatar: '', peerAvatar: '',
+    myRole: 'boy', peer: 'girl', myAvatar: '', peerAvatar: '',
+    myNick: '',               // 我的昵称（戳一戳记录显示用）
+    mySuffix: '',             // 我预设的戳一戳后缀（pokeSuffix/{myRole}）
     pokeTip: false, pokeText: '',
-    pokeOpen: false, pokeSuffix: ''
+    pokeShakeTarget: '',      // 当前要抖动的头像 role（被戳方）
+    kbHeight: 0               // 键盘高度（弹起时抬高输入栏，防遮挡）
   },
 
   onLoad() {
@@ -55,11 +59,12 @@ Page({
     const u = user.getUser() || {};
     this._pending = [];
     this._serverItems = [];
-    this._lastPokeTs = null;     // 对方戳我的基线 ts
-    this._lastTap = 0;           // 双击头像检测
+    this._lastPokeTs = null;   // 对方戳我的基线 ts
+    this._lastTap = 0;         // 双击头像检测
     this.setData({
       theme: getApp().globalData.theme || 'sakura',
-      myRole: role,
+      myRole: role, peer,
+      myNick: u.nick || '',
       myAvatar: u.avatar || ('/assets/images/' + role + '.jpg'),
       peerAvatar: '/assets/images/' + peer + '.jpg'
     });
@@ -69,28 +74,47 @@ Page({
   },
 
   onShow() {
-    if (this._unsub) return;
     this.setData({ theme: getApp().globalData.theme || 'sakura' });
-    this._unsub = Store.onList('chat', items => {
-      const arr = items || [];
-      this._serverItems = arr;
-      // 检测对方新戳一戳 → 震动 + 顶部提示（首次只建基线）
-      const peerPokes = arr.filter(it => it && it.type === 'poke' && it.from !== this.data.myRole);
-      if (peerPokes.length) {
-        const top = peerPokes.reduce((a, b) => ((b.ts || 0) > (a.ts || 0) ? b : a));
-        if (this._lastPokeTs === null) {
-          this._lastPokeTs = top.ts || 0;
-        } else if ((top.ts || 0) > this._lastPokeTs) {
-          this._lastPokeTs = top.ts || 0;
-          this.receivePoke(top.suffix);
+    if (!this._unsub) {
+      this._unsub = Store.onList('chat', items => {
+        const arr = items || [];
+        this._serverItems = arr;
+        // 对方戳我（from !== myRole）的新 poke → 我头像抖 + 震动 + 顶部提示
+        const peerPokes = arr.filter(it => it && it.type === 'poke' && it.from !== this.data.myRole);
+        if (peerPokes.length) {
+          const top = peerPokes.reduce((a, b) => ((b.ts || 0) > (a.ts || 0) ? b : a));
+          if (this._lastPokeTs === null) {
+            this._lastPokeTs = top.ts || 0;
+          } else if ((top.ts || 0) > this._lastPokeTs) {
+            this._lastPokeTs = top.ts || 0;
+            this.receivePoke(top.suffix);
+          }
         }
-      }
-      this.compose();
-    });
+        this.compose();
+      });
+    }
+    // 读我预设的戳一戳后缀
+    if (!this._suffixSub) {
+      this._suffixSub = Store.onValue('pokeSuffix/' + this.data.myRole, v => {
+        this.setData({ mySuffix: (v && v.suffix) || '' });
+      });
+    }
+    // 全局键盘高度监听（比 input 的 bindkeyboardheightchange 更可靠，作主通道）
+    if (!this._kbHandler) {
+      this._kbHandler = res => {
+        const px = res.height || 0;
+        if (!this._sw) this._sw = (wx.getWindowInfo ? wx.getWindowInfo().windowWidth : wx.getSystemInfoSync().windowWidth) || 375;
+        this.setData({ kbHeight: px ? px * 750 / this._sw : 0 });
+      };
+      wx.onKeyboardHeightChange(this._kbHandler);
+    }
   },
   onUnload() {
     if (this._unsub) { this._unsub(); this._unsub = null; }
+    if (this._suffixSub) { this._suffixSub(); this._suffixSub = null; }
+    if (this._kbHandler) { wx.offKeyboardHeightChange(this._kbHandler); this._kbHandler = null; }
     if (this._pokeTimer) clearTimeout(this._pokeTimer);
+    if (this._shakeTimer) clearTimeout(this._shakeTimer);
     this._pending = [];
   },
 
@@ -106,14 +130,15 @@ Page({
     const messages = all.map(m => {
       const showTime = !prevTs || (m.ts - prevTs) > 5 * 60 * 1000;
       prevTs = m.ts;
-      // 戳一戳记录：居中灰条
       if (m.type === 'poke') {
-        const sender = m.from;
-        prevSender = sender;
+        const from = m.from;
+        const isMe = from === this.data.myRole;
+        const fromNick = m.fromNick || roleFull(from);
+        prevSender = from;
         return {
           uid: m._uid || m.id || ('p' + m.ts),
           poke: true,
-          pokeText: roleFull(sender) + ' 戳了 ' + roleFull(peerRole(sender)) + (m.suffix ? ' 「' + m.suffix + '」' : ''),
+          pokeText: fromNick + ' 拍了拍 ' + (isMe ? 'ta' : '你') + (m.suffix ? ' ' + m.suffix : ''),
           timeText: showTime ? formatChatTime(m.ts) : '',
           showTime
         };
@@ -138,7 +163,17 @@ Page({
   },
 
   onInput(e) { this.setData({ input: e.detail.value }); },
-  toggleEmoji() { this.setData({ emojiOpen: !this.data.emojiOpen }); },
+  onInputFocus() { if (this.data.emojiOpen) this.setData({ emojiOpen: false }); },   // 键盘弹起 → 收起表情面板
+  onKbHeight(e) {
+    const px = e.detail.height || 0;
+    if (!this._sw) this._sw = (wx.getWindowInfo ? wx.getWindowInfo().windowWidth : wx.getSystemInfoSync().windowWidth) || 375;
+    this.setData({ kbHeight: px ? px * 750 / this._sw : 0 });
+  },
+  toggleEmoji() {
+    const open = !this.data.emojiOpen;
+    this.setData({ emojiOpen: open });
+    if (open && wx.hideKeyboard) wx.hideKeyboard();                                   // 打开表情 → 收键盘
+  },
   pickEmoji(e) {
     this.setData({ input: (this.data.input || '') + e.currentTarget.dataset.e });
   },
@@ -163,25 +198,32 @@ Page({
     this.compose();
   },
 
-  // —— 戳一戳 ——
+  // —— 戳一戳（学微信）——
   onAvatarTap() {
     const now = Date.now();
-    if (this._lastTap && now - this._lastTap < 300) { this._lastTap = 0; this.openPoke(); }
+    if (this._lastTap && now - this._lastTap < 300) { this._lastTap = 0; this.sendPoke(); }
     else this._lastTap = now;
   },
-  openPoke() { this.setData({ pokeOpen: true, pokeSuffix: '' }); },
-  closePoke() { this.setData({ pokeOpen: false }); },
-  noop() {},
-  onPokeInput(e) { this.setData({ pokeSuffix: e.detail.value }); },
-  confirmPoke() {
-    const suffix = (this.data.pokeSuffix || '').trim();
-    this.setData({ pokeOpen: false });
-    Store.push('chat', { type: 'poke', from: this.data.myRole, ts: Store.now(), suffix });
+  sendPoke() {
+    Store.push('chat', {
+      type: 'poke', from: this.data.myRole, to: this.data.peer,
+      fromNick: this.data.myNick || '', suffix: this.data.mySuffix || '', ts: Store.now()
+    });
+    this.triggerShake(this.data.peer);   // 我戳对方 → 我屏上对方头像抖
   },
   receivePoke(suffix) {
-    this.setData({ pokeTip: true, pokeText: 'ta 戳了你' + (suffix ? ' 「' + suffix + '」' : '') });
+    this.setData({ pokeTip: true, pokeText: 'ta 拍了拍你' + (suffix ? ' ' + suffix : '') });
     if (wx.vibrateShort) wx.vibrateShort({ type: 'medium' });
+    this.triggerShake(this.data.myRole);  // 被戳 → 我的头像抖
     if (this._pokeTimer) clearTimeout(this._pokeTimer);
     this._pokeTimer = setTimeout(() => this.setData({ pokeTip: false }), 2000);
+  },
+  triggerShake(target) {
+    this.setData({ pokeShakeTarget: '' });   // 先清，确保 class 重新挂上能再次播放
+    setTimeout(() => {
+      this.setData({ pokeShakeTarget: target });
+      if (this._shakeTimer) clearTimeout(this._shakeTimer);
+      this._shakeTimer = setTimeout(() => this.setData({ pokeShakeTarget: '' }), 600);
+    }, 20);
   }
 });
