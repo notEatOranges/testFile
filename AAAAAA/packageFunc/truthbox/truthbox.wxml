@@ -1,31 +1,85 @@
-<view class="theme-{{theme}} love-page">
+<view class="theme-{{theme}} love-page truth-page">
 
-  <view class="love-card truth-q">
-    <view class="q-label">
-      <image wx:if="{{q}}" class="q-av" src="/assets/images/{{q.pickedBy}}.jpg" mode="aspectFill" />
-      <view wx:else class="q-icon"><t-icon name="help-circle" size="32rpx" /></view>
-      <text>{{q ? (pickedByFull + ' 抽的') : '真心话'}}</text>
+  <!-- 抽题 / 出题 -->
+  <view class="section-title">来一题</view>
+  <view class="draw-row">
+    <view wx:for="{{catList}}" wx:key="key" class="draw-chip {{drawing ? 'busy' : ''}}" data-k="{{item.key}}" bindtap="draw">
+      <t-icon name="{{item.icon}}" size="30rpx" /><text>{{item.name}}</text>
     </view>
-    <view class="q-text">{{q ? q.question : '点下面抽一题，看看你俩有多默契'}}</view>
   </view>
+  <t-button theme="default" block class="love-btn ghost-btn" bind:tap="openAdd" icon="edit-1">我自己出一题</t-button>
 
-  <t-button theme="default" block class="love-btn ghost-btn" bind:tap="newQ" loading="{{picking}}">换一题</t-button>
-
-  <view class="section-title">我的回答</view>
-  <view class="love-card">
-    <t-textarea placeholder="认真回答哦～" value="{{myAns}}" bind:change="onMyAns" maxlength="200" indicator />
-  </view>
-  <t-button theme="primary" block class="love-btn" bind:tap="saveAns" loading="{{saving}}">提交回答</t-button>
-
-  <view class="section-title">ta 的回答</view>
-  <view class="love-card">
-    <block wx:if="{{peerAns}}">
-      <view class="ans-who">
-        <image class="ans-av" src="/assets/images/{{peer}}.jpg" mode="aspectFill" />
-        <text>{{peerFull}} · {{peerAnsTime}}</text>
+  <!-- 堆叠卡组：等我回答的题 -->
+  <view class="section-title">等你回答 <text class="muted small">（堆叠卡片，点开作答）</text></view>
+  <view class="deck-wrap">
+    <view wx:if="{{deck.length}}" class="deck">
+      <view wx:for="{{deck}}" wx:key="id" class="deck-card" data-id="{{item.id}}" bindtap="openAns"
+            style="top:{{index * 30}}rpx; left:{{index * 18}}rpx; transform: scale({{1 - index * 0.05}}); z-index: {{10 - index}};">
+        <view class="dc-cat"><t-icon name="{{item.catIcon}}" size="26rpx" /><text>{{item.catName}}</text></view>
+        <view class="dc-text">{{item.text}}</view>
+        <view class="dc-foot muted small">由 {{item.creatorName || 'ta'}} 出题 · 点开回答</view>
       </view>
-      <view class="ans-text">{{peerAns.text}}</view>
+    </view>
+    <view wx:else class="love-card deck-empty">
+      <t-icon name="heart" size="48rpx" />
+      <view class="muted small" style="margin-top:12rpx">没有等你回答的题了，上面抽一题吧</view>
+    </view>
+  </view>
+
+  <!-- 全部题目 -->
+  <view class="section-title">全部题目 <text class="muted small">（{{questions.length}}）</text></view>
+  <view class="q-list">
+    <block wx:if="{{questions.length}}">
+      <view wx:for="{{questions}}" wx:key="id" class="love-card q-card {{item.both ? 'both' : ''}}" data-id="{{item.id}}" bindtap="openAns">
+        <view class="q-head">
+          <view class="q-cat"><t-icon name="{{item.catIcon}}" size="26rpx" /><text>{{item.catName}}</text></view>
+          <text class="q-status {{item.both ? 'ok' : ''}}">{{item.statusText}}</text>
+        </view>
+        <view class="q-text">{{item.text}}</view>
+        <view class="q-foot muted small">
+          <text>由 {{item.creatorName || 'ta'}} 出题</text>
+          <text class="q-del" data-id="{{item.id}}" catchtap="delQuestion">删除</text>
+        </view>
+      </view>
     </block>
-    <view wx:else class="empty muted">ta 还没回答</view>
+    <view wx:else class="empty muted">还没有题目，抽一题或自己出一题吧</view>
+  </view>
+
+  <!-- 回答弹层 -->
+  <view class="sf-mask {{ansOpen ? 'show' : ''}}" bindtap="closeAns"></view>
+  <view class="sf-sheet {{ansOpen ? 'show' : ''}}" catchtap="noop" wx:if="{{ansQ}}">
+    <view class="ans-cat"><t-icon name="{{ansQ.catIcon}}" size="28rpx" /><text>{{ansQ.catName}} · {{ansQ.creatorName || 'ta'}} 出题</text></view>
+    <view class="ans-q">{{ansQ.text}}</view>
+
+    <view class="ans-label">我的回答 <text wx:if="{{ansLocked}}" class="ans-lock">已锁定</text></view>
+    <t-textarea wx:if="{{!ansLocked}}" class="ans-area" placeholder="认真回答哦～" value="{{ansText}}" bind:change="onAnsInput" maxlength="200" indicator autosize="{{ true }}" />
+    <view wx:else class="ans-readonly">{{ansText}}</view>
+
+    <view class="ans-label">ta 的回答</view>
+    <view wx:if="{{ansShowPeer}}" class="ans-peer">{{ansPeerText || '（ta 留了空）'}}</view>
+    <view wx:else class="ans-peer ph">先回答才能看到 ta 的答案；ta 回答后你的答案会锁定</view>
+
+    <view class="sf-actions">
+      <view class="sf-cancel" bindtap="closeAns">关闭</view>
+      <view wx:if="{{!ansLocked}}" class="sf-ok {{saving ? 'disabled' : ''}}" bindtap="submitAns">{{saving ? '保存中' : (ansQ.hasMy ? '保存修改' : '提交回答')}}</view>
+    </view>
+  </view>
+
+  <!-- 出题弹层 -->
+  <view class="sf-mask {{addOpen ? 'show' : ''}}" bindtap="closeAdd"></view>
+  <view class="sf-sheet {{addOpen ? 'show' : ''}}" catchtap="noop">
+    <view class="sf-title">出一题</view>
+    <view class="sf-sub muted small">写给对方回答，写完点添加</view>
+    <t-textarea class="ans-area" placeholder="你的问题…" value="{{addText}}" bind:change="onAddInput" maxlength="60" autosize="{{ true }}" />
+    <view class="add-label">归类</view>
+    <view class="chip-row">
+      <view wx:for="{{catList}}" wx:key="key" class="chip {{addCat === item.key ? 'sel' : ''}}" data-k="{{item.key}}" bindtap="pickAddCat">
+        <t-icon name="{{item.icon}}" size="26rpx" /><text>{{item.name}}</text>
+      </view>
+    </view>
+    <view class="sf-actions">
+      <view class="sf-cancel" bindtap="closeAdd">取消</view>
+      <view class="sf-ok" bindtap="addCustom">添加</view>
+    </view>
   </view>
 </view>

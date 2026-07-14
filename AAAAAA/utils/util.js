@@ -82,6 +82,22 @@ const TRUTH_QUESTIONS = [
   '你觉得我们之间最有默契的一件事？', '最喜欢我叫你什么？', '什么时候觉得「有ta真好」？'
 ];
 
+// 真心话分类（功能4）：客户端兜底题库；完整题库在云函数 truthQuestions（联网找题，可免发版扩容）
+const TRUTH_CATS = {
+  icebreak:   { name: '破冰', icon: 'chat' },
+  sweet:      { name: '甜蜜', icon: 'heart' },
+  deep:       { name: '深度', icon: 'user' },
+  adventure:  { name: '冒险', icon: 'flag' },
+  wilder:     { name: '脑洞', icon: 'bulletpoint' }
+};
+const TRUTH_BANK = {
+  icebreak: ['最近一次发自内心的笑是因为什么？', '今天最想分享的一件小事？', '用一个词形容此刻的心情？', '最近循环最多的一首歌？', '你最怕的一种食物？'],
+  sweet: ['第一次心动是什么时候？', '最喜欢我哪个瞬间？', '上次偷偷想我是什么时候？', '最喜欢我叫你什么？', '什么时候觉得「有ta真好」？'],
+  deep: ['在亲密关系里最大的恐惧是什么？', '你觉得我们之间最需要改进的一点？', '有没有隐瞒过对方的事？', '未来三年最想和我一起完成什么？', '你最看重伴侣的哪个品质？'],
+  adventure: ['给对方打个电话只说一句情话', '模仿对方的一句口头禅', '用最肉麻的语气说一段话', '闭上眼让对方画一笔在你脸上', '发一条朋友圈只对ta可见'],
+  wilder: ['如果世界只剩我们俩，第一天做什么？', '变成小猫你会怎么粘我？', '我们能穿越，想去哪一天？', '如果失忆只能记一个人，你选谁？', '用一种动物形容我们的关系？']
+};
+
 function toast(msg, icon = 'none') {
   wx.showToast({ title: String(msg), icon, duration: 1800 });
 }
@@ -98,5 +114,5 @@ module.exports = {
   todayStr, fmtTime, fmtDateTime, daysBetween, daysUntil,
   uid, throttle, escapeHtml, debounce,
   roleName, roleFull, peerRole,
-  MOODS, TRUTH_QUESTIONS, toast
+  MOODS, TRUTH_QUESTIONS, TRUTH_CATS, TRUTH_BANK, toast
 };

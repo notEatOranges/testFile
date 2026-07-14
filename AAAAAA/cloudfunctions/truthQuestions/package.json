@@ -1,0 +1,7 @@
+{
+  "name": "truthQuestions",
+  "version": "1.0.0",
+  "description": "真心话题库（联网找题），返回随机/分类题目",
+  "main": "index.js",
+  "dependencies": {}
+}
