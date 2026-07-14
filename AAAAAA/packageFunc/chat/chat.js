@@ -159,7 +159,10 @@ Page({
       };
     });
     const last = messages[messages.length - 1];
-    this.setData({ messages, scrollTo: last ? ('m-' + last.uid) : '' });
+    this.setData({ messages }, () => {
+      // 等 DOM 渲染完再定位到最后一条，避免 scroll-into-view 找不到元素、进入时停在第一条
+      this.setData({ scrollTo: last ? ('m-' + last.uid) : '' });
+    });
   },
 
   onInput(e) { this.setData({ input: e.detail.value }); },
@@ -189,8 +192,17 @@ Page({
     this.compose();
     try {
       const coupleId = (user.getUser() || {}).coupleId;
-      await wx.cloud.callFunction({ name: 'sendMsg', data: { coupleId, text: entry.text, ts: entry.ts } });
+      const r = await wx.cloud.callFunction({ name: 'sendMsg', data: { coupleId, text: entry.text, ts: entry.ts } });
       entry.status = 'sent';
+      const push = r && r.result && r.result.push;
+      if (push) console.log('[sendMsg push]', push);
+      if (push && !push.ok) {
+        const tip = push.errCode === 43101 ? '对方还没开启通知，让 ta 点首页「消息通知」'
+          : push.errCode === 47003 ? '订阅模板参数不符，检查模板关键词'
+          : push.errCode === 40037 ? '模板 ID 有误'
+          : ('通知推送失败 ' + (push.errCode || ''));
+        toast(tip);
+      }
     } catch (e) {
       entry.status = 'failed';
       toast('发送失败');

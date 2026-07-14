@@ -5,7 +5,7 @@
     <text>{{pokeText}}</text>
   </view>
 
-  <scroll-view class="chat-list" scroll-y scroll-into-view="{{scrollTo}}" scroll-with-animation>
+  <scroll-view class="chat-list" scroll-y scroll-into-view="{{scrollTo}}">
     <view class="chat-inner">
       <view wx:for="{{messages}}" wx:key="uid">
         <view wx:if="{{item.showTime}}" class="chat-time">{{item.timeText}}</view>

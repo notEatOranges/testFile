@@ -59,6 +59,7 @@ exports.main = async (event) => {
     if (pu.data.length && pu.data[0].nick) peerNick = pu.data[0].nick;
   } catch (e) {}
 
+  let push = { ok: true };
   try {
     await cloud.openapi.subscribeMessage.send({
       touser: peerOpenid,
@@ -74,8 +75,9 @@ exports.main = async (event) => {
       }
     });
   } catch (err) {
-    // 43101=未订阅/额度用尽, 47003=模板参数不符, 40037=模板id错 —— 全静默
+    // 43101=未订阅/额度用尽, 47003=模板参数不符, 40037=模板id错
+    push = { ok: false, errCode: err && err.errCode, errMsg: err && err.errMsg };
     console.warn('[sendMsg] subscribe failed', err && err.errCode, err && err.errMsg);
   }
-  return { ok: true };
+  return { ok: true, push };
 };
