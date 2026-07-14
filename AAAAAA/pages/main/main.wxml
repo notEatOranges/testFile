@@ -13,7 +13,7 @@
       <view class="hi-row">
         <image class="hi-av" src="{{myAvatar || '/assets/images/' + role + '.jpg'}}" mode="aspectFill" />
         <view class="hi-text">
-          <view class="hi-title">{{nick || roleFull}}，欢迎回来</view>
+          <view class="hi-title">{{myNick ? myNick + '，欢迎回来' : '欢迎回来'}}</view>
           <view class="hi-sub muted small">空间码 {{roomCode}}</view>
         </view>
       </view>
@@ -21,7 +21,7 @@
       <view class="presence">
         <view class="dot {{peerOnline ? 'on' : ''}}"></view>
         <image class="peer-av" src="{{peerAvatar || '/assets/images/' + peer + '.jpg'}}" mode="aspectFill" />
-        <view class="peer-status {{peerOnline ? 'on' : ''}}">{{peerOnline ? peerFull + ' 在线' : peerFull + ' 暂不在线'}}</view>
+        <view class="peer-status {{peerOnline ? 'on' : ''}}">{{peerOnline ? peerName + ' 在线' : peerName + ' 暂不在线'}}</view>
       </view>
     </view>
 

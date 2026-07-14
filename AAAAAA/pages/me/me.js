@@ -3,13 +3,13 @@ const user = require('../../utils/user.js');
 const room = require('../../utils/room.js');
 const notify = require('../../utils/notify.js');
 const { Store } = require('../../utils/store.js');
-const { roleFull, toast } = require('../../utils/util.js');
+const { toast } = require('../../utils/util.js');
 const { THEMES } = require('../../utils/themes.js');
 
 Page({
   data: {
     theme: 'sakura',
-    role: 'boy', roleFull: '男生',
+    role: 'boy',
     nick: '', avatar: '', roomCode: '', inviteCode: '',
     themeSheet: false,
     themeList: Object.keys(THEMES).map(k => ({ key: k, name: THEMES[k].name, primary: THEMES[k].primary, primaryDeep: THEMES[k].primaryDeep })),
@@ -38,7 +38,7 @@ Page({
     const role = room.getRole() || 'boy';
     const u = user.getUser() || {};
     this.setData({
-      role, roleFull: roleFull(role),
+      role,
       nick: u.nick || '', avatar: u.avatar || '',
       roomCode: room.getRoom() || '',
       inviteCode: wx.getStorageSync('lh5_invite') || ''

@@ -1,7 +1,8 @@
 // main —— 首页 tab：欢迎栏 + 对方在线 + 导航 + 订阅通知入口
 const user = require('../../utils/user.js');
 const room = require('../../utils/room.js');
-const { roleFull, toast } = require('../../utils/util.js');
+const ident = require('../../utils/ident.js');
+const { toast } = require('../../utils/util.js');
 const notify = require('../../utils/notify.js');
 const { Store } = require('../../utils/store.js');
 
@@ -17,10 +18,9 @@ const CARDS = [
 Page({
   data: {
     theme: 'sakura', cards: CARDS, booting: true,
-    role: 'boy', peer: 'girl', roleFull: '男生', peerFull: '女生',
-    nick: '', myAvatar: '', peerAvatar: '',
-    roomCode: '', peerOnline: false, quota: { chat: 0, anniv: 0 },
-    peerNick: ''
+    role: 'boy', peer: 'girl',
+    myNick: '', myAvatar: '', peerName: 'ta', peerAvatar: '',
+    roomCode: '', peerOnline: false, quota: { chat: 0, anniv: 0 }
   },
 
   onLoad() {
@@ -49,8 +49,8 @@ Page({
     }
     user.applyToRoom();
     room.join();
-    this.applyUser();
-    this.setData({ booting: false });
+    ident.bind(this);                 // 注入 myNick/myAvatar/peerName/peerAvatar，并订阅对方 profile
+    this.setData({ roomCode: room.getRoom() || '', booting: false });
     if (!this._unsub) {
       this._unsub = room.onPeerPresence(p => this.evalPresence(p));
     }
@@ -59,37 +59,13 @@ Page({
     if (!this._presenceTimer) {
       this._presenceTimer = setInterval(() => this.evalPresence(this._peerPresence), 5000);
     }
-    // 读对方昵称头像（对方写的 profile/{peer}）
-    if (!this._peerProfile) {
-      this._peerProfile = Store.onValue('profile/' + (room.getPeer() || 'girl'), v => {
-        this.setData({
-          peerAvatar: (v && v.avatar) || '',
-          peerNick: (v && v.nick) || '',
-          peerFull: (v && v.nick) || roleFull(room.getPeer() || 'girl')
-        });
-      });
-    }
   },
 
   onUnload() {
     if (this._unsub) { this._unsub(); this._unsub = null; }
-    if (this._peerProfile) { this._peerProfile(); this._peerProfile = null; }
+    ident.teardown(this);
     if (this._presenceTimer) { clearInterval(this._presenceTimer); this._presenceTimer = null; }
     if (this._bubbleTimer) { clearTimeout(this._bubbleTimer); this._bubbleTimer = null; }
-  },
-
-  applyUser() {
-    const role = room.getRole() || 'boy';
-    const peer = room.getPeer() || 'girl';
-    const u = user.getUser() || {};
-    this.setData({
-      role, peer,
-      roleFull: roleFull(role), peerFull: roleFull(peer),
-      nick: u.nick || '', myAvatar: u.avatar || '',
-      roomCode: room.getRoom() || ''
-    });
-    // 把自己的昵称头像写进 kv，让对方能读到（对方头像来源）
-    Store.update('profile/' + role, { nick: u.nick || '', avatar: u.avatar || '' });
   },
 
   // 评估对方在线状态；离线→上线时弹气泡通知
@@ -100,8 +76,8 @@ Page({
     if (this.data.peerOnline !== online) this.setData({ peerOnline: online });
   },
   showOnlineBubble() {
-    // 用 TDesign message 组件提示；显示对方网名（没有网名时退回称谓，不再显示男生/女生）
-    const text = (this.data.peerNick || this.data.peerFull || '对方') + ' 上线啦';
+    // 用 TDesign message 组件提示；显示对方网名（无网名时退回 'ta'，不再出现男生/女生）
+    const text = (this.data.peerName || '对方') + ' 上线啦';
     const msg = this.selectComponent('#t-message');
     if (msg && msg.setMessage) msg.setMessage({ content: text, duration: 3000, single: true }, 'success');
   },
