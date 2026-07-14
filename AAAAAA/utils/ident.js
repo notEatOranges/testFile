@@ -11,13 +11,15 @@ const { Store } = require('./store.js');
 const SELF_FALLBACK = '我';
 const PEER_FALLBACK = 'ta';
 
-/** 绑定到页面：注入网名头像 + 订阅对方 profile。返回退订函数。 */
-function bind(page) {
+/** 绑定到页面：注入网名头像 + 订阅对方 profile。返回退订函数。
+ *  opts.onChange：网名头像变更后（含首次注入）回调，供页面重算依赖网名的派生数据。 */
+function bind(page, opts) {
   const role = room.getRole() || 'boy';
   const peer = room.getPeer() || 'girl';
   const u = user.getUser() || {};
   const myNick = u.nick || '';
   const myAvatar = u.avatar || '';
+  const onChange = opts && opts.onChange;
   page.setData({
     role, peer,
     myNick, myAvatar,
@@ -35,7 +37,9 @@ function bind(page) {
       peerAvatar: (v && v.avatar) || '',
       peerName: nick || PEER_FALLBACK
     });
+    if (onChange) onChange();
   });
+  if (onChange) onChange();   // 首次（自己网名已就绪）
   return () => teardown(page);
 }
 

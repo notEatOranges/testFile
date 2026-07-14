@@ -1,20 +1,67 @@
 <view class="theme-{{theme}} love-page wish-page">
 
+  <!-- 进度 -->
+  <view class="love-card prog-card">
+    <view class="prog-row">
+      <text class="prog-title">心愿进度</text>
+      <text class="prog-num">{{doneCount}} / {{totalCount}}</text>
+    </view>
+    <view class="prog-bar"><view class="prog-fill" style="width:{{totalCount ? (doneCount*100/totalCount) : 0}}%"></view></view>
+  </view>
+
+  <!-- 分类 -->
+  <scroll-view scroll-x class="cat-tabs" enhanced show-scrollbar="{{false}}">
+    <view wx:for="{{catTabs}}" wx:key="key" class="cat-tab {{filter === item.key ? 'sel' : ''}}" data-k="{{item.key}}" bindtap="switchTab">{{item.name}}</view>
+  </scroll-view>
+
+  <!-- 心愿列表 -->
   <view class="wish-list">
     <block wx:if="{{items.length}}">
       <view wx:for="{{items}}" wx:key="id" class="love-card wish-item {{item.done ? 'done' : ''}}">
-        <view class="check {{item.done ? 'on' : ''}}" data-id="{{item.id}}" bindtap="toggle">
-          <t-icon wx:if="{{item.done}}" name="check" size="28rpx" />
+        <view class="wish-cat"><t-icon name="{{item.catIcon}}" size="32rpx" /></view>
+        <view class="wish-main">
+          <view class="wish-text">{{item.text}}</view>
+          <view class="wish-sub muted small">由 {{item.creatorName || 'ta'}} 提出</view>
+          <block wx:if="{{item.done}}">
+            <image wx:if="{{item.photo}}" class="wish-photo" src="{{item.photo}}" mode="aspectFill" />
+            <view wx:if="{{item.note}}" class="wish-note">{{item.note}}</view>
+            <view class="wish-done-row">
+              <text class="wish-by">{{item.completerName || 'ta'}} 已完成</text>
+              <text class="wish-reopen" data-id="{{item.id}}" catchtap="reopen">重新打开</text>
+            </view>
+          </block>
         </view>
-        <view class="wish-text">{{item.text}}</view>
-        <view class="wish-del" data-id="{{item.id}}" bindtap="delWish"><t-icon name="close" size="32rpx" /></view>
+        <view wx:if="{{!item.done}}" class="wish-check" data-id="{{item.id}}" catchtap="openFinish"><t-icon name="check" size="32rpx" /></view>
+        <view class="wish-del" data-id="{{item.id}}" catchtap="delWish"><t-icon name="close" size="30rpx" /></view>
       </view>
     </block>
-    <view wx:else class="empty muted">还没有心愿，加一个想一起做的事吧</view>
+    <view wx:else class="empty muted">这里还空着，加个想一起做的事吧</view>
   </view>
 
+  <!-- 底部添加栏 -->
   <view class="wish-add love-card">
     <input class="wish-input" placeholder="想一起做的事..." value="{{input}}" bindinput="onInput" bindconfirm="addWish" />
-    <view class="wish-add-btn" bindtap="addWish"><t-icon name="add" size="36rpx" /></view>
+    <view class="add-cats">
+      <view wx:for="{{catChips}}" wx:key="key" class="add-cat {{inputCat === item.key ? 'sel' : ''}}" data-k="{{item.key}}" bindtap="pickInputCat">
+        <t-icon name="{{item.icon}}" size="26rpx" /><text>{{item.name}}</text>
+      </view>
+    </view>
+  </view>
+  <view class="add-fab" bindtap="addWish"><t-icon name="add" size="40rpx" /></view>
+
+  <!-- 完成打卡弹层 -->
+  <view class="sf-mask {{finishOpen ? 'show' : ''}}" bindtap="closeFinish"></view>
+  <view class="sf-sheet {{finishOpen ? 'show' : ''}}" catchtap="noop">
+    <view class="sf-title">完成打卡</view>
+    <view class="sf-sub muted small">可选：上传照片 + 写一句感受</view>
+    <view class="fin-photo" bindtap="pickFinishPhoto">
+      <image wx:if="{{finishPhoto}}" class="fin-img" src="{{finishPhoto}}" mode="aspectFill" />
+      <view wx:else class="fin-ph"><t-icon name="add" size="40rpx" /></view>
+    </view>
+    <input class="sf-input" placeholder="一句话感受（可选）" value="{{finishNote}}" bindinput="onFinishNote" />
+    <view class="sf-actions">
+      <view class="sf-cancel" bindtap="closeFinish">取消</view>
+      <view class="sf-ok {{finishing ? 'disabled' : ''}}" bindtap="confirmFinish">{{finishing ? '保存中' : '完成'}}</view>
+    </view>
   </view>
 </view>
