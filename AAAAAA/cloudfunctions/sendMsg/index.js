@@ -16,7 +16,7 @@ const KV = 'kv', COUPLES = 'couples', USERS = 'users';
 // TODO: 替换为微信公众平台申请到的「聊天消息」订阅模板 ID（与 utils/notify.js 的 TMPL_CHAT 一致）
 const TMPL_ID = 'Is1-N9RbFP4UwAtGEtlHIpIbJ1edVBul5vQdstGACJQ';
 // 开发版 developer / 体验版 trial / 正式上线改 formal
-const MP_STATE = 'formal';
+const MP_STATE = 'trial';
 
 function peerRole(r) { return r === 'boy' ? 'girl' : 'boy'; }
 function pad(n) { return String(n).padStart(2, '0'); }
