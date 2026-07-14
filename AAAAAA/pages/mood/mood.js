@@ -70,6 +70,6 @@ Page({
       [role]: { emoji: this.data.picked, whisper: (this.data.whisper || '').trim(), ts: Store.now() }
     });
     this.setData({ saving: false });
-    toast('已保存 💕 ta 能看到啦');
+    toast('已保存，ta 能看到啦');
   }
 });

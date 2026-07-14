@@ -38,6 +38,63 @@
   transition: transform .15s;
 }
 .nav-card:active { transform: scale(0.97); }
-.nav-ic { color: var(--primary); margin-bottom: 16rpx; line-height: 1; }
+/* 导航图标：圆角渐变底色容器 + 白色图标，精致化（替代原裸线性大图标） */
+.nav-ic {
+  width: 72rpx; height: 72rpx; border-radius: 22rpx; margin-bottom: 18rpx;
+  background: linear-gradient(135deg, var(--primary), var(--primary-deep));
+  color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 6rpx 18rpx var(--primary-soft);
+}
 .nav-nt { font-size: 30rpx; font-weight: 600; color: var(--text); }
 .nav-nd { margin-top: 6rpx; }
+
+/* 主题切换半屏弹层 */
+.theme-mask {
+  position: fixed; left: 0; top: 0; right: 0; bottom: 0; z-index: 50;
+  background: rgba(0,0,0,.35); opacity: 0; pointer-events: none; transition: opacity .2s;
+}
+.theme-mask.show { opacity: 1; pointer-events: auto; }
+.theme-sheet {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 51;
+  background: var(--card); border-radius: 28rpx 28rpx 0 0;
+  padding: 16rpx 32rpx calc(36rpx + env(safe-area-inset-bottom));
+  transform: translateY(110%); transition: transform .26s cubic-bezier(.2,.8,.2,1);
+  box-shadow: 0 -8rpx 32rpx var(--card-shadow);
+}
+.theme-sheet.show { transform: translateY(0); }
+.sheet-handle { width: 64rpx; height: 8rpx; border-radius: 4rpx; background: var(--border); margin: 0 auto 18rpx; }
+.sheet-title { font-size: 32rpx; font-weight: 700; color: var(--text); }
+.sheet-sub { margin-top: 6rpx; margin-bottom: 26rpx; }
+.theme-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20rpx; }
+.theme-chip {
+  display: flex; flex-direction: column; align-items: center; gap: 10rpx;
+  padding: 14rpx 0 16rpx; border-radius: 18rpx; border: 2rpx solid transparent; position: relative;
+}
+.theme-chip.sel { border-color: var(--primary); background: var(--chip); }
+.chip-color { width: 72rpx; height: 72rpx; border-radius: 50%; box-shadow: 0 4rpx 14rpx var(--card-shadow); }
+.chip-name { font-size: 22rpx; color: var(--text-soft); }
+.theme-chip.sel .chip-name { color: var(--primary-deep); font-weight: 600; }
+.chip-check {
+  position: absolute; top: 8rpx; right: 14rpx;
+  width: 32rpx; height: 32rpx; border-radius: 50%;
+  background: var(--primary-deep); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* 首页订阅通知板块 */
+.notify-card {
+  display: flex; align-items: center; gap: 18rpx;
+  margin-top: 24rpx; padding: 26rpx 28rpx;
+}
+.notify-card:active { transform: scale(0.98); }
+.notify-ic {
+  width: 64rpx; height: 64rpx; border-radius: 18rpx; flex-shrink: 0;
+  background: linear-gradient(135deg, var(--primary), var(--primary-deep)); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 6rpx 16rpx var(--primary-soft);
+}
+.notify-text { flex: 1; min-width: 0; }
+.notify-title { font-size: 30rpx; font-weight: 600; color: var(--text); }
+.notify-sub { margin-top: 6rpx; }
+.notify-arrow { color: var(--text-soft); }

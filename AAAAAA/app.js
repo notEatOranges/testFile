@@ -14,4 +14,11 @@ App({
             });
         }
     },
+    // 全局切换主题：更新缓存 + 遍历当前页面栈立即生效（解决切主题后其他页不刷新）
+    setTheme(key) {
+        this.globalData.theme = key;
+        wx.setStorageSync('lh5-theme', key);
+        const pages = getCurrentPages();
+        pages.forEach(p => { if (p && p.data && 'theme' in p.data) p.setData({ theme: key }); });
+    },
 });

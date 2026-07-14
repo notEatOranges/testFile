@@ -63,7 +63,7 @@ Page({
     this._unsub = Store.onValue('members/' + peer, p => {
       if (p && p.openid && !this._gone) {
         this._gone = true;
-        toast('ta 来啦 💕');
+        toast('ta 来啦');
         setTimeout(() => this.goMood(), 700);
       }
     });

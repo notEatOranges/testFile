@@ -3,7 +3,7 @@
   <view class="love-card truth-q">
     <view class="q-label">
       <image wx:if="{{q}}" class="q-av" src="/assets/images/{{q.pickedBy}}.jpg" mode="aspectFill" />
-      <view wx:else class="q-icon"><t-icon name="help-circle" size="40" /></view>
+      <view wx:else class="q-icon"><t-icon name="help-circle" size="32rpx" /></view>
       <text>{{q ? (pickedByFull + ' 抽的') : '真心话'}}</text>
     </view>
     <view class="q-text">{{q ? q.question : '点下面抽一题，看看你俩有多默契'}}</view>

@@ -1,0 +1,9 @@
+{
+  "name": "anniversaryReminder",
+  "version": "1.0.0",
+  "description": "定时扫描纪念日，临近/当天给双方发订阅消息",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

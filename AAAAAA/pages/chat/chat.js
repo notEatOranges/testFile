@@ -117,7 +117,8 @@ Page({
     this._pending.push(entry);
     this.compose();
     try {
-      await Store.push('chat', { sender: entry.sender, text: entry.text, ts: entry.ts });
+      const coupleId = (user.getUser() || {}).coupleId;
+      await wx.cloud.callFunction({ name: 'sendMsg', data: { coupleId, text: entry.text, ts: entry.ts } });
       entry.status = 'sent';
     } catch (e) {
       entry.status = 'failed';

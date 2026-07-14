@@ -16,7 +16,7 @@
           <view class="event-title">{{item.title}}</view>
           <view class="event-date muted small">{{item.date}}</view>
         </view>
-        <view class="event-del" data-id="{{item.id}}" bindtap="delEvent"><t-icon name="delete" size="40" /></view>
+        <view class="event-del" data-id="{{item.id}}" bindtap="delEvent"><t-icon name="delete" size="32rpx" /></view>
       </view>
     </block>
     <view wx:else class="empty muted">还没有纪念日，加一个吧</view>

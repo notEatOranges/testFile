@@ -24,7 +24,7 @@
   </view>
 
   <view class="chat-input-bar">
-    <view class="emoji-btn" bindtap="toggleEmoji"><t-icon name="smile" size="44" /></view>
+    <view class="emoji-btn" bindtap="toggleEmoji"><t-icon name="smile" size="36rpx" /></view>
     <input class="chat-input" placeholder="说点什么～" value="{{input}}" bindinput="onInput" bindconfirm="send" confirm-type="send" />
     <view class="send-btn {{input ? 'on' : ''}}" bindtap="send">发送</view>
   </view>

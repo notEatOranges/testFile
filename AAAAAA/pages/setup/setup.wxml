@@ -3,7 +3,7 @@
   <!-- 阶段 1：资料 -->
   <block wx:if="{{step === 'profile'}}">
     <view class="hero">
-      <view class="hero-icon"><t-icon name="heart-filled" size="96" /></view>
+      <view class="hero-icon"><t-icon name="heart-filled" size="64rpx" /></view>
       <view class="hero-title">建立我们的小窝</view>
       <view class="hero-sub">先告诉 ta 你是谁～</view>
     </view>
@@ -12,7 +12,7 @@
       <button class="avatar-pick" open-type="chooseAvatar" bind:chooseavatar="onChooseAvatar">
         <image wx:if="{{avatar}}" class="avatar-img" src="{{avatar}}" mode="aspectFill" />
         <view wx:else class="avatar-empty">
-          <view class="avatar-empty-icon"><t-icon name="camera" size="44" /></view>
+          <view class="avatar-empty-icon"><t-icon name="camera" size="36rpx" /></view>
           <view class="avatar-empty-text">点击设置头像</view>
         </view>
       </button>
@@ -28,7 +28,7 @@
   <!-- 阶段 2：配对 -->
   <block wx:elif="{{step === 'pair'}}">
     <view class="hero">
-      <view class="hero-icon"><t-icon name="{{tab === 'create' ? 'heart' : 'link'}}" size="96" /></view>
+      <view class="hero-icon"><t-icon name="{{tab === 'create' ? 'heart' : 'link'}}" size="64rpx" /></view>
       <view class="hero-title">{{tab === 'create' ? '创建情侣空间' : '加入 ta 的空间'}}</view>
       <view class="hero-sub">{{tab === 'create' ? '建好后把邀请码发给 ta' : '输入 ta 发来的邀请码'}}</view>
     </view>

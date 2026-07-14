@@ -1,0 +1,9 @@
+{
+  "triggers": [
+    {
+      "name": "dailyAnniv",
+      "type": "timer",
+      "config": "0 0 9 * * * *"
+    }
+  ]
+}

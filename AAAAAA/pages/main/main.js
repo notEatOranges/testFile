@@ -2,7 +2,8 @@
 const user = require('../../utils/user.js');
 const room = require('../../utils/room.js');
 const { roleFull, toast } = require('../../utils/util.js');
-const { THEME_LIST } = require('../../utils/themes.js');
+const { THEME_LIST, THEMES } = require('../../utils/themes.js');
+const notify = require('../../utils/notify.js');
 
 const CARDS = [
   { page: 'chat',     icon: 'chat',      nt: '悄悄对话', nd: '只属于你俩',  ready: true },
@@ -18,7 +19,9 @@ Page({
     theme: 'sakura', cards: CARDS, booting: true,
     role: 'boy', peer: 'girl', roleFull: '男生', peerFull: '女生',
     nick: '', myAvatar: '', peerAvatar: '',
-    roomCode: '', peerOnline: false, inviteCode: ''
+    roomCode: '', peerOnline: false, inviteCode: '',
+    themeSheet: false,
+    themeList: Object.keys(THEMES).map(k => ({ key: k, name: THEMES[k].name, primary: THEMES[k].primary, primaryDeep: THEMES[k].primaryDeep }))
   },
 
   onLoad() {
@@ -74,16 +77,20 @@ Page({
     wx.setClipboardData({ data: c, success: () => toast('邀请码已复制，发给 ta 吧') });
   },
 
-  pickTheme() {
-    wx.showActionSheet({
-      itemList: THEME_LIST.map(t => t.name),
-      success: res => {
-        const t = THEME_LIST[res.tapIndex];
-        getApp().globalData.theme = t.key;
-        wx.setStorageSync('lh5-theme', t.key);
-        this.setData({ theme: t.key });
-        toast('已切换 ' + t.name);
-      }
+  pickTheme() { this.setData({ themeSheet: true }); },
+  selectTheme(e) {
+    const key = e.currentTarget.dataset.key;
+    getApp().setTheme(key);
+    this.setData({ themeSheet: false });
+    const t = THEMES[key];
+    if (t) toast('已切换 ' + t.name);
+  },
+  closeTheme() { this.setData({ themeSheet: false }); },
+
+  onNotifyTap() {
+    notify.requestSubscribeMessage().then(res => {
+      const ok = Object.keys(res).some(k => res[k] === 'accept');
+      toast(ok ? '已开启，ta 回复时提醒你' : '可稍后再开启');
     });
   },
 
