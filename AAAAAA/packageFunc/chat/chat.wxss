@@ -4,7 +4,7 @@
   background: linear-gradient(160deg, var(--bg-1), var(--bg-2));
 }
 /* 右侧多留 padding，给滚动条让位，避免压到自己头像 */
-.chat-list { flex: 1; min-height: 0; padding: 16rpx 40rpx 24rpx 24rpx; box-sizing: border-box; }
+.chat-list { flex: 1; min-height: 0; padding: 16rpx 0rpx 24rpx 24rpx; box-sizing: border-box; }
 
 .chat-time { text-align: center; font-size: 22rpx; color: var(--text-soft); margin: 20rpx 0; }
 

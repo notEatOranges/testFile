@@ -26,9 +26,9 @@
 .me-cell.danger .mc-title { color: #e85a86; }
 
 /* 主题切换半屏弹层 */
-.theme-mask { position: fixed; left: 0; top: 0; right: 0; bottom: 0; z-index: 50; background: rgba(0,0,0,.35); opacity: 0; pointer-events: none; transition: opacity .2s; }
+.theme-mask { position: fixed; left: 0; top: 0; right: 0; bottom: 0; z-index: 200; background: rgba(0,0,0,.35); opacity: 0; pointer-events: none; transition: opacity .2s; }
 .theme-mask.show { opacity: 1; pointer-events: auto; }
-.theme-sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 51; background: var(--card); border-radius: 28rpx 28rpx 0 0; padding: 16rpx 32rpx calc(36rpx + env(safe-area-inset-bottom)); transform: translateY(110%); transition: transform .26s cubic-bezier(.2,.8,.2,1); box-shadow: 0 -8rpx 32rpx var(--card-shadow); }
+.theme-sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 201; background: var(--card); border-radius: 28rpx 28rpx 0 0; padding: 16rpx 32rpx calc(36rpx + env(safe-area-inset-bottom)); transform: translateY(110%); transition: transform .26s cubic-bezier(.2,.8,.2,1); box-shadow: 0 -8rpx 32rpx var(--card-shadow); }
 .theme-sheet.show { transform: translateY(0); }
 .sheet-handle { width: 64rpx; height: 8rpx; border-radius: 4rpx; background: var(--border); margin: 0 auto 18rpx; }
 .sheet-title { font-size: 32rpx; font-weight: 700; color: var(--text); }

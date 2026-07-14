@@ -56,7 +56,7 @@ exports.main = async (event) => {
     await cloud.openapi.subscribeMessage.send({
       touser: peerOpenid,
       templateId: TMPL_ID,
-      page: 'pages/chat/chat',
+      page: 'packageFunc/chat/chat',
       miniprogramState: MP_STATE,
       lang: 'zh_CN',
       // ⚠️ 下面 key 必须与你申请的模板关键词一一对应（常见：thing1=昵称 thing2=内容 time3=时间）

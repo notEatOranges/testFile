@@ -5,7 +5,8 @@
     <text>{{pokeText}}</text>
   </view>
 
-  <scroll-view class="chat-list" scroll-y enhanced scroll-into-view="{{scrollTo}}" scroll-with-animation>
+  <scroll-view class="chat-list" scroll-y scroll-into-view="{{scrollTo}}" scroll-with-animation>
+    <view style="padding-right: 40rpx">
     <view wx:for="{{messages}}" wx:key="uid">
       <view wx:if="{{item.showTime}}" class="chat-time">{{item.timeText}}</view>
       <view wx:if="{{item.poke}}" class="chat-poke-row">
@@ -27,6 +28,7 @@
       </view>
     </view>
     <view wx:if="{{!messages.length}}" class="chat-empty muted">还没有消息，先和 ta 说句话吧</view>
+    </view>
   </scroll-view>
 
   <view class="chat-emoji" wx:if="{{emojiOpen}}">

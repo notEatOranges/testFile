@@ -43,7 +43,7 @@ exports.main = async () => {
       for (const oid of openids) {
         try {
           await cloud.openapi.subscribeMessage.send({
-            touser: oid, templateId: TMPL_ID, page: 'pages/days/days', miniprogramState: MP_STATE, lang: 'zh_CN',
+            touser: oid, templateId: TMPL_ID, page: 'packageFunc/days/days', miniprogramState: MP_STATE, lang: 'zh_CN',
             // ⚠️ key 必须与你申请的模板关键词一一对应（常见：thing1=名称 time2=日期 thing3=提示）
             data: {
               thing1: { value: String(e.title || '纪念日').slice(0, 20) },
