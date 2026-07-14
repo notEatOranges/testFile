@@ -1,0 +1,32 @@
+<view class="theme-{{theme}} love-page history-page">
+
+  <view wx:if="{{loading}}" class="empty muted">加载中…</view>
+
+  <block wx:elif="{{days.length}}">
+    <view wx:for="{{days}}" wx:key="date" class="h-day">
+      <view class="h-date">{{item.date}}</view>
+      <view class="h-duo">
+        <view class="h-card {{item.myBg ? 'has-bg' : ''}}">
+          <image wx:if="{{item.myBg}}" class="card-bgimg" src="{{item.myBg}}" mode="aspectFill" />
+          <view wx:if="{{item.myBg}}" class="card-scrim" style="background:{{item.myScrim}}"></view>
+          <view class="h-inner" style="{{item.myBg ? 'color:' + item.myTextColor : ''}}">
+            <view class="h-who">{{myName}}</view>
+            <view class="h-emoji">{{item.myEmoji || '—'}}</view>
+            <view wx:if="{{item.myWhisper}}" class="h-w">{{item.myWhisper}}</view>
+          </view>
+        </view>
+        <view class="h-card {{item.peerBg ? 'has-bg' : ''}}">
+          <image wx:if="{{item.peerBg}}" class="card-bgimg" src="{{item.peerBg}}" mode="aspectFill" />
+          <view wx:if="{{item.peerBg}}" class="card-scrim" style="background:{{item.peerScrim}}"></view>
+          <view class="h-inner" style="{{item.peerBg ? 'color:' + item.peerTextColor : ''}}">
+            <view class="h-who">{{peerName}}</view>
+            <view class="h-emoji">{{item.peerEmoji || '—'}}</view>
+            <view wx:if="{{item.peerWhisper}}" class="h-w">{{item.peerWhisper}}</view>
+          </view>
+        </view>
+      </view>
+    </view>
+  </block>
+
+  <view wx:else class="empty muted">还没有历史心情记录</view>
+</view>

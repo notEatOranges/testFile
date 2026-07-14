@@ -1,0 +1,16 @@
+.history-page { padding-top: 16rpx; }
+.h-day { margin-bottom: 28rpx; }
+.h-date { font-size: 26rpx; color: var(--text-soft); margin: 0 4rpx 12rpx; font-weight: 600; }
+.h-duo { display: flex; gap: 18rpx; }
+.h-card {
+  flex: 1; position: relative; overflow: hidden; border-radius: 24rpx;
+  background: var(--card); box-shadow: 0 6rpx 24rpx var(--card-shadow);
+  padding: 24rpx 20rpx; min-height: 200rpx; box-sizing: border-box;
+}
+.card-bgimg { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
+.card-scrim { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
+.h-inner { position: relative; display: flex; flex-direction: column; height: 100%; }
+.h-who { font-size: 24rpx; opacity: .8; }
+.h-emoji { font-size: 64rpx; text-align: center; margin-top: 8rpx; }
+.h-w { margin-top: 8rpx; font-size: 22rpx; line-height: 1.4; opacity: .9; }
+.empty { text-align: center; padding: 80rpx 0; font-size: 26rpx; }

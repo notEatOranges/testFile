@@ -1,23 +1,50 @@
-.mood-head { text-align: center; padding: 24rpx 0 16rpx; }
-.my-emoji { font-size: 120rpx; }
-.my-label { margin-top: 8rpx; font-size: 26rpx; }
+.mood-page { padding-bottom: calc(60rpx + env(safe-area-inset-bottom)); }
 
+/* 采样画布：离屏隐藏（仅用于背景图取色） */
+.bg-canvas { position: fixed; left: -9999rpx; top: -9999rpx; width: 48px; height: 48px; opacity: 0; pointer-events: none; }
+
+/* 我 + ta 双卡片 */
+.duo { display: flex; gap: 20rpx; }
+.mood-card {
+  flex: 1; position: relative; overflow: hidden; border-radius: 28rpx;
+  background: var(--card); box-shadow: 0 8rpx 30rpx var(--card-shadow);
+  padding: 28rpx 24rpx; min-height: 320rpx; box-sizing: border-box;
+}
+.card-bgimg { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
+.card-scrim { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
+.card-inner { position: relative; display: flex; flex-direction: column; height: 100%; }
+.card-av-row { display: flex; align-items: center; gap: 12rpx; }
+.card-av { width: 56rpx; height: 56rpx; border-radius: 50%; border: 2rpx solid rgba(255,255,255,.5); background: var(--chip); flex-shrink: 0; }
+.card-name { font-size: 26rpx; font-weight: 600; opacity: .9; }
+.card-emoji { font-size: 88rpx; text-align: center; margin-top: 16rpx; line-height: 1.1; }
+.card-label { text-align: center; font-size: 26rpx; margin-top: 6rpx; opacity: .9; }
+.card-whisper { margin-top: auto; padding-top: 16rpx; font-size: 24rpx; line-height: 1.5; opacity: .92; }
+.card-whisper.ph { opacity: .55; font-style: italic; }
+.card-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12rpx; height: 100%; opacity: .7; }
+
+/* 表情选择网格 */
 .mood-grid {
-  display: grid; grid-template-columns: repeat(5, 1fr); gap: 16rpx;
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 14rpx;
   background: var(--card); padding: 24rpx; border-radius: 24rpx;
-  box-shadow: 0 6rpx 24rpx var(--card-shadow);
+  box-shadow: 0 6rpx 24rpx var(--card-shadow); margin-top: 24rpx;
 }
 .mood-emoji {
-  font-size: 52rpx; text-align: center; padding: 12rpx 0; border-radius: 16rpx;
+  font-size: 48rpx; text-align: center; padding: 12rpx 0; border-radius: 16rpx;
   transition: transform .15s, background .15s;
 }
 .mood-emoji.sel { background: var(--chip); transform: scale(1.12); }
+.mood-emoji.custom { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2rpx; color: var(--primary); font-size: 30rpx; }
+.mood-emoji.custom .custom-txt { font-size: 20rpx; color: var(--text-soft); }
 
-.love-btn { margin-top: 24rpx; }
+/* 背景图按钮行 */
+.bg-row { display: flex; gap: 16rpx; margin: 20rpx 0 4rpx; }
 
-.peer-card { margin-top: 8rpx; }
-.peer-top { display: flex; align-items: center; gap: 20rpx; }
-.peer-av { width: 88rpx; height: 88rpx; border-radius: 50%; border: 3rpx solid var(--border); }
-.peer-emoji { font-size: 64rpx; }
-.peer-whisper { margin-top: 16rpx; line-height: 1.6; color: var(--text); }
-.peer-empty { text-align: center; padding: 24rpx 0; }
+.love-btn { margin-top: 16rpx; }
+
+/* 历史入口 */
+.history-entry {
+  display: flex; align-items: center; gap: 12rpx; margin-top: 28rpx; padding: 24rpx 28rpx;
+  background: var(--card); border-radius: 20rpx; box-shadow: 0 6rpx 24rpx var(--card-shadow);
+  color: var(--text); font-size: 28rpx;
+}
+.he-arrow { margin-left: auto; color: var(--text-soft); }

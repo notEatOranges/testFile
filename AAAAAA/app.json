@@ -12,6 +12,7 @@
       "pages": [
         "chat/chat",
         "mood/mood",
+        "mood/history/history",
         "days/days",
         "wishlist/wishlist",
         "truthbox/truthbox"

@@ -1,32 +1,87 @@
-<view class="theme-{{theme}} love-page">
+<view class="theme-{{theme}} love-page mood-page">
 
-  <view class="mood-head">
-    <view class="my-emoji">{{myEmoji}}</view>
-    <view class="my-label muted">{{myLabel}}</view>
+  <!-- 采样画布（隐藏，用于背景图取色） -->
+  <canvas type="2d" id="bgCanvas" class="bg-canvas"></canvas>
+
+  <!-- 今日：我 + ta 双卡片 -->
+  <view class="section-title">今日心情</view>
+  <view class="duo">
+    <view class="mood-card {{myBg ? 'has-bg' : ''}}">
+      <image wx:if="{{myBg}}" class="card-bgimg" src="{{myBg}}" mode="aspectFill" />
+      <view wx:if="{{myBg}}" class="card-scrim" style="background:{{myScrim}}"></view>
+      <view class="card-inner" style="{{myBg ? 'color:' + myTextColor : ''}}">
+        <view class="card-av-row">
+          <image class="card-av" src="{{myAvatar || '/assets/images/' + role + '.jpg'}}" mode="aspectFill" />
+          <text class="card-name">{{myName}}</text>
+        </view>
+        <view class="card-emoji">{{myEmoji}}</view>
+        <view class="card-label">{{myLabel}}</view>
+        <view wx:if="{{whisper}}" class="card-whisper">{{whisper}}</view>
+        <view wx:else class="card-whisper ph">还没写悄悄话</view>
+      </view>
+    </view>
+
+    <view class="mood-card peer {{peerBg ? 'has-bg' : ''}}">
+      <image wx:if="{{peerBg}}" class="card-bgimg" src="{{peerBg}}" mode="aspectFill" />
+      <view wx:if="{{peerBg}}" class="card-scrim" style="background:{{peerScrim}}"></view>
+      <view class="card-inner" style="{{peerBg ? 'color:' + peerTextColor : ''}}">
+        <block wx:if="{{peerHas}}">
+          <view class="card-av-row">
+            <image class="card-av" src="{{peerAvatar || '/assets/images/' + peer + '.jpg'}}" mode="aspectFill" />
+            <text class="card-name">{{peerName}}</text>
+          </view>
+          <view class="card-emoji">{{peerEmoji}}</view>
+          <view class="card-label">{{peerLabel || '今日心情'}}</view>
+          <view wx:if="{{peerWhisper}}" class="card-whisper">{{peerWhisper}}</view>
+          <view wx:else class="card-whisper ph">没留悄悄话</view>
+        </block>
+        <view wx:else class="card-empty">
+          <image class="card-av" src="{{peerAvatar || '/assets/images/' + peer + '.jpg'}}" mode="aspectFill" />
+          <view class="card-label">{{peerName}} 还没设置今日心情</view>
+        </view>
+      </view>
+    </view>
   </view>
 
+  <!-- 表情选择 -->
   <view class="mood-grid">
     <view wx:for="{{moods}}" wx:key="emoji"
           class="mood-emoji {{picked === item.emoji ? 'sel' : ''}}"
           data-e="{{item.emoji}}" bindtap="pickEmoji">{{item.emoji}}</view>
+    <view class="mood-emoji custom {{picked === myEmoji && myLabel === '自定义' ? 'sel' : ''}}" bindtap="openCustom">
+      <t-icon name="edit-1" size="36rpx" />
+      <text class="custom-txt">自定义</text>
+    </view>
   </view>
 
+  <!-- 悄悄话 -->
   <view class="section-title">一句悄悄话</view>
   <view class="love-card">
     <t-textarea placeholder="想对 ta 说..." value="{{whisper}}" bind:change="onWhisperInput" maxlength="80" indicator />
   </view>
-  <t-button theme="primary" block class="love-btn" loading="{{saving}}" bind:tap="save">保存今日心情</t-button>
 
-  <view class="section-title">ta 的今日</view>
-  <view class="love-card peer-card">
-    <block wx:if="{{peerHas}}">
-      <view class="peer-top">
-        <image class="peer-av" src="/assets/images/{{peerRole}}.jpg" mode="aspectFill" />
-        <view class="peer-emoji">{{peerEmoji}}</view>
-      </view>
-      <view wx:if="{{peerWhisper}}" class="peer-whisper">{{peerWhisper}}</view>
-      <view wx:else class="muted small">ta 没留悄悄话</view>
-    </block>
-    <view wx:else class="muted small peer-empty">ta 还没设置今日心情</view>
+  <!-- 背景图 -->
+  <view class="bg-row">
+    <t-button theme="default" size="small" icon="image" bind:tap="pickBg">{{myBg ? '换张背景图' : '设置背景图'}}</t-button>
+    <t-button wx:if="{{myBg}}" theme="default" size="small" icon="clear" variant="outline" bind:tap="clearBg">清除</t-button>
+  </view>
+
+  <t-button theme="primary" block class="love-btn" loading="{{saving}}" bind:tap="save">保存今日心情</t-button>
+  <view class="history-entry" bindtap="goHistory">
+    <t-icon name="time" size="32rpx" />
+    <text>历史心情</text>
+    <view class="he-arrow"><t-icon name="chevron-right" size="32rpx" /></view>
+  </view>
+
+  <!-- 自定义表情弹层 -->
+  <view class="sf-mask {{customOpen ? 'show' : ''}}" bindtap="closeCustom"></view>
+  <view class="sf-sheet {{customOpen ? 'show' : ''}}" catchtap="noop">
+    <view class="sf-title">自定义心情</view>
+    <view class="sf-sub muted small">输一个 emoji 或几个字（最多 4 字）</view>
+    <input class="sf-input" placeholder="如 🐱 / 想吃火锅" value="{{customInput}}" maxlength="4" bindinput="onCustomInput" confirm-type="done" bindconfirm="confirmCustom" />
+    <view class="sf-actions">
+      <view class="sf-cancel" bindtap="closeCustom">取消</view>
+      <view class="sf-ok" bindtap="confirmCustom">确定</view>
+    </view>
   </view>
 </view>

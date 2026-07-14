@@ -152,6 +152,25 @@ const Store = {
   onList(path, cb) { return this.onValue(path, snap => cb(toList(snap))); },
   async getOnce(path) { return kvGet(path); },
 
+  /** 按路径前缀一次性拉取所有文档（非实时），返回 { 后缀: value }。
+   *  用于历史类查询（如 getPrefix('mood/') → { '2026-07-15': {...} }）。
+   *  分页拉取（每页 100），客户端单次 get 上限兼容。 */
+  async getPrefix(prefix) {
+    const database = getDB();
+    const rx = database.RegExp({ regexp: '^' + String(prefix).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), options: 'i' });
+    const out = {};
+    const STEP = 100;
+    let skip = 0;
+    for (let guard = 0; guard < 20; guard++) {
+      const res = await database.collection(KV).where({ room: code, path: rx }).skip(skip).limit(STEP).get();
+      if (!res.data || !res.data.length) break;
+      for (const d of res.data) out[d.path.slice(prefix.length)] = d.value;
+      if (res.data.length < STEP) break;
+      skip += STEP;
+    }
+    return out;
+  },
+
   async set(path, val) { await callWrite('set', { path, value: val ?? null }); emit(path); },
   async update(path, partial) { await callWrite('update', { path, partial }); emit(path); },
   async push(path, val) {
