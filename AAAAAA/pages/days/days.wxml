@@ -1,0 +1,41 @@
+<view class="theme-{{theme}} love-page">
+
+  <view class="love-card days-hero">
+    <view class="days-big"><text class="big-num">{{days}}</text><text class="unit">天</text></view>
+    <view class="days-since muted small">{{sinceText}}</view>
+  </view>
+
+  <view class="section-title">纪念日 / 倒数</view>
+  <view class="event-list">
+    <block wx:if="{{events.length}}">
+      <view wx:for="{{events}}" wx:key="id" class="love-card event-card">
+        <view class="event-count {{item.past ? 'past' : ''}}">
+          <text class="count-num">{{item.n}}</text><text class="count-unit">{{item.past ? '天前' : '天后'}}</text>
+        </view>
+        <view class="event-body">
+          <view class="event-title">{{item.title}}</view>
+          <view class="event-date muted small">{{item.date}}</view>
+        </view>
+        <view class="event-del" data-id="{{item.id}}" bindtap="delEvent"><t-icon name="delete" size="40" /></view>
+      </view>
+    </block>
+    <view wx:else class="empty muted">还没有纪念日，加一个吧</view>
+  </view>
+
+  <view class="section-title">添加纪念日</view>
+  <view class="love-card form-card">
+    <input class="form-input" placeholder="名称（如 领证 / 生日）" value="{{evTitle}}" bindinput="onEvTitle" />
+    <picker mode="date" value="{{evDate}}" bindchange="onEvDate">
+      <view class="form-input picker-row {{evDate ? '' : 'ph'}}">{{evDate || '选择日期'}}</view>
+    </picker>
+    <t-button theme="primary" block class="love-btn" loading="{{adding}}" bind:tap="addEvent">添加</t-button>
+  </view>
+
+  <view class="section-title">在一起的日子</view>
+  <view class="love-card form-card">
+    <picker mode="date" value="{{startDate}}" bindchange="onStart">
+      <view class="form-input picker-row {{startDate ? '' : 'ph'}}">{{startDate || '选择在一起的起始日'}}</view>
+    </picker>
+    <t-button theme="primary" block class="love-btn" loading="{{savingStart}}" bind:tap="saveStart">保存起始日</t-button>
+  </view>
+</view>

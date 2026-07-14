@@ -1,0 +1,31 @@
+<view class="theme-{{theme}} chat-page">
+
+  <scroll-view class="chat-list" scroll-y scroll-into-view="{{scrollTo}}" scroll-with-animation>
+    <view wx:for="{{messages}}" wx:key="uid">
+      <view wx:if="{{item.showTime}}" class="chat-time">{{item.timeText}}</view>
+      <view id="m-{{item.uid}}" class="bubble-row {{item.mine ? 'me' : 'peer'}} {{item.emojiOnly ? 'emoji-only' : ''}}">
+        <image class="avatar" src="{{item.avatar}}" mode="aspectFill" />
+        <view wx:if="{{item.mine && item.status === 'sending'}}" class="bubble-status"><t-loading theme="circular" size="24rpx" /></view>
+        <view wx:elif="{{item.mine && item.status === 'failed'}}" class="bubble-status failed"><t-icon name="error-circle" size="30rpx" /></view>
+        <view wx:else class="bubble-placeholder"></view>
+
+        <view wx:if="{{item.emojiOnly}}" class="bubble emoji-bubble"><text class="emoji-big">{{item.text}}</text></view>
+        <view wx:else class="bubble">
+          <text class="bubble-text">{{item.text}}</text>
+          <text class="bubble-time">{{item.timeShort}}</text>
+        </view>
+      </view>
+    </view>
+    <view wx:if="{{!messages.length}}" class="chat-empty muted">还没有消息，先和 ta 说句话吧</view>
+  </scroll-view>
+
+  <view class="chat-emoji" wx:if="{{emojiOpen}}">
+    <view wx:for="{{emojis}}" wx:key="*this" class="emoji-cell" data-e="{{item}}" bindtap="pickEmoji">{{item}}</view>
+  </view>
+
+  <view class="chat-input-bar">
+    <view class="emoji-btn" bindtap="toggleEmoji"><t-icon name="smile" size="44" /></view>
+    <input class="chat-input" placeholder="说点什么～" value="{{input}}" bindinput="onInput" bindconfirm="send" confirm-type="send" />
+    <view class="send-btn {{input ? 'on' : ''}}" bindtap="send">发送</view>
+  </view>
+</view>

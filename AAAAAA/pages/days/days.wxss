@@ -1,0 +1,25 @@
+.days-hero { text-align: center; padding: 24rpx 0; margin-bottom: 16rpx; }
+.days-big { display: flex; align-items: baseline; justify-content: center; gap: 10rpx; }
+.big-num { font-size: 104rpx; font-weight: 800; color: var(--primary-deep); line-height: 1; }
+.unit { font-size: 32rpx; color: var(--text-soft); }
+.days-since { margin-top: 12rpx; }
+
+.event-list { display: flex; flex-direction: column; gap: 16rpx; }
+.event-card { display: flex; align-items: center; gap: 20rpx; padding: 24rpx 28rpx; }
+.event-count { width: 110rpx; text-align: center; color: var(--primary-deep); }
+.count-num { font-size: 48rpx; font-weight: 800; line-height: 1; }
+.count-unit { font-size: 22rpx; color: var(--text-soft); display: block; margin-top: 4rpx; }
+.event-count.past { color: var(--text-soft); opacity: 0.7; }
+.event-body { flex: 1; min-width: 0; }
+.event-title { font-size: 30rpx; color: var(--text); font-weight: 500; }
+.event-date { margin-top: 6rpx; }
+.event-del { color: var(--text-soft); padding: 8rpx; }
+
+.form-card { display: flex; flex-direction: column; gap: 16rpx; }
+.form-input {
+  width: 100%; box-sizing: border-box; height: 88rpx; line-height: 88rpx;
+  padding: 0 24rpx; background: var(--chip); border-radius: 16rpx; font-size: 30rpx; color: var(--text);
+}
+.picker-row { display: flex; align-items: center; }
+.picker-row.ph { color: var(--text-soft); }
+.empty { text-align: center; padding: 40rpx 0; font-size: 26rpx; }

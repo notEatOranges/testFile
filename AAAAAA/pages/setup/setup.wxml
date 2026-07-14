@@ -1,0 +1,73 @@
+<view class="theme-{{theme}} love-page setup-page">
+
+  <!-- 阶段 1：资料 -->
+  <block wx:if="{{step === 'profile'}}">
+    <view class="hero">
+      <view class="hero-icon"><t-icon name="heart-filled" size="96" /></view>
+      <view class="hero-title">建立我们的小窝</view>
+      <view class="hero-sub">先告诉 ta 你是谁～</view>
+    </view>
+
+    <view class="love-card profile-card">
+      <button class="avatar-pick" open-type="chooseAvatar" bind:chooseavatar="onChooseAvatar">
+        <image wx:if="{{avatar}}" class="avatar-img" src="{{avatar}}" mode="aspectFill" />
+        <view wx:else class="avatar-empty">
+          <view class="avatar-empty-icon"><t-icon name="camera" size="44" /></view>
+          <view class="avatar-empty-text">点击设置头像</view>
+        </view>
+      </button>
+
+      <view class="field-label">昵称</view>
+      <input class="nick-input" type="nickname" placeholder="点击填写昵称" placeholder-class="nick-ph" value="{{nick}}" bindinput="onNickInput" />
+
+      <t-button theme="primary" block class="love-btn" bind:tap="saveProfile">开始配对</t-button>
+      <view class="hint muted small">头像昵称仅保存在你的情侣空间，用于对方认出你</view>
+    </view>
+  </block>
+
+  <!-- 阶段 2：配对 -->
+  <block wx:elif="{{step === 'pair'}}">
+    <view class="hero">
+      <view class="hero-icon"><t-icon name="{{tab === 'create' ? 'heart' : 'link'}}" size="96" /></view>
+      <view class="hero-title">{{tab === 'create' ? '创建情侣空间' : '加入 ta 的空间'}}</view>
+      <view class="hero-sub">{{tab === 'create' ? '建好后把邀请码发给 ta' : '输入 ta 发来的邀请码'}}</view>
+    </view>
+
+    <view class="love-card pair-card">
+      <view class="tab-row">
+        <view class="tab {{tab === 'create' ? 'on' : ''}}" bindtap="switchTab" data-t="create">创建</view>
+        <view class="tab {{tab === 'join' ? 'on' : ''}}" bindtap="switchTab" data-t="join">加入</view>
+      </view>
+
+      <!-- 创建 -->
+      <block wx:if="{{tab === 'create'}}">
+        <block wx:if="{{!inviteCode}}">
+          <view class="field-label">我是…</view>
+          <view class="role-row">
+            <view class="role-card {{role === 'boy' ? 'sel' : ''}}" bindtap="pickRole" data-r="boy">
+              <view class="role-label big">男生</view>
+            </view>
+            <view class="role-card {{role === 'girl' ? 'sel' : ''}}" bindtap="pickRole" data-r="girl">
+              <view class="role-label big">女生</view>
+            </view>
+          </view>
+          <t-button theme="primary" block class="love-btn" loading="{{creating}}" bind:tap="doCreate">创建空间</t-button>
+        </block>
+        <block wx:else>
+          <view class="field-label center">你的邀请码</view>
+          <view class="invite-code">{{inviteCode}}</view>
+          <view class="invite-sub">把邀请码发给 ta，ta 输码即可加入</view>
+          <t-button theme="primary" block class="love-btn" bind:tap="copyCode">复制邀请码</t-button>
+          <view class="waiting"><t-loading theme="circular" size="36rpx" /><text class="waiting-text">静静等 ta 加入…</text></view>
+        </block>
+      </block>
+
+      <!-- 加入 -->
+      <block wx:if="{{tab === 'join'}}">
+        <view class="field-label">邀请码</view>
+        <input class="code-input" value="{{inputCode}}" placeholder="输入 6 位邀请码" placeholder-class="nick-ph" maxlength="6" bindinput="onCodeInput" />
+        <t-button theme="primary" block class="love-btn" loading="{{joining}}" bind:tap="doJoin">加入空间</t-button>
+      </block>
+    </view>
+  </block>
+</view>

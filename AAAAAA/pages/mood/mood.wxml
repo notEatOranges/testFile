@@ -1,0 +1,32 @@
+<view class="theme-{{theme}} love-page">
+
+  <view class="mood-head">
+    <view class="my-emoji">{{myEmoji}}</view>
+    <view class="my-label muted">{{myLabel}}</view>
+  </view>
+
+  <view class="mood-grid">
+    <view wx:for="{{moods}}" wx:key="emoji"
+          class="mood-emoji {{picked === item.emoji ? 'sel' : ''}}"
+          data-e="{{item.emoji}}" bindtap="pickEmoji">{{item.emoji}}</view>
+  </view>
+
+  <view class="section-title">一句悄悄话</view>
+  <view class="love-card">
+    <t-textarea placeholder="想对 ta 说..." value="{{whisper}}" bind:change="onWhisperInput" maxlength="80" indicator />
+  </view>
+  <t-button theme="primary" block class="love-btn" loading="{{saving}}" bind:tap="save">保存今日心情</t-button>
+
+  <view class="section-title">ta 的今日</view>
+  <view class="love-card peer-card">
+    <block wx:if="{{peerHas}}">
+      <view class="peer-top">
+        <image class="peer-av" src="/assets/images/{{peerRole}}.jpg" mode="aspectFill" />
+        <view class="peer-emoji">{{peerEmoji}}</view>
+      </view>
+      <view wx:if="{{peerWhisper}}" class="peer-whisper">{{peerWhisper}}</view>
+      <view wx:else class="muted small">ta 没留悄悄话</view>
+    </block>
+    <view wx:else class="muted small peer-empty">ta 还没设置今日心情</view>
+  </view>
+</view>

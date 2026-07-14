@@ -1,0 +1,9 @@
+{
+  "name": "kvWrite",
+  "version": "1.0.0",
+  "description": "love-h5 kv 原子写云函数（set/update/push/remove）",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}

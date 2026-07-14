@@ -1,0 +1,7 @@
+{
+  "name": "leaveCouple",
+  "version": "1.0.0",
+  "description": "love-h5 退出情侣空间（解绑）",
+  "main": "index.js",
+  "dependencies": { "wx-server-sdk": "~2.6.3" }
+}

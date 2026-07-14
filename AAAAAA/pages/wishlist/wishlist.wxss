@@ -1,0 +1,26 @@
+.wish-page { padding-bottom: 180rpx; }
+.wish-list { display: flex; flex-direction: column; gap: 16rpx; }
+
+.wish-item { display: flex; align-items: center; gap: 20rpx; padding: 24rpx 28rpx; }
+.check {
+  width: 56rpx; height: 56rpx; border-radius: 50%; border: 3rpx solid var(--border);
+  display: flex; align-items: center; justify-content: center; color: #fff; flex-shrink: 0;
+}
+.check.on { background: var(--primary); border-color: var(--primary); }
+.wish-text { flex: 1; min-width: 0; font-size: 30rpx; color: var(--text); line-height: 1.5; word-break: break-all; }
+.wish-item.done .wish-text { color: var(--text-soft); text-decoration: line-through; }
+.wish-del { color: var(--text-soft); padding: 8rpx; }
+
+.wish-add {
+  position: fixed; left: 32rpx; right: 32rpx; bottom: 32rpx;
+  display: flex; align-items: center; gap: 16rpx; padding: 16rpx 20rpx;
+}
+.wish-input {
+  flex: 1; height: 72rpx; line-height: 72rpx; padding: 0 24rpx;
+  background: var(--chip); border-radius: 36rpx; font-size: 28rpx; color: var(--text);
+}
+.wish-add-btn {
+  width: 72rpx; height: 72rpx; border-radius: 50%; background: var(--primary); color: #fff;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.empty { text-align: center; padding: 60rpx 0; font-size: 26rpx; }

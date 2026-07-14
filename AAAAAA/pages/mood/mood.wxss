@@ -1,0 +1,23 @@
+.mood-head { text-align: center; padding: 24rpx 0 16rpx; }
+.my-emoji { font-size: 120rpx; }
+.my-label { margin-top: 8rpx; font-size: 26rpx; }
+
+.mood-grid {
+  display: grid; grid-template-columns: repeat(5, 1fr); gap: 16rpx;
+  background: var(--card); padding: 24rpx; border-radius: 24rpx;
+  box-shadow: 0 6rpx 24rpx var(--card-shadow);
+}
+.mood-emoji {
+  font-size: 52rpx; text-align: center; padding: 12rpx 0; border-radius: 16rpx;
+  transition: transform .15s, background .15s;
+}
+.mood-emoji.sel { background: var(--chip); transform: scale(1.12); }
+
+.love-btn { margin-top: 24rpx; }
+
+.peer-card { margin-top: 8rpx; }
+.peer-top { display: flex; align-items: center; gap: 20rpx; }
+.peer-av { width: 88rpx; height: 88rpx; border-radius: 50%; border: 3rpx solid var(--border); }
+.peer-emoji { font-size: 64rpx; }
+.peer-whisper { margin-top: 16rpx; line-height: 1.6; color: var(--text); }
+.peer-empty { text-align: center; padding: 24rpx 0; }

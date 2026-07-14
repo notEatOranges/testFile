@@ -1,0 +1,95 @@
+/* ============================================================
+   love-h5 马卡龙主题系统（小程序版）
+   原 H5 用 [data-theme] 属性选择器，WXSS 不支持属性选择器 → 改为 .theme-{{key}} class。
+   页面根节点绑 class="theme-{{theme}} love-page"，变量级联到子元素。
+   颜色与 utils/themes.js 完全对应（供 Canvas 游戏取色）。
+   通过 app.wxss 顶部 @import 引入，不破坏 TDesign 原有变量。
+   ============================================================ */
+
+.theme-sakura {
+  --bg-1: #fff5f7; --bg-2: #ffe4ec; --bg-3: #ffd1dc;
+  --primary: #ff7aa2; --primary-deep: #e85a86; --primary-soft: #ffb6c8; --accent: #ff9eb5;
+  --text: #5a3d4a; --text-soft: #8a6b78;
+  --card: #ffffff; --card-shadow: rgba(255, 122, 162, 0.18); --border: rgba(255, 122, 162, 0.25);
+  --chip: rgba(255, 122, 162, 0.12);
+}
+.theme-mint {
+  --bg-1: #f0fbf6; --bg-2: #d7f2e3; --bg-3: #b8e6cc;
+  --primary: #5bb89e; --primary-deep: #3fa286; --primary-soft: #a4ddc9; --accent: #7fd0b0;
+  --text: #2f4a40; --text-soft: #5e786d;
+  --card: #ffffff; --card-shadow: rgba(91, 184, 158, 0.18); --border: rgba(91, 184, 158, 0.25);
+  --chip: rgba(91, 184, 158, 0.12);
+}
+.theme-lavender {
+  --bg-1: #f6f2fc; --bg-2: #e6dcf5; --bg-3: #d2c2ec;
+  --primary: #9b7fd4; --primary-deep: #7d61c0; --primary-soft: #c3b0e8; --accent: #b59ce0;
+  --text: #3d3553; --text-soft: #6b6188;
+  --card: #ffffff; --card-shadow: rgba(155, 127, 212, 0.18); --border: rgba(155, 127, 212, 0.25);
+  --chip: rgba(155, 127, 212, 0.12);
+}
+.theme-peach {
+  --bg-1: #fff3ec; --bg-2: #ffe4d4; --bg-3: #ffd0b8;
+  --primary: #ff9a6c; --primary-deep: #f17844; --primary-soft: #ffc4a6; --accent: #ffb088;
+  --text: #5a3d2e; --text-soft: #8a6b58;
+  --card: #ffffff; --card-shadow: rgba(255, 154, 108, 0.18); --border: rgba(255, 154, 108, 0.25);
+  --chip: rgba(255, 154, 108, 0.12);
+}
+.theme-babyblue {
+  --bg-1: #eef6fd; --bg-2: #d6ebfa; --bg-3: #b3d9f5;
+  --primary: #6db4e8; --primary-deep: #4f93cf; --primary-soft: #a8d4f3; --accent: #8cc4ee;
+  --text: #2f414e; --text-soft: #5e7787;
+  --card: #ffffff; --card-shadow: rgba(109, 180, 232, 0.18); --border: rgba(109, 180, 232, 0.25);
+  --chip: rgba(109, 180, 232, 0.12);
+}
+.theme-lemon {
+  --bg-1: #fff9e8; --bg-2: #fff0c8; --bg-3: #ffe6a3;
+  --primary: #e8b94d; --primary-deep: #c99a2f; --primary-soft: #f1d488; --accent: #eecb6e;
+  --text: #4d4128; --text-soft: #7a6c4e;
+  --card: #ffffff; --card-shadow: rgba(232, 185, 77, 0.2); --border: rgba(232, 185, 77, 0.28);
+  --chip: rgba(232, 185, 77, 0.14);
+}
+.theme-berry {
+  --bg-1: #fff0f3; --bg-2: #ffdde4; --bg-3: #ffc6d2;
+  --primary: #e87090; --primary-deep: #cf4f73; --primary-soft: #f3a8bd; --accent: #ee8ba6;
+  --text: #4d2e36; --text-soft: #7a5862;
+  --card: #ffffff; --card-shadow: rgba(232, 112, 144, 0.18); --border: rgba(232, 112, 144, 0.25);
+  --chip: rgba(232, 112, 144, 0.12);
+}
+.theme-cocoa {
+  --bg-1: #f7f1ea; --bg-2: #ecdfd0; --bg-3: #dccab4;
+  --primary: #b08968; --primary-deep: #8c6a4f; --primary-soft: #ccb094; --accent: #bd9a7d;
+  --text: #3d2f24; --text-soft: #6d5b4a;
+  --card: #ffffff; --card-shadow: rgba(176, 137, 104, 0.18); --border: rgba(176, 137, 104, 0.25);
+  --chip: rgba(176, 137, 104, 0.12);
+}
+
+/* —— love-h5 页面通用容器与组件 —— */
+.love-page {
+  min-height: 100vh;
+  background: linear-gradient(160deg, var(--bg-1), var(--bg-2));
+  color: var(--text);
+  padding: 0 32rpx 56rpx;
+  box-sizing: border-box;
+}
+.section-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--text);
+  margin: 32rpx 0 16rpx;
+}
+.muted { color: var(--text-soft); }
+.small { font-size: 24rpx; }
+.love-card {
+  background: var(--card);
+  border-radius: 24rpx;
+  box-shadow: 0 8rpx 30rpx var(--card-shadow);
+  padding: 32rpx;
+}
+
+/* TDesign t-button 主题色覆盖（让按钮吃马卡龙主色） */
+.love-page .love-btn {
+  --td-brand-color: var(--primary);
+  --td-brand-color-active: var(--primary-deep);
+  --td-brand-color-disabled: var(--primary-soft);
+  --td-brand-color-light: var(--chip);
+}

@@ -1,0 +1,82 @@
+.setup-page { padding-top: 32rpx; }
+
+/* 顶部主视觉（图标版，非 emoji） */
+.hero { text-align: center; padding: 32rpx 0 40rpx; }
+.hero-icon { color: var(--primary); line-height: 1; display: flex; justify-content: center; }
+.hero-title { font-size: 40rpx; font-weight: 700; color: var(--text); margin-top: 16rpx; }
+.hero-sub { color: var(--text-soft); font-size: 26rpx; margin-top: 8rpx; }
+
+.profile-card, .pair-card {
+  padding: 40rpx 36rpx;
+  display: flex; flex-direction: column; align-items: stretch;
+}
+
+/* —— 头像选择：原生 button 彻底重置 —— */
+.avatar-pick {
+  width: 180rpx !important; height: 180rpx !important;
+  min-height: 0; padding: 0; margin: 0 auto 28rpx;
+  background: transparent !important; border: none;
+  border-radius: 50%; overflow: hidden;
+  line-height: 1; font-size: 0; box-sizing: border-box;
+}
+.avatar-pick::after { border: none; display: none; }
+.avatar-img {
+  display: block; width: 180rpx; height: 180rpx; border-radius: 50%;
+  border: 6rpx solid #fff; box-shadow: 0 8rpx 24rpx var(--card-shadow); box-sizing: border-box;
+}
+.avatar-empty {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  width: 180rpx; height: 180rpx; border-radius: 50%; box-sizing: border-box;
+  border: 4rpx dashed var(--primary-soft); background: var(--chip);
+}
+.avatar-empty-icon { color: var(--primary); line-height: 1; margin-bottom: 8rpx; }
+.avatar-empty-text { font-size: 22rpx; color: var(--primary-deep); line-height: 1; }
+
+.field-label { font-size: 26rpx; color: var(--text-soft); margin: 0 0 12rpx; line-height: 1.4; }
+.field-label.center { text-align: center; margin-bottom: 4rpx; }
+
+.nick-input {
+  width: 100%; box-sizing: border-box;
+  height: 96rpx; line-height: 96rpx;
+  padding: 0 28rpx;
+  background: var(--chip); border-radius: 20rpx; font-size: 32rpx; color: var(--text);
+}
+.nick-ph { color: var(--text-soft); }
+
+.hint { text-align: center; margin-top: 20rpx; line-height: 1.5; }
+
+/* 自定义 tab */
+.tab-row { display: flex; background: var(--chip); border-radius: 20rpx; padding: 6rpx; margin-bottom: 28rpx; }
+.tab { flex: 1; text-align: center; padding: 18rpx 0; font-size: 28rpx; color: var(--text-soft); border-radius: 16rpx; }
+.tab.on { background: #fff; color: var(--primary-deep); font-weight: 600; box-shadow: 0 4rpx 12rpx var(--card-shadow); }
+
+/* 身份卡（纯文字，无 emoji） */
+.role-row { display: flex; gap: 24rpx; }
+.role-card {
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 48rpx 0; background: var(--bg-1); border-radius: 24rpx;
+  border: 4rpx solid transparent;
+}
+.role-card.sel { border-color: var(--primary); background: var(--card); box-shadow: 0 8rpx 24rpx var(--card-shadow); }
+.role-label { color: var(--text); font-size: 28rpx; }
+.role-label.big { font-size: 40rpx; font-weight: 700; }
+
+/* 邀请码 */
+.invite-code {
+  font-size: 80rpx; font-weight: 800; letter-spacing: 16rpx; color: var(--primary-deep);
+  text-align: center; font-family: monospace; margin: 4rpx 0; line-height: 1.2;
+}
+.invite-sub { text-align: center; color: var(--text-soft); font-size: 24rpx; margin-bottom: 16rpx; }
+.waiting { display: flex; align-items: center; justify-content: center; gap: 12rpx; margin-top: 32rpx; }
+.waiting-text { color: var(--text-soft); font-size: 24rpx; }
+
+/* 邀请码输入 */
+.code-input {
+  width: 100%; box-sizing: border-box;
+  height: 108rpx; line-height: 108rpx;
+  padding: 0 28rpx; text-align: center;
+  background: var(--chip); border-radius: 20rpx; font-size: 44rpx; letter-spacing: 12rpx;
+  color: var(--primary-deep); font-family: monospace; font-weight: 700;
+}
+
+.love-btn { margin-top: 32rpx; }

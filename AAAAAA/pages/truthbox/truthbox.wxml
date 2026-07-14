@@ -1,0 +1,31 @@
+<view class="theme-{{theme}} love-page">
+
+  <view class="love-card truth-q">
+    <view class="q-label">
+      <image wx:if="{{q}}" class="q-av" src="/assets/images/{{q.pickedBy}}.jpg" mode="aspectFill" />
+      <view wx:else class="q-icon"><t-icon name="help-circle" size="40" /></view>
+      <text>{{q ? (pickedByFull + ' 抽的') : '真心话'}}</text>
+    </view>
+    <view class="q-text">{{q ? q.question : '点下面抽一题，看看你俩有多默契'}}</view>
+  </view>
+
+  <t-button theme="default" block class="love-btn ghost-btn" bind:tap="newQ" loading="{{picking}}">换一题</t-button>
+
+  <view class="section-title">我的回答</view>
+  <view class="love-card">
+    <t-textarea placeholder="认真回答哦～" value="{{myAns}}" bind:change="onMyAns" maxlength="200" indicator />
+  </view>
+  <t-button theme="primary" block class="love-btn" bind:tap="saveAns" loading="{{saving}}">提交回答</t-button>
+
+  <view class="section-title">ta 的回答</view>
+  <view class="love-card">
+    <block wx:if="{{peerAns}}">
+      <view class="ans-who">
+        <image class="ans-av" src="/assets/images/{{peer}}.jpg" mode="aspectFill" />
+        <text>{{peerFull}} · {{peerAnsTime}}</text>
+      </view>
+      <view class="ans-text">{{peerAns.text}}</view>
+    </block>
+    <view wx:else class="empty muted">ta 还没回答</view>
+  </view>
+</view>

@@ -1,0 +1,43 @@
+.main-page { padding-top: 24rpx; }
+
+.booting { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 80vh; gap: 20rpx; }
+
+.home-head { padding: 32rpx; margin-bottom: 24rpx; }
+.hi-row { display: flex; align-items: center; gap: 20rpx; }
+.hi-av { width: 88rpx; height: 88rpx; border-radius: 50%; border: 3rpx solid var(--border); background: var(--chip); }
+.hi-text { flex: 1; min-width: 0; }
+.hi-title { font-size: 32rpx; font-weight: 600; color: var(--text); }
+.hi-sub { margin-top: 6rpx; }
+.head-actions { display: flex; gap: 4rpx; }
+.action-btn { color: var(--primary); padding: 8rpx; line-height: 1; }
+
+.invite-bar {
+  display: flex; align-items: center; gap: 16rpx; margin-top: 20rpx;
+  padding: 16rpx 20rpx; background: var(--chip); border-radius: 16rpx;
+}
+.invite-info { flex: 1; min-width: 0; }
+.invite-label { margin-bottom: 6rpx; }
+.invite-code { font-size: 40rpx; font-weight: 800; letter-spacing: 8rpx; color: var(--primary-deep); font-family: monospace; line-height: 1.2; }
+.invite-copy { color: var(--primary); padding: 8rpx; line-height: 1; }
+
+.presence {
+  display: flex; align-items: center; gap: 14rpx;
+  margin-top: 28rpx; padding-top: 24rpx; border-top: 1rpx solid var(--border);
+}
+.dot { width: 16rpx; height: 16rpx; border-radius: 50%; background: #ccc; }
+.dot.on { background: #4caf50; box-shadow: 0 0 10rpx #4caf50; }
+.peer-av { width: 56rpx; height: 56rpx; border-radius: 50%; background: var(--chip); }
+.peer-status { font-size: 26rpx; color: var(--text-soft); }
+.peer-status.on { color: #4caf50; }
+
+.grid-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 20rpx; }
+.nav-card {
+  background: var(--card); border-radius: 24rpx; padding: 32rpx 24rpx;
+  box-shadow: 0 6rpx 24rpx var(--card-shadow);
+  display: flex; flex-direction: column; align-items: flex-start;
+  transition: transform .15s;
+}
+.nav-card:active { transform: scale(0.97); }
+.nav-ic { color: var(--primary); margin-bottom: 16rpx; line-height: 1; }
+.nav-nt { font-size: 30rpx; font-weight: 600; color: var(--text); }
+.nav-nd { margin-top: 6rpx; }

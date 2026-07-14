@@ -1,0 +1,7 @@
+{
+  "name": "joinCouple",
+  "version": "1.0.0",
+  "description": "love-h5 凭邀请码加入情侣空间",
+  "main": "index.js",
+  "dependencies": { "wx-server-sdk": "~2.6.3" }
+}

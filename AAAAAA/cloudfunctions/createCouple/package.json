@@ -1,0 +1,7 @@
+{
+  "name": "createCouple",
+  "version": "1.0.0",
+  "description": "love-h5 建情侣空间 + 邀请码",
+  "main": "index.js",
+  "dependencies": { "wx-server-sdk": "~2.6.3" }
+}

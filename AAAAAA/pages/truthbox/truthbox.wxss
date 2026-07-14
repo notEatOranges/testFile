@@ -1,0 +1,12 @@
+.truth-q { text-align: center; padding: 24rpx 0; margin-bottom: 16rpx; }
+.q-label { display: flex; align-items: center; justify-content: center; gap: 12rpx; font-size: 26rpx; color: var(--text-soft); margin-bottom: 20rpx; }
+.q-av { width: 44rpx; height: 44rpx; border-radius: 50%; }
+.q-icon { color: var(--primary); display: flex; line-height: 1; }
+.q-text { font-size: 36rpx; font-weight: 600; color: var(--text); line-height: 1.6; }
+
+.ghost-btn { margin-top: 0; }
+
+.ans-who { display: flex; align-items: center; gap: 12rpx; font-size: 24rpx; color: var(--text-soft); margin-bottom: 16rpx; }
+.ans-av { width: 48rpx; height: 48rpx; border-radius: 50%; }
+.ans-text { font-size: 30rpx; color: var(--text); line-height: 1.6; }
+.empty { text-align: center; padding: 32rpx 0; font-size: 26rpx; }

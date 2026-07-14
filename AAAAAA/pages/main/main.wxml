@@ -1,0 +1,45 @@
+<view class="theme-{{theme}} love-page main-page">
+
+  <view wx:if="{{booting}}" class="booting">
+    <t-loading theme="circular" size="56rpx" />
+    <view class="booting-text muted small">正在进入小窝…</view>
+  </view>
+
+  <block wx:else>
+    <view class="home-head love-card">
+      <view class="hi-row">
+        <image class="hi-av" src="{{myAvatar || '/assets/images/{{role}}.jpg'}}" mode="aspectFill" />
+        <view class="hi-text">
+          <view class="hi-title">{{nick || roleFull}}，欢迎回来</view>
+          <view class="hi-sub muted small">空间码 {{roomCode}}</view>
+        </view>
+        <view class="head-actions">
+          <view class="action-btn" bindtap="pickTheme"><t-icon name="palette" size="44" /></view>
+          <view class="action-btn" bindtap="logout"><t-icon name="logout" size="44" /></view>
+        </view>
+      </view>
+
+      <view wx:if="{{inviteCode}}" class="invite-bar" bindtap="copyInvite">
+        <view class="invite-info">
+          <view class="invite-label muted small">邀请码（发给 ta 加入）</view>
+          <view class="invite-code">{{inviteCode}}</view>
+        </view>
+        <view class="invite-copy"><t-icon name="file-copy" size="36" /></view>
+      </view>
+
+      <view class="presence">
+        <view class="dot {{peerOnline ? 'on' : ''}}"></view>
+        <image class="peer-av" src="{{peerAvatar || '/assets/images/{{peer}}.jpg'}}" mode="aspectFill" />
+        <view class="peer-status {{peerOnline ? 'on' : ''}}">{{peerOnline ? peerFull + ' 在线' : peerFull + ' 暂不在线'}}</view>
+      </view>
+    </view>
+
+    <view class="grid-cards">
+      <view wx:for="{{cards}}" wx:key="page" class="nav-card" data-idx="{{index}}" bindtap="goCard">
+        <view class="nav-ic"><t-icon name="{{item.icon}}" size="56" /></view>
+        <view class="nav-nt">{{item.nt}}</view>
+        <view class="nav-nd muted small">{{item.nd}}</view>
+      </view>
+    </view>
+  </block>
+</view>
