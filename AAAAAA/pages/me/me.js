@@ -13,7 +13,9 @@ Page({
     nick: '', avatar: '', roomCode: '', inviteCode: '',
     themeSheet: false,
     themeList: Object.keys(THEMES).map(k => ({ key: k, name: THEMES[k].name, primary: THEMES[k].primary, primaryDeep: THEMES[k].primaryDeep })),
-    pokeSuffix: '', suffixOpen: false, suffixInput: ''
+    pokeSuffix: '', suffixOpen: false, suffixInput: '',
+    // 编辑资料（网名 + 头像）
+    editOpen: false, editNick: '', editAvatar: '', savingProfile: false
   },
 
   onShow() {
@@ -43,8 +45,59 @@ Page({
     });
   },
 
+  // —— 编辑资料：网名 + 头像 ——
+  openEdit() {
+    this._avatarTemp = null;
+    this.setData({ editOpen: true, editNick: this.data.nick || '', editAvatar: this.data.avatar || '' });
+  },
+  closeEdit() { this.setData({ editOpen: false }); },
+  onEditNick(e) { this.setData({ editNick: e.detail.value }); },
+  pickAvatar() {
+    wx.chooseMedia({
+      count: 1, mediaType: ['image'], sizeType: ['compressed'], sourceType: ['album', 'camera'],
+      success: res => {
+        const tempPath = res.tempFiles && res.tempFiles[0] && res.tempFiles[0].tempFilePath;
+        if (!tempPath) return;
+        this._avatarTemp = tempPath;
+        this.setData({ editAvatar: tempPath });
+      }
+    });
+  },
+  async saveProfile() {
+    const nick = (this.data.editNick || '').trim();
+    const avatar = this.data.editAvatar;
+    if (!nick && !avatar) return toast('填个网名或选个头像吧');
+    this.setData({ savingProfile: true });
+    let finalAvatar = avatar;
+    // 新选的临时图 → 上传云存储拿 fileID（持久化，对方也能加载）
+    if (this._avatarTemp && this._avatarTemp !== this.data.avatar) {
+      try {
+        const role = room.getRole() || 'boy';
+        const cloudPath = `avatar/${room.getRoom() || 'free'}/${role}_${Date.now()}.jpg`;
+        const up = await wx.cloud.uploadFile({ cloudPath, filePath: this._avatarTemp });
+        finalAvatar = up.fileID;
+      } catch (e) {
+        console.warn('[me] 头像上传失败，回退临时路径', e);
+      }
+      this._avatarTemp = null;
+    }
+    const finalNick = nick || this.data.nick || '我';
+    try {
+      await user.saveProfile({ nick: finalNick, avatar: finalAvatar });
+      // 同步写 profile/{role}，对方主页/各页经订阅实时刷新
+      Store.update('profile/' + (room.getRole() || 'boy'), { nick: finalNick, avatar: finalAvatar });
+      this.setData({ savingProfile: false, editOpen: false, nick: finalNick, avatar: finalAvatar });
+      toast('已保存，ta 马上能看到');
+    } catch (e) {
+      this.setData({ savingProfile: false });
+      toast('保存失败，稍后再试');
+    }
+  },
+
   copyInvite() {
     const c = this.data.inviteCode; if (!c) return;
+    wx.setClipboardData({ data: c, success: () => toast('邀请码已复制，发给 ta 吧') });
+  },
     wx.setClipboardData({ data: c, success: () => toast('邀请码已复制，发给 ta 吧') });
   },
 

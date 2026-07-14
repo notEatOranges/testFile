@@ -3,7 +3,14 @@
 /* 资料 */
 .me-profile { display: flex; align-items: center; gap: 20rpx; padding: 28rpx 32rpx; margin-bottom: 24rpx; }
 .me-av { width: 96rpx; height: 96rpx; border-radius: 50%; border: 3rpx solid var(--border); background: var(--chip); }
+.av-wrap { position: relative; width: 96rpx; height: 96rpx; flex-shrink: 0; }
+.av-badge {
+  position: absolute; right: -4rpx; bottom: -4rpx; width: 38rpx; height: 38rpx; border-radius: 50%;
+  background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: center;
+  border: 3rpx solid var(--card);
+}
 .me-info { flex: 1; min-width: 0; }
+.me-edit-arrow { color: var(--text-soft); padding-left: 8rpx; }
 .me-nick { font-size: 32rpx; font-weight: 600; color: var(--text); }
 .me-sub { margin-top: 8rpx; }
 
@@ -60,3 +67,9 @@
 .sf-actions { display: flex; gap: 20rpx; margin-top: 24rpx; }
 .sf-cancel { flex: 1; text-align: center; padding: 20rpx 0; border-radius: 36rpx; background: var(--chip); color: var(--text-soft); font-size: 28rpx; }
 .sf-ok { flex: 1; text-align: center; padding: 20rpx 0; border-radius: 36rpx; background: var(--primary); color: #fff; font-size: 28rpx; }
+.sf-ok.disabled { opacity: 0.6; }
+
+/* 编辑资料浮层：头像选择 */
+.ep-avatar { display: flex; flex-direction: column; align-items: center; gap: 10rpx; margin: 8rpx 0 24rpx; }
+.ep-av { width: 140rpx; height: 140rpx; border-radius: 50%; border: 3rpx solid var(--border); background: var(--chip); }
+.ep-av-tip { display: flex; align-items: center; gap: 6rpx; font-size: 24rpx; color: var(--primary); }

@@ -1,11 +1,15 @@
 <view class="theme-{{theme}} love-page me-page">
 
-  <view class="me-profile love-card">
-    <image class="me-av" src="{{avatar || '/assets/images/' + role + '.jpg'}}" mode="aspectFill" />
-    <view class="me-info">
-      <view class="me-nick">{{nick || roleFull}}</view>
-      <view class="me-sub muted small">空间码 {{roomCode}} · {{roleFull}}</view>
+  <view class="me-profile love-card" bindtap="openEdit">
+    <view class="av-wrap">
+      <image class="me-av" src="{{avatar || '/assets/images/' + role + '.jpg'}}" mode="aspectFill" />
+      <view class="av-badge"><t-icon name="camera" size="24rpx" /></view>
     </view>
+    <view class="me-info">
+      <view class="me-nick">{{nick || '点这里设置网名'}}</view>
+      <view class="me-sub muted small">空间码 {{roomCode}} · 点此改网名头像</view>
+    </view>
+    <view class="me-edit-arrow"><t-icon name="edit-1" size="36rpx" /></view>
   </view>
 
   <view class="me-group love-card">
@@ -66,6 +70,22 @@
     <view class="sf-actions">
       <view class="sf-cancel" bindtap="closeSuffix">取消</view>
       <view class="sf-ok" bindtap="confirmSuffix">保存</view>
+    </view>
+  </view>
+
+  <!-- 编辑资料浮层：网名 + 头像 -->
+  <view class="sf-mask {{editOpen ? 'show' : ''}}" bindtap="closeEdit"></view>
+  <view class="sf-sheet {{editOpen ? 'show' : ''}}" catchtap="noop">
+    <view class="sf-title">编辑我的资料</view>
+    <view class="sf-sub muted small">改完对方会实时看到你的新网名和头像</view>
+    <view class="ep-avatar" catchtap="pickAvatar">
+      <image class="ep-av" src="{{editAvatar || '/assets/images/' + role + '.jpg'}}" mode="aspectFill" />
+      <view class="ep-av-tip"><t-icon name="camera" size="28rpx" /><text>换头像</text></view>
+    </view>
+    <input class="sf-input" placeholder="给自己起个网名" value="{{editNick}}" maxlength="12" bindinput="onEditNick" confirm-type="done" />
+    <view class="sf-actions">
+      <view class="sf-cancel" bindtap="closeEdit">取消</view>
+      <view class="sf-ok {{savingProfile ? 'disabled' : ''}}" catchtap="saveProfile">{{savingProfile ? '保存中' : '保存'}}</view>
     </view>
   </view>
 </view>
