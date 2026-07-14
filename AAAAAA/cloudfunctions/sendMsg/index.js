@@ -38,9 +38,9 @@ function fmtTime(ts) {
 }
 
 exports.main = async (event) => {
-  const { coupleId, text, ts } = event;
+  const { coupleId, text, ts, media } = event;
   const openid = cloud.getWXContext().OPENID;
-  if (!coupleId || text == null) return { ok: false, reason: 'bad_args' };
+  if (!coupleId || (text == null && !media)) return { ok: false, reason: 'bad_args' };
 
   // 1) 反查 couple：确定 sender role + peer openid
   const c = await db.collection(COUPLES).where({ coupleId }).limit(1).get();
@@ -54,7 +54,20 @@ exports.main = async (event) => {
 
   // 2) 写 kv chat（与 kvWrite push 等价，保证 store.js watch/onList/toList 全兼容）
   const key = `k_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
-  const val = { sender: senderRole, text: String(text), ts: ts || Date.now() };
+  const val = { sender: senderRole, ts: ts || Date.now() };
+  if (text != null) val.text = String(text);
+  if (media && media.fileID) {                 // 图片/文件消息
+    val.type = media.kind;                      // 'image' | 'file'
+    val.fileID = media.fileID;
+    if (media.kind === 'image') {
+      if (media.sticker) val.sticker = true;
+      if (media.w) val.w = media.w;
+      if (media.h) val.h = media.h;
+    } else if (media.kind === 'file') {
+      if (media.name != null) val.name = media.name;
+      if (media.size != null) val.size = media.size;
+    }
+  }
   const kvCol = db.collection(KV);
   const existing = await kvCol.where({ room: coupleId, path: 'chat' }).limit(1).get();
   if (existing.data.length) {
@@ -84,7 +97,7 @@ exports.main = async (event) => {
         [KW.stime]: { value: fmtTime(val.ts) },                 // 发送时间
         [KW.title]: { value: '新消息' },                          // 消息标题
         [KW.ptime]: { value: fmtTime(val.ts) },                 // 发布时间
-        [KW.content]: { value: String(text).slice(0, 20) }      // 消息内容
+        [KW.content]: { value: (text != null ? String(text) : (val.type === 'image' ? '[图片]' : val.type === 'file' ? '[文件]' : '')).slice(0, 20) }      // 消息内容（图片/文件用占位词）
       }
     });
   } catch (err) {

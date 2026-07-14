@@ -8,6 +8,7 @@
   </view>
 
   <block wx:else>
+    <t-message id="t-message" />
     <view class="home-head love-card">
       <view class="hi-row">
         <image class="hi-av" src="{{myAvatar || '/assets/images/' + role + '.jpg'}}" mode="aspectFill" />

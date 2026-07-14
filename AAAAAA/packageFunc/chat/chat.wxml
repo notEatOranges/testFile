@@ -5,14 +5,18 @@
     <text>{{pokeText}}</text>
   </view>
 
-  <scroll-view class="chat-list" scroll-y scroll-into-view="{{scrollTo}}">
+  <scroll-view class="chat-list" scroll-y scroll-top="{{scrollTop}}" scroll-with-animation="{{false}}" bindscroll="onListScroll">
     <view class="chat-inner">
       <view wx:for="{{messages}}" wx:key="uid">
         <view wx:if="{{item.showTime}}" class="chat-time">{{item.timeText}}</view>
+
+        <!-- 戳一戳居中条 -->
         <view wx:if="{{item.poke}}" class="chat-poke-row" id="m-{{item.uid}}">
           <view class="chat-poke"><t-icon name="heart" size="28rpx" /> {{item.pokeText}}</view>
         </view>
-        <view wx:else id="m-{{item.uid}}" class="bubble-row {{item.mine ? 'me' : 'peer'}} {{item.emojiOnly ? 'emoji-only' : ''}} {{item.showAvatar ? '' : 'cont'}}">
+
+        <!-- 普通消息行 -->
+        <view wx:else id="m-{{item.uid}}" class="bubble-row {{item.mine ? 'me' : 'peer'}} {{item.emojiOnly ? 'emoji-only' : ''}} {{item.kind === 'sticker' ? 'is-sticker' : ''}} {{item.showAvatar ? '' : 'cont'}}">
           <image wx:if="{{item.showAvatar}}" class="avatar {{pokeShakeTarget && ((item.mine && pokeShakeTarget === myRole) || (!item.mine && pokeShakeTarget === peer)) ? 'shake' : ''}}" src="{{item.avatar}}" mode="aspectFill" bindtap="onAvatarTap" />
           <view wx:else class="avatar avatar-ph"></view>
 
@@ -20,25 +24,95 @@
           <view wx:elif="{{item.mine && item.status === 'failed'}}" class="bubble-status failed"><t-icon name="error-circle" size="30rpx" /></view>
           <view wx:else class="bubble-placeholder"></view>
 
-          <view wx:if="{{item.emojiOnly}}" class="bubble emoji-bubble"><text class="emoji-big">{{item.text}}</text></view>
-          <view wx:else class="bubble">
+          <!-- 内容按 kind 分支 -->
+          <image wx:if="{{item.kind === 'image' || item.kind === 'sticker'}}"
+            class="media-img {{item.kind === 'sticker' ? 'sticker-img' : 'bubble-img'}}"
+            src="{{item.src}}" mode="widthFix" lazy-load
+            data-src="{{item.src}}" bindtap="previewImage" bindlongpress="collectSticker" />
+
+          <view wx:elif="{{item.kind === 'file'}}" class="bubble file-bubble" data-fid="{{item.fileID}}" bindtap="openFile">
+            <view class="file-ext">{{item.ext}}</view>
+            <view class="file-info">
+              <text class="file-name">{{item.name}}</text>
+              <text class="file-size muted small">{{item.sizeText}}</text>
+            </view>
+          </view>
+
+          <view wx:elif="{{item.emojiOnly}}" class="bubble emoji-bubble"><text class="emoji-big">{{item.text}}</text></view>
+
+          <view wx:else class="bubble" data-text="{{item.text}}" bindlongpress="onBubbleLongPress" bindtap="onBubbleTap">
             <text class="bubble-text">{{item.text}}</text>
             <text class="bubble-time">{{item.timeShort}}</text>
           </view>
         </view>
       </view>
-      <view wx:if="{{!messages.length}}" class="chat-empty muted">还没有消息，先和 ta 说句话吧</view>
+      <view wx:if="{{loaded && !messages.length}}" class="chat-empty muted">还没有消息，先和 ta 说句话吧</view>
     </view>
   </scroll-view>
 
-  <view class="chat-emoji" wx:if="{{emojiOpen}}">
-    <view wx:for="{{emojis}}" wx:key="*this" class="emoji-cell" data-e="{{item}}" bindtap="pickEmoji">{{item}}</view>
+  <!-- 表情 / 表情包 面板 -->
+  <view class="chat-panel" wx:if="{{emojiOpen}}">
+    <t-tabs value="{{emojiTab}}" bind:change="onEmojiTab">
+      <t-tab-panel value="0" label="表情">
+        <scroll-view scroll-y class="panel-scroll">
+          <view class="emoji-grid">
+            <view wx:for="{{emojis}}" wx:key="*this" class="emoji-cell" data-e="{{item}}" bindtap="pickEmoji">{{item}}</view>
+          </view>
+        </scroll-view>
+      </t-tab-panel>
+      <t-tab-panel value="1" label="表情包">
+        <scroll-view scroll-y class="panel-scroll">
+          <view wx:if="{{!collectedStickers.length && !builtinStickers.length}}" class="sticker-empty muted">长按收到的图片可收藏为表情包；内置表情在 utils/stickers.js 登记</view>
+          <view class="sticker-grid">
+            <image wx:for="{{collectedStickers}}" wx:key="id" class="sticker-thumb" src="{{item.fileID}}" mode="aspectFit" data-fid="{{item.fileID}}" bindtap="sendSticker" />
+            <image wx:for="{{builtinStickers}}" wx:key="key" class="sticker-thumb" src="{{item.src}}" mode="aspectFit" data-src="{{item.src}}" bindtap="sendBuiltinSticker" />
+          </view>
+        </scroll-view>
+      </t-tab-panel>
+    </t-tabs>
   </view>
 
+  <!-- 输入栏 -->
   <view class="chat-input-bar" style="padding-bottom: {{kbHeight ? (kbHeight + 24) + 'rpx' : 'calc(16rpx + env(safe-area-inset-bottom))'}}">
     <view class="emoji-btn" bindtap="toggleEmoji"><t-icon name="smile" size="44rpx" /></view>
     <view class="poke-btn" bindtap="sendPoke"><t-icon name="heart" size="44rpx" /></view>
-    <input class="chat-input" placeholder="说点什么～ 双击头像可戳一戳" value="{{input}}" adjust-position="{{false}}" bindfocus="onInputFocus" bindkeyboardheightchange="onKbHeight" bindinput="onInput" bindconfirm="send" confirm-type="send" />
+    <view class="plus-btn" bindtap="openPlus"><t-icon name="add" size="44rpx" /></view>
+    <textarea class="chat-input" hidden="{{fullInput || msgView || imgView}}"
+      style="height:{{inputHeight}}rpx"
+      value="{{input}}"
+      disable-default-padding adjust-position="{{false}}" show-confirm-bar="{{false}}" cursor-spacing="20"
+      bindfocus="onInputFocus" bindkeyboardheightchange="onKbHeight" bindinput="onInput" />
+    <text class="expand-btn" bindtap="openFullInput">全屏</text>
     <view class="send-btn {{input ? 'on' : ''}}" bindtap="send">发送</view>
+  </view>
+
+  <!-- 「+」操作菜单 -->
+  <t-action-sheet visible="{{plusOpen}}" theme="grid" items="{{plusItems}}" bind:selected="onPlusPick" bind:visible-change="onPlusChange" />
+
+  <!-- 图片全屏预览 -->
+  <t-image-viewer visible="{{imgView}}" images="{{imgViewList}}" bind:close="onImgViewClose" />
+
+  <!-- 全屏输入 -->
+  <view class="full-input-mask" wx:if="{{fullInput}}">
+    <view class="full-input-topbar">
+      <text class="fi-btn" catchtap="closeFullInput">取消</text>
+      <text class="fi-title">全屏输入</text>
+      <text class="fi-btn ok {{fullInputText ? 'on' : ''}}" catchtap="confirmFullInput">完成</text>
+    </view>
+    <textarea class="full-input-area" style="height: calc(100vh - {{kbHeight}}rpx - 96rpx)"
+      value="{{fullInputText}}" placeholder="输入内容，支持换行" disable-default-padding
+      show-confirm-bar="{{false}}" adjust-position="{{false}}" fixed="{{true}}"
+      focus="{{fullInput}}" cursor-spacing="20" bindinput="onFullInput" />
+  </view>
+
+  <!-- 文本消息全屏查看（双击气泡） -->
+  <view class="msg-view-mask" wx:if="{{msgView}}" bindtap="closeMsgView">
+    <view class="msg-view-card" catchtap>
+      <scroll-view scroll-y class="msg-view-scroll"><text class="msg-view-text" user-select="{{true}}">{{msgViewText}}</text></scroll-view>
+      <view class="msg-view-actions">
+        <view class="msg-view-btn" catchtap="copyMsgView">复制</view>
+        <view class="msg-view-btn primary" catchtap="closeMsgView">关闭</view>
+      </view>
+    </view>
   </view>
 </view>

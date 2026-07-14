@@ -67,3 +67,5 @@
 .notify-title { font-size: 30rpx; font-weight: 600; color: var(--text); }
 .notify-sub { margin-top: 6rpx; }
 .notify-arrow { color: var(--text-soft); }
+
+/* 对方上线提示改用 TDesign t-message 组件，无需自定义样式 */
