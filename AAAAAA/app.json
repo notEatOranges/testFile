@@ -15,7 +15,8 @@
         "mood/history/history",
         "days/days",
         "wishlist/wishlist",
-        "truthbox/truthbox"
+        "truthbox/truthbox",
+        "lobby/lobby"
       ]
     }
   ],

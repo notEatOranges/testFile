@@ -1,0 +1,13 @@
+<view class="theme-{{theme}} love-page lobby-page">
+  <view class="lobby-head">
+    <view class="lh-title">游戏大厅</view>
+    <view class="lh-sub muted small">两个人，一起玩点小游戏的时光</view>
+  </view>
+  <view class="game-grid">
+    <view wx:for="{{games}}" wx:key="key" class="love-card game-card" data-k="{{item.key}}" bindtap="go">
+      <view class="g-ic"><t-icon name="{{item.icon}}" size="56rpx" /></view>
+      <view class="g-name">{{item.name}}</view>
+      <view class="g-desc muted small">{{item.desc}}</view>
+    </view>
+  </view>
+</view>

@@ -12,7 +12,7 @@ const CARDS = [
   { page: 'days',     icon: 'calendar',  nt: '在一起',   nd: '天数·纪念日', ready: true },
   { page: 'wishlist', icon: 'check',     nt: '心愿清单', nd: '一起打卡',    ready: true },
   { page: 'truthbox', icon: 'edit-1',    nt: '真心话',   nd: '默契问答',    ready: true },
-  { page: 'lobby',    icon: 'app',       nt: '游戏大厅', nd: '敬请期待',    ready: false }
+  { page: 'lobby',    icon: 'app',       nt: '游戏大厅', nd: '2048·方块·画猜', ready: true }
 ];
 
 Page({
