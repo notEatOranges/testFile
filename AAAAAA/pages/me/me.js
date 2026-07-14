@@ -98,8 +98,6 @@ Page({
     const c = this.data.inviteCode; if (!c) return;
     wx.setClipboardData({ data: c, success: () => toast('邀请码已复制，发给 ta 吧') });
   },
-    wx.setClipboardData({ data: c, success: () => toast('邀请码已复制，发给 ta 吧') });
-  },
 
   pickTheme() { this.setData({ themeSheet: true }); },
   selectTheme(e) {
