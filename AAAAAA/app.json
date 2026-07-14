@@ -18,6 +18,12 @@
         "truthbox/truthbox",
         "lobby/lobby"
       ]
+    },
+    {
+      "root": "packageGames",
+      "pages": [
+        "game2048/game2048"
+      ]
     }
   ],
   "tabBar": {

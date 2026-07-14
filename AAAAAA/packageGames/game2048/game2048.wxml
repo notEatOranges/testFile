@@ -1,0 +1,19 @@
+<view class="theme-{{theme}} love-page g-page">
+
+  <view class="g-bar">
+    <view class="g-score"><text class="lbl">分数</text><text class="val">{{score}}</text></view>
+    <view class="g-score best"><text class="lbl">最高</text><text class="val">{{best}}</text></view>
+    <view class="g-restart" bindtap="restart"><t-icon name="refresh" size="40rpx" /></view>
+  </view>
+
+  <view class="board-wrap">
+    <canvas type="2d" id="board" class="board" bindtouchstart="ts" bindtouchend="te"></canvas>
+    <view wx:if="{{over}}" class="over-mask">
+      <view class="over-text">游戏结束</view>
+      <view class="over-score">本局得分 {{score}}</view>
+      <view class="over-btn" bindtap="restart">再来一局</view>
+    </view>
+  </view>
+
+  <view class="g-tip muted small">上下左右滑动，相同数字合并</view>
+</view>
