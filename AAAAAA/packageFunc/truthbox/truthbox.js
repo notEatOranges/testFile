@@ -19,7 +19,9 @@ Page({
     ansOpen: false, ansQ: null, ansText: '', ansLocked: false, ansShowPeer: false, ansPeerText: '', saving: false,
     // 出题弹层
     addOpen: false, addText: '', addCat: 'sweet',
-    drawing: false
+    drawing: false,
+    // 堆叠滑动 & 全部题目弹层
+    deckTop: null, deckRest: [], topDx: 0, allOpen: false
   },
 
   onLoad() {
@@ -58,16 +60,17 @@ Page({
       };
     }).sort((a, b) => (b.ts || 0) - (a.ts || 0));
     const deck = enriched.filter(q => !q.hasMy).slice(0, 3);
-    this.setData({ questions: enriched, deck });
+    this.setData({ questions: enriched, deck, deckTop: deck[0] || null, deckRest: deck.slice(1), topDx: 0 });
   },
 
   // —— 回答 / 修改 ——
   openAns(e) {
+    if (this._swiped) { this._swiped = false; return; }   // 滑动切换不触发作答
     const id = e.currentTarget.dataset.id;
     const q = this.data.questions.find(x => x.id === id);
     if (!q) return;
     this.setData({
-      ansOpen: true, ansQ: q, ansId: id,
+      ansOpen: true, allOpen: false, ansQ: q, ansId: id,
       ansText: q.myText || '',
       ansLocked: q.hasMy && q.hasPeer,
       ansShowPeer: q.hasMy, ansPeerText: q.peerText || ''
@@ -122,6 +125,33 @@ Page({
     this.setData({ addOpen: false });
     toast('已添加');
   },
+
+  // —— 堆叠卡片：左右滑动切换 ——
+  onDeckTouchStart(e) { this._deckSX = e.touches[0].clientX; this._swiped = false; },
+  onDeckTouchMove(e) {
+    const dx = e.touches[0].clientX - this._deckSX;
+    if (Math.abs(dx) > 12) this._swiped = true;
+    this.setData({ topDx: dx });
+  },
+  onDeckTouchEnd() {
+    const dx = this.data.topDx;
+    if (Math.abs(dx) > 80 && this.data.deck.length > 1) {
+      this.setData({ topDx: dx > 0 ? 1000 : -1000 });     // 顶卡飞出屏幕
+      setTimeout(() => { this.switchDeck(); this.setData({ topDx: 0 }); }, 240);
+    } else {
+      this.setData({ topDx: 0 });                          // 未达阈值，回弹
+    }
+  },
+  switchDeck() {
+    const d = this.data.deck;
+    if (d.length < 2) return;
+    const nd = [...d.slice(1), d[0]];
+    this.setData({ deck: nd, deckTop: nd[0], deckRest: nd.slice(1) });
+  },
+
+  // —— 全部题目弹层 ——
+  openAll() { this.setData({ allOpen: true }); },
+  closeAll() { this.setData({ allOpen: false }); },
 
   delQuestion(e) {
     const id = e.currentTarget.dataset.id;

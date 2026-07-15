@@ -3,6 +3,7 @@
   <!-- 采样画布（隐藏，用于背景图取色） -->
   <canvas type="2d" id="bgCanvas" class="bg-canvas"></canvas>
 
+  <scroll-view scroll-y enhanced="{{true}}" show-scrollbar="{{false}}" class="mood-scroll">
   <!-- 今日：我 + ta 双卡片 -->
   <view class="section-title">今日心情</view>
   <view class="duo">
@@ -66,11 +67,16 @@
     <t-button wx:if="{{myBg}}" theme="default" size="small" icon="clear" variant="outline" bind:tap="clearBg">清除</t-button>
   </view>
 
-  <t-button theme="primary" block class="love-btn" loading="{{saving}}" bind:tap="save">保存今日心情</t-button>
   <view class="history-entry" bindtap="goHistory">
     <t-icon name="time" size="32rpx" />
     <text>历史心情</text>
     <view class="he-arrow"><t-icon name="chevron-right" size="32rpx" /></view>
+  </view>
+  </scroll-view>
+
+  <!-- 保存按钮：在滚动区下方，滚动条只在上方滚动区、不会穿过按钮 -->
+  <view class="mood-footer">
+    <t-button theme="primary" block class="love-btn" loading="{{saving}}" bind:tap="save">保存今日心情</t-button>
   </view>
 
   <!-- 自定义表情弹层 -->

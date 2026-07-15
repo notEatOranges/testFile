@@ -21,7 +21,7 @@ Page({
   onShow() {
     this.setData({ theme: getApp().globalData.theme || 'sakura' });
     if (typeof this.getTabBar === 'function' && this.getTabBar()) {
-      this.getTabBar().setData({ selected: 1 });
+      this.getTabBar().setData({ selected: 1, hidden: false });   // 回到本页确保 tabBar 可见（防换肤弹层打开时切走导致永久隐藏）
     }
     if (!user.isPaired()) { wx.reLaunch({ url: '/pages/setup/setup' }); return; }
     this.applyUser();
@@ -99,15 +99,22 @@ Page({
     wx.setClipboardData({ data: c, success: () => toast('邀请码已复制，发给 ta 吧') });
   },
 
-  pickTheme() { this.setData({ themeSheet: true }); },
+  pickTheme() { this.setData({ themeSheet: true }); this._hideTabBar(true); },
   selectTheme(e) {
     const key = e.currentTarget.dataset.key;
     getApp().setTheme(key);
     this.setData({ themeSheet: false });
+    this._hideTabBar(false);
     const t = THEMES[key];
     if (t) toast('已切换 ' + t.name);
   },
-  closeTheme() { this.setData({ themeSheet: false }); },
+  closeTheme() { this.setData({ themeSheet: false }); this._hideTabBar(false); },
+  // Skyline 下自定义 tabBar 独立成层，底部弹层的 z-index 盖不住它 → 打开换肤弹层时把 tabBar 滑出屏幕
+  _hideTabBar(hidden) {
+    if (typeof this.getTabBar === 'function' && this.getTabBar()) {
+      this.getTabBar().setData({ hidden });
+    }
+  },
 
   onNotifyTap() {
     notify.requestSubscribeMessage().then(res => {

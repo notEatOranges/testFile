@@ -1,0 +1,26 @@
+<view class="theme-{{theme}} love-page lb-page">
+
+  <!-- 游戏切换 -->
+  <view class="lb-tabs">
+    <view wx:for="{{games}}" wx:key="key" class="lb-tab {{tab === item.key ? 'sel' : ''}}" data-k="{{item.key}}" bindtap="switchTab">{{item.label}}</view>
+  </view>
+
+  <!-- 双方最高分对比 -->
+  <view class="lb-best">
+    <view class="bb-item mine"><text class="bb-lbl">我的最高</text><text class="bb-val">{{myBest}}</text></view>
+    <view class="bb-vs">VS</view>
+    <view class="bb-item"><text class="bb-lbl">ta 的最高</text><text class="bb-val">{{peerBest}}</text></view>
+  </view>
+
+  <!-- 历史成绩列表（按分数降序） -->
+  <view class="section-title">历史成绩 <text class="muted small">（按分数排名）</text></view>
+  <view class="lb-list">
+    <view wx:for="{{list}}" wx:key="index" class="lb-row {{item.mine ? 'mine' : ''}} {{item.top ? 'top' : ''}}">
+      <view class="lr-rank">{{item.rank}}</view>
+      <view class="lr-name">{{item.name}}</view>
+      <view class="lr-score">{{item.score}}</view>
+      <view class="lr-time muted small">{{item.time}}</view>
+    </view>
+    <view wx:if="{{!list.length}}" class="empty muted">还没有成绩，去玩一局吧</view>
+  </view>
+</view>

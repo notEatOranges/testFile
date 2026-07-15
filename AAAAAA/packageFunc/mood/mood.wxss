@@ -1,4 +1,6 @@
-.mood-page { padding-bottom: calc(60rpx + env(safe-area-inset-bottom)); }
+page { background-color: var(--bg-1); }   /* 兜底：防 page 灰底在渐变缝隙露出（顶部灰条来源之一） */
+.mood-page { height: 100vh; display: flex; flex-direction: column; overflow: hidden; box-sizing: border-box; padding-bottom: 0; }
+.mood-scroll { flex: 1; min-height: 0; }
 
 /* 采样画布：离屏隐藏（仅用于背景图取色） */
 .bg-canvas { position: fixed; left: -9999rpx; top: -9999rpx; width: 48px; height: 48px; opacity: 0; pointer-events: none; }
@@ -37,7 +39,7 @@
 .mood-emoji.custom .custom-txt { font-size: 20rpx; color: var(--text-soft); }
 
 /* 背景图按钮行 */
-.bg-row { display: flex; gap: 16rpx; margin: 20rpx 0 4rpx; }
+.bg-row { display: flex; flex-wrap: wrap; gap: 16rpx; margin: 20rpx 0 4rpx; }
 
 .love-btn { margin-top: 16rpx; }
 
@@ -48,3 +50,10 @@
   color: var(--text); font-size: 28rpx;
 }
 .he-arrow { margin-left: auto; color: var(--text-soft); }
+
+/* 保存按钮：作为 flex 底部子项（在滚动区下方），滚动条不会穿过它 */
+.mood-footer {
+  flex-shrink: 0; margin: 0 -32rpx; padding: 16rpx 32rpx calc(16rpx + env(safe-area-inset-bottom));
+  background: var(--card); box-shadow: 0 -4rpx 20rpx var(--card-shadow); box-sizing: border-box;
+}
+.mood-footer .love-btn { margin-top: 0; }

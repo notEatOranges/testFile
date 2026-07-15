@@ -48,6 +48,14 @@ const EMOJIS = [
   '🐱','🐶','🐰','🐻','🐼','🐨','👋','👌','✌️','🤞','🙏','💪','👏','👀','🌹','🎁'
 ];
 
+// 浅相等：两个消息对象所有字段都相同（用于 compose 复用旧引用，避免未变消息被重新渲染、头像重新加载）
+function objSame(a, b) {
+  if (!a || !b) return false;
+  const ka = Object.keys(a), kb = Object.keys(b);
+  if (ka.length !== kb.length) return false;
+  for (let i = 0; i < kb.length; i++) if (a[kb[i]] !== b[kb[i]]) return false;
+  return true;
+}
 function isEmojiOnly(t) {
   if (!t || t.length > 6) return false;
   const stripped = t.replace(/[️‍♀♂]/g, '');
@@ -208,7 +216,9 @@ Page({
     all.sort((a, b) => (a.ts || 0) - (b.ts || 0));
 
     let prevTs = 0, prevSender = null;
-    const messages = all.map(m => {
+    const _oldMap = {};
+    (this.data.messages || []).forEach(m => _oldMap[m.uid] = m);
+    const raw = all.map(m => {
       const showTime = !prevTs || (m.ts - prevTs) > 5 * 60 * 1000;
       prevTs = m.ts;
       if (m.type === 'poke') {
@@ -247,6 +257,8 @@ Page({
       }
       return { ...base, kind: 'text', text: m.text, emojiOnly: isEmojiOnly(m.text) };
     });
+    // 复用未变化消息的旧引用：setData diff 会跳过这些 item，头像 image 不重新加载、发送更流畅
+    const messages = raw.map(it => { const old = _oldMap[it.uid]; return (old && objSame(old, it)) ? old : it; });
     this.setData({ messages, loaded: true });
     const action = this._scrollAction; this._scrollAction = null;
     if (action === 'restore') {

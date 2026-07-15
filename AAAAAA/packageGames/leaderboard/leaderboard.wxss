@@ -1,0 +1,33 @@
+page { background-color: var(--bg-1); }
+.lb-page { padding-bottom: calc(40rpx + env(safe-area-inset-bottom)); }
+
+/* 游戏切换 tab */
+.lb-tabs { display: flex; gap: 14rpx; }
+.lb-tab {
+  flex: 1; text-align: center; padding: 18rpx 0; border-radius: 30rpx;
+  background: var(--card); color: var(--text-soft); font-size: 28rpx; box-shadow: 0 4rpx 16rpx var(--card-shadow);
+  transition: transform .12s ease, background .14s ease;
+}
+.lb-tab:active { transform: scale(.97); }
+.lb-tab.sel { background: var(--primary); color: #fff; font-weight: 600; }
+
+/* 双方最高对比 */
+.lb-best { display: flex; align-items: center; justify-content: center; gap: 28rpx; margin: 24rpx 0 8rpx; }
+.bb-item { display: flex; flex-direction: column; align-items: center; padding: 18rpx 40rpx; border-radius: 22rpx; background: var(--card); box-shadow: 0 6rpx 24rpx var(--card-shadow); min-width: 200rpx; }
+.bb-item.mine { background: var(--primary); }
+.bb-item.mine .bb-lbl, .bb-item.mine .bb-val { color: #fff; }
+.bb-lbl { font-size: 24rpx; color: var(--text-soft); }
+.bb-val { font-size: 50rpx; font-weight: 800; color: var(--primary-deep); line-height: 1.1; }
+.bb-vs { font-size: 26rpx; color: var(--text-soft); font-weight: 700; }
+
+/* 成绩列表 */
+.lb-list { display: flex; flex-direction: column; gap: 12rpx; }
+.lb-row { display: flex; align-items: center; gap: 18rpx; padding: 20rpx 24rpx; border-radius: 18rpx; background: var(--card); box-shadow: 0 4rpx 16rpx var(--card-shadow); }
+.lb-row.mine { border-left: 8rpx solid var(--primary); }
+.lb-row.top { background: var(--chip); }
+.lr-rank { width: 48rpx; text-align: center; font-size: 30rpx; font-weight: 800; color: var(--primary-deep); }
+.lr-name { flex: 1; font-size: 28rpx; color: var(--text); }
+.lb-row.mine .lr-name { font-weight: 600; }
+.lr-score { font-size: 36rpx; font-weight: 800; color: var(--primary-deep); }
+.lr-time { font-size: 22rpx; }
+.empty { text-align: center; padding: 60rpx 0; font-size: 26rpx; }

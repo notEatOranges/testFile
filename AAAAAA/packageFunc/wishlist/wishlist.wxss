@@ -13,7 +13,9 @@
 .cat-tab {
   display: inline-block; padding: 12rpx 28rpx; margin-right: 14rpx; border-radius: 30rpx;
   background: var(--card); color: var(--text-soft); font-size: 26rpx; box-shadow: 0 4rpx 16rpx var(--card-shadow);
+  transition: transform .12s ease;
 }
+.cat-tab:active { transform: scale(.95); }
 .cat-tab.sel { background: var(--primary); color: #fff; font-weight: 600; }
 
 /* 心愿卡 */
@@ -38,16 +40,19 @@
 .empty { text-align: center; padding: 70rpx 0; font-size: 26rpx; }
 
 /* 底部添加栏 */
-.wish-add { position: fixed; left: 24rpx; right: 24rpx; bottom: calc(28rpx + env(safe-area-inset-bottom)); padding: 18rpx 20rpx; z-index: 40; }
+.wish-add { position: fixed; left: 32rpx; right: 32rpx; bottom: calc(28rpx + env(safe-area-inset-bottom)); padding: 18rpx 20rpx; z-index: 40; }
 .wish-input { width: 100%; box-sizing: border-box; height: 76rpx; line-height: 76rpx; padding: 0 24rpx; background: var(--chip); border-radius: 38rpx; font-size: 28rpx; color: var(--text); }
-.add-cats { display: flex; gap: 12rpx; margin-top: 14rpx; }
-.add-cat { display: flex; align-items: center; gap: 6rpx; padding: 8rpx 18rpx; border-radius: 24rpx; background: var(--chip); color: var(--text-soft); font-size: 24rpx; }
+.add-cats { display: flex; flex-wrap: wrap; gap: 12rpx; margin-top: 14rpx; }
+.add-cat { display: flex; align-items: center; gap: 6rpx; padding: 8rpx 18rpx; border-radius: 24rpx; background: var(--chip); color: var(--text-soft); font-size: 24rpx; transition: transform .12s ease, background .14s ease; }
+.add-cat:active { transform: scale(.94); }
 .add-cat.sel { background: var(--primary); color: #fff; }
 .add-fab {
   position: fixed; right: 36rpx; bottom: calc(150rpx + env(safe-area-inset-bottom));
   width: 88rpx; height: 88rpx; border-radius: 50%; background: var(--primary-deep); color: #fff;
   display: flex; align-items: center; justify-content: center; box-shadow: 0 8rpx 24rpx var(--card-shadow); z-index: 41;
+  transition: transform .14s ease;
 }
+.add-fab:active { transform: scale(.9); }
 
 /* 完成打卡 */
 .fin-photo { display: flex; justify-content: center; margin-bottom: 18rpx; }

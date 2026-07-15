@@ -1,11 +1,14 @@
+page { background-color: var(--bg-1); }   /* 兜底：防 page 灰底在渐变缝隙露出（顶部灰条来源之一） */
 .truth-page { padding-bottom: calc(60rpx + env(safe-area-inset-bottom)); }
 
 /* 抽题 chips */
-.draw-row { display: flex; flex-wrap: wrap; gap: 12rpx; margin-bottom: 16rpx; }
+.draw-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14rpx; margin-bottom: 16rpx; }
 .draw-chip {
-  display: flex; align-items: center; gap: 6rpx; padding: 14rpx 24rpx; border-radius: 30rpx;
+  display: flex; align-items: center; justify-content: center; gap: 6rpx; padding: 18rpx 12rpx; border-radius: 30rpx;
   background: var(--card); color: var(--primary-deep); font-size: 26rpx; box-shadow: 0 4rpx 16rpx var(--card-shadow);
+  transition: transform .12s ease;
 }
+.draw-chip:active { transform: scale(.95); }
 .draw-chip.busy { opacity: 0.6; }
 .ghost-btn { margin-top: 0; }
 
@@ -16,7 +19,9 @@
   position: absolute; left: 0; right: 0; box-sizing: border-box;
   background: var(--card); border-radius: 24rpx; padding: 28rpx;
   box-shadow: 0 12rpx 36rpx var(--card-shadow);
+  transition: transform .28s cubic-bezier(.2,.8,.2,1), top .28s ease, left .28s ease;
 }
+.deck-card.top { top: 0; left: 0; right: 0; z-index: 10; }
 .dc-cat { display: flex; align-items: center; gap: 8rpx; color: var(--primary); font-size: 24rpx; }
 .dc-text { font-size: 34rpx; font-weight: 600; color: var(--text); line-height: 1.5; margin: 14rpx 0; }
 .deck-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--primary); padding: 50rpx 0; }
@@ -48,6 +53,21 @@
 .chip {
   display: flex; align-items: center; gap: 6rpx; padding: 12rpx 22rpx; border-radius: 30rpx;
   background: var(--chip); color: var(--text-soft); font-size: 26rpx; border: 2rpx solid transparent;
+  transition: transform .12s ease, border-color .14s ease;
 }
+.chip:active { transform: scale(.95); }
 .chip.sel { color: var(--primary-deep); border-color: var(--primary); font-weight: 600; }
 .add-label { font-size: 24rpx; color: var(--text-soft); margin: 14rpx 0 10rpx; }
+
+/* 全部题目入口 */
+.all-entry { display: flex; align-items: center; gap: 18rpx; padding: 22rpx 28rpx; margin-top: 20rpx; transition: transform .12s ease; }
+.all-entry:active { transform: scale(.99); }
+.ae-ic { width: 60rpx; height: 60rpx; border-radius: 16rpx; background: var(--chip); color: var(--primary); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.ae-info { flex: 1; }
+.ae-title { font-size: 29rpx; color: var(--text); font-weight: 600; }
+.he-arrow { color: var(--text-soft); flex-shrink: 0; }
+
+/* 全部题目弹层（半屏滚动列表，覆盖 sf-sheet 的居中定位） */
+.all-sheet { left: 24rpx; right: 24rpx; top: 10vh; transform: none; max-height: 78vh; display: flex; flex-direction: column; }
+.all-sheet.show { transform: none; }
+.all-scroll { flex: 1; min-height: 0; padding: 8rpx 4rpx; }

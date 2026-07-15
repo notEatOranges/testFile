@@ -92,6 +92,7 @@
   padding: 16rpx 20rpx calc(16rpx + env(safe-area-inset-bottom));
   background: var(--card); border-top: 1rpx solid var(--border); box-sizing: border-box;
   position: relative; z-index: 2;
+  transition: padding-bottom .22s ease;   /* 键盘弹起/收起柔和过渡，不再生硬跳变 */
 }
 .emoji-btn { color: var(--text-soft); padding: 4rpx; line-height: 1; }
 .chat-input {
@@ -110,7 +111,9 @@
 .send-btn {
   padding: 0 32rpx; height: 72rpx; line-height: 72rpx; border-radius: 36rpx;
   background: var(--primary-soft); color: #fff; font-size: 28rpx;
+  transition: transform .12s ease;
 }
+.send-btn:active { transform: scale(.94); }
 .send-btn.on { background: var(--primary); }
 
 /* 全屏输入 */

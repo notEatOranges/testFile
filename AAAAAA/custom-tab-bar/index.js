@@ -2,6 +2,7 @@
 Component({
   data: {
     selected: 0,
+    hidden: false,
     list: [
       { pagePath: '/pages/main/main', text: '小窝', icon: 'home' },
       { pagePath: '/pages/me/me', text: '我的', icon: 'user' }

@@ -24,7 +24,8 @@
       "pages": [
         "game2048/game2048",
         "tetris/tetris",
-        "drawguess/drawguess"
+        "drawguess/drawguess",
+        "leaderboard/leaderboard"
       ]
     }
   ],

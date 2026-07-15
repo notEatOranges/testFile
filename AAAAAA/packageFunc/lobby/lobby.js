@@ -16,5 +16,6 @@ Page({
   go(e) {
     const key = e.currentTarget.dataset.k;
     wx.navigateTo({ url: '/packageGames/' + key + '/' + key });
-  }
+  },
+  goBoard() { wx.navigateTo({ url: '/packageGames/leaderboard/leaderboard' }); }
 });

@@ -75,7 +75,7 @@
   font-size: 28rpx;
   font-weight: 600;
   color: var(--text);
-  margin: 32rpx 0 16rpx;
+  padding: 32rpx 0 16rpx;
 }
 .muted { color: var(--text-soft); }
 .small { font-size: 24rpx; }
@@ -113,4 +113,47 @@
 .sf-cancel { flex: 1; text-align: center; padding: 20rpx 0; border-radius: 36rpx; background: var(--chip); color: var(--text-soft); font-size: 28rpx; }
 .sf-ok { flex: 1; text-align: center; padding: 20rpx 0; border-radius: 36rpx; background: var(--primary); color: #fff; font-size: 28rpx; }
 .sf-ok.disabled { opacity: 0.6; }
+
+/* sf 双按钮按压反馈（全局补，多功能页弹层复用，原定义在上方） */
+.sf-cancel { transition: transform .12s ease; }
+.sf-ok { transition: transform .12s ease; }
+.sf-cancel:active { transform: scale(.97); }
+.sf-ok:active { transform: scale(.97); }
+
+/* ============================================================
+   全站统一按钮 / 标签 / 卡片入场（精致化基线 v2）
+   主操作按钮 .love-btn-primary；次级 .love-btn-ghost；标签 .love-chip；圆形图标 .love-icon-btn
+   所有页面经 app.wxss 顶部 @import "love-theme.wxss" 自动生效。
+   ============================================================ */
+.love-btn-primary {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8rpx;
+  min-height: 80rpx; line-height: 80rpx; padding: 0 44rpx;
+  border-radius: 40rpx; background: var(--primary); color: #fff;
+  font-size: 28rpx; font-weight: 600; letter-spacing: 1rpx;
+  box-shadow: 0 8rpx 24rpx var(--card-shadow);
+  transition: transform .12s ease, opacity .12s ease, box-shadow .12s ease;
+}
+.love-btn-primary:active { transform: scale(.96); opacity: .9; box-shadow: 0 4rpx 14rpx var(--card-shadow); }
+.love-btn-ghost {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8rpx;
+  min-height: 80rpx; line-height: 80rpx; padding: 0 40rpx;
+  border-radius: 40rpx; background: var(--chip); color: var(--text-soft);
+  font-size: 28rpx;
+  transition: transform .12s ease, background .12s ease;
+}
+.love-btn-ghost:active { transform: scale(.95); background: var(--border); }
+.love-chip {
+  display: inline-flex; align-items: center; gap: 6rpx;
+  padding: 12rpx 26rpx; border-radius: 30rpx;
+  background: var(--chip); color: var(--text-soft); font-size: 26rpx;
+  transition: transform .12s ease, background .14s ease, color .14s ease;
+}
+.love-chip:active { transform: scale(.95); background: var(--border); }
+.love-chip.sel { background: var(--primary); color: #fff; }
+.love-icon-btn { transition: transform .1s ease, background .12s ease; }
+.love-icon-btn:active { transform: scale(.92); }
+
+/* 卡片入场动画：列表/卡片首屏挂 .enter */
+@keyframes loveCardIn { from { opacity: 0; transform: translateY(18rpx); } to { opacity: 1; transform: translateY(0); } }
+.love-card.enter { animation: loveCardIn .34s cubic-bezier(.2,.8,.2,1) both; }
 

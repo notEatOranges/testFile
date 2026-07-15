@@ -3,6 +3,11 @@
     <view class="lh-title">游戏大厅</view>
     <view class="lh-sub muted small">两个人，一起玩点小游戏的时光</view>
   </view>
+  <view class="lb-entry love-card" bindtap="goBoard">
+    <view class="lb-ic"><t-icon name="chart-bar" size="44rpx" /></view>
+    <view class="lb-info"><view class="lb-title">成绩榜</view><view class="muted small">两人所有游戏历史成绩 · 分类排名</view></view>
+    <view class="lb-arrow"><t-icon name="chevron-right" size="40rpx" /></view>
+  </view>
   <view class="game-grid">
     <view wx:for="{{games}}" wx:key="key" class="love-card game-card" data-k="{{item.key}}" bindtap="go">
       <view class="g-ic"><t-icon name="{{item.icon}}" size="56rpx" /></view>

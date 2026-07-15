@@ -4,6 +4,9 @@
   "navigationBarBackgroundColor": "#fff5f7",
   "navigationBarTextStyle": "black",
   "enablePullDownRefresh": true,
+  "backgroundColor": "#fff5f7",
+  "backgroundColorTop": "#fff5f7",
+  "backgroundColorBottom": "#ffe4ec",
   "backgroundTextStyle": "dark",
   "usingComponents": {
     "t-message": "tdesign-miniprogram/message/message"

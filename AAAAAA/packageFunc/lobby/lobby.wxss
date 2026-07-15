@@ -14,3 +14,11 @@
 }
 .g-name { font-size: 30rpx; font-weight: 600; color: var(--text); }
 .g-desc { text-align: center; }
+
+/* 成绩榜入口 */
+.lb-entry { display: flex; align-items: center; gap: 18rpx; padding: 22rpx 28rpx; margin-bottom: 24rpx; transition: transform .12s ease; }
+.lb-entry:active { transform: scale(.99); }
+.lb-ic { width: 64rpx; height: 64rpx; border-radius: 18rpx; background: var(--chip); color: var(--primary); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.lb-info { flex: 1; }
+.lb-title { font-size: 30rpx; font-weight: 600; color: var(--text); }
+.lb-arrow { color: var(--text-soft); flex-shrink: 0; }
