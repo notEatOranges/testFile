@@ -4,6 +4,7 @@
     <view class="g-score"><text class="lbl">分数</text><text class="val">{{score}}</text></view>
     <view class="g-score best"><text class="lbl">最高</text><text class="val">{{best}}</text></view>
     <view class="g-restart" bindtap="restart"><t-icon name="refresh" size="40rpx" /></view>
+    <view class="g-restart finish" bindtap="finishGame"><t-icon name="flag" size="40rpx" /></view>
   </view>
 
   <view class="board-wrap">

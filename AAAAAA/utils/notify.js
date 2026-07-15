@@ -1,17 +1,36 @@
-// notify.js —— 订阅消息授权封装（攒发送额度）+ 本地额度统计
+// notify.js —— 订阅消息授权封装（攒发送额度）+ 额度统计（授权 − 已发送 = 剩余可收）
 // requestSubscribeMessage 必须在用户 tap 上下文同步调用。
+const { Store } = require('./store.js');
 
 const TMPL_CHAT = 'Is1-N9RbFP4UwAtGEtlHIpIbJ1edVBul5vQdstGACJQ';
 const TMPL_ANNIV = 'CZjK1A6V6fXOKaiJ-TdfJCdTBMloydYLZeaF9PPITw4';
 const TMPL_IDS = [TMPL_CHAT, TMPL_ANNIV];
 
-// 本地额度计数。
-// ⚠️ 微信不开放「剩余可收次数」查询，这里统计的是「你已授权 accept 的累计次数」，
-//    作为可用额度的乐观展示；对方给你发消息会消耗你的真实额度，但本地无法感知扣减。
+// 本地授权计数（每 accept 一次 +1）
 const K_CHAT = 'lh5_quota_chat', K_ANNIV = 'lh5_quota_anniv';
 function bump(key) { wx.setStorageSync(key, (wx.getStorageSync(key) || 0) + 1); }
-function getQuota() {
-  return { chat: wx.getStorageSync(K_CHAT) || 0, anniv: wx.getStorageSync(K_ANNIV) || 0 };
+
+// 已发送计数存云端 kv：notifySent/{role}/{type}
+// 发送方在 sendMsg 返回 push.ok 后 markSent（给接收方的额度 -1），接收方 getQuota 读它算「剩余可收」。
+// ⚠️ 聊天通知由前端发起（chat send），可准确 markSent；纪念日提醒是定时触发器，前端无法感知，anniv 暂不减。
+async function _sent(role, type) {
+  if (!role) return 0;
+  try { return (await Store.getOnce('notifySent/' + role + '/' + type)) || 0; } catch (e) { return 0; }
+}
+// 剩余可收次数 = 我已授权 − 对方已发给我的
+async function getQuota(role) {
+  const chat = Math.max(0, (wx.getStorageSync(K_CHAT) || 0) - await _sent(role, 'chat'));
+  const anniv = Math.max(0, (wx.getStorageSync(K_ANNIV) || 0) - await _sent(role, 'anniv'));
+  return { chat, anniv };
+}
+// 发送方推送成功后调：给 role 的 type 额度 -1
+async function markSent(role, type) {
+  if (!role || !type) return;
+  try {
+    const key = 'notifySent/' + role + '/' + type;
+    const cur = (await Store.getOnce(key)) || 0;
+    await Store.set(key, cur + 1);
+  } catch (e) {}
 }
 
 /**
@@ -39,4 +58,4 @@ function requestSubscribeMessage(ids) {
   });
 }
 
-module.exports = { TMPL_CHAT, TMPL_ANNIV, TMPL_IDS, requestSubscribeMessage, getQuota };
+module.exports = { TMPL_CHAT, TMPL_ANNIV, TMPL_IDS, requestSubscribeMessage, getQuota, markSent };

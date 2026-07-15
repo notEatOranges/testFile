@@ -14,6 +14,7 @@
   transition: transform .14s ease;
 }
 .g-restart:active { transform: scale(.9); }
+.g-restart.finish { background: var(--card); color: var(--primary-deep); }
 
 .board-wrap { position: relative; }
 .board { width: 94vw; height: 94vw; max-width: 680rpx; max-height: 680rpx; }

@@ -29,10 +29,15 @@ Page({
   },
 
   onShow() {
-    this.setData({ theme: getApp().globalData.theme || 'sakura', quota: notify.getQuota() });
+    this.setData({ theme: getApp().globalData.theme || 'sakura' });
+    this.refreshQuota();
     if (typeof this.getTabBar === 'function' && this.getTabBar()) {
       this.getTabBar().setData({ selected: 0 });
     }
+  },
+  async refreshQuota() {
+    const quota = await notify.getQuota(room.getRole());
+    this.setData({ quota });
   },
 
   async boot() {
@@ -97,9 +102,9 @@ Page({
   },
 
   onNotifyTap() {
-    notify.requestSubscribeMessage().then(res => {
+    notify.requestSubscribeMessage().then(async res => {
       const ok = Object.keys(res).some(k => res[k] === 'accept');
-      this.setData({ quota: notify.getQuota() });
+      await this.refreshQuota();
       toast(ok ? '又攒了一条额度，ta 回复/纪念日能提醒你' : '可稍后再开启');
     });
   }

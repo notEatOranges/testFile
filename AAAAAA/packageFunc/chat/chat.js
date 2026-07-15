@@ -8,6 +8,7 @@ const room = require('@utils/room.js');
 const { Store } = require('@utils/store.js');
 const { toast, roleFull } = require('@utils/util.js');
 const { BUILTIN_STICKERS } = require('@utils/stickers.js');
+const notify = require('@utils/notify.js');
 
 // 会话内记住的聊天浏览位置（scrollTop, px）。模块级变量：页面销毁不丢，只有冷启动重载模块才清空。
 // 借此区分「返回首页再进 → 恢复上次位置」与「杀掉小程序重进 → 回到底部」。
@@ -305,6 +306,7 @@ Page({
       entry.status = 'sent';
       const push = r && r.result && r.result.push;
       if (push) console.log('[sendMsg push]', push);
+      if (push && push.ok) notify.markSent(this.data.peer, 'chat');   // 推送成功 → 消耗对方聊天额度
       if (push && !push.ok) {
         const tip = push.errCode === 43101 ? '对方还没开启通知，让 ta 点首页「消息通知」'
           : push.errCode === 47003 ? '订阅模板参数不符，检查模板关键词'

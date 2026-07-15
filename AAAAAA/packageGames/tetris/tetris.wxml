@@ -8,6 +8,7 @@
         <view class="scr-meta">
           <text>第 {{level}} 关 · {{lines}} 行</text>
           <text>最高 {{best}}</text>
+          <text class="scr-finish" bindtap="finishGame">结束记分</text>
         </view>
       </view>
       <view class="t-board-wrap">

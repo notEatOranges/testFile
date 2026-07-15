@@ -45,6 +45,7 @@ Page({
     this.anims = [];
     this._animating = false;
     this._animStart = 0;
+    this._scored = false;
     this.setData({ score: 0, over: false });
     this.spawn(); this.spawn();
     this.tiles.forEach(t => { t.isNew = false; });   // 开局两个方块不播 pop
@@ -102,20 +103,20 @@ Page({
     if (!moved) return;
     this._animating = true;
 
-    // 构造动画队列（更短：真机 rAF 帧率有限，时长过长会显得「合并延迟」）
+    // 构造动画队列：去掉滑动补间——方块直接到新位置、合并数字瞬间相加
+    // （真机 rAF 帧率有限，滑动补间会被拉长成「数字迟迟不相加」的观感）
     this.anims = [];
-    this.anims.push({ type: 'slide', t0: 0, dur: 55, _t: 0 });                   // 全员滑动补间
-    this.tiles.filter(t => t._merging).forEach(t =>                             // 合并目标：滑到位即变值
-      this.anims.push({ type: 'merge', tileId: t.id, t0: 55, dur: 70, _t: -1 }));
+    this.tiles.filter(t => t._merging).forEach(t =>                             // 合并目标立即弹跳（数字已当场翻倍）
+      this.anims.push({ type: 'merge', tileId: t.id, t0: 0, dur: 120, _t: -1 }));
     if (gained) {
       this.setData({ score: this.data.score + gained });
-      this.anims.push({ type: 'score', val: gained, t0: 0, dur: 400, _t: -1 }); // 得分 +N 飘字
+      this.anims.push({ type: 'score', val: gained, t0: 0, dur: 500, _t: -1 }); // 得分 +N 飘字
     }
     if (this.data.score > this.best) { this.best = this.data.score; wx.setStorageSync(BEST_KEY, this.best); this.setData({ best: this.best }); }
 
     this.spawn();                                                                // 新生方块带 isNew
     this.tiles.filter(t => t.isNew).forEach(t =>
-      this.anims.push({ type: 'pop', tileId: t.id, t0: 55, dur: 60, _t: -1 }));
+      this.anims.push({ type: 'pop', tileId: t.id, t0: 0, dur: 120, _t: -1 }));
     if (this.tiles.some(t => t._merging && t._mergeTo >= 2048)) {
       this.anims.push({ type: 'celebrate', t0: 200, dur: 1200, _t: -1 });        // 达成 2048 庆祝
     }
@@ -186,9 +187,18 @@ Page({
     if (this.isOver()) { this.setData({ over: true }); this.uploadScore(); }
   },
   uploadScore() {
+    if (this._scored) return;   // 防重复：手动结束 / 自然结束只记一次
     const score = this.data.score;
     if (!score) return;
+    this._scored = true;
     Store.push('gameScores', { game: 'g2048', role: room.getRole() || 'boy', score, ts: Store.now() });
+  },
+  finishGame() {   // 手动结束并记分（玩一半不想玩了也能记下来）
+    if (this.data.over) return;
+    this.stopAnimLoop();
+    this.uploadScore();
+    this.setData({ over: true });
+    wx.showToast({ title: '已记入成绩榜', icon: 'none' });
   },
 
   draw() {
@@ -211,7 +221,7 @@ Page({
     this.tiles.forEach(tile => {
       const mt = animOf('merge', tile.id);
       const mergeStarted = mt >= 0;
-      if (tile._remove && mergeStarted) return;   // 合并开始后源方块消失
+      if (tile._remove) return;   // 源方块立即消失（合并瞬间完成，不画）
       const r = lerp(tile.fromR, tile.r, slideP);
       const c = lerp(tile.fromC, tile.c, slideP);
       const x = pad + c * (cell + gap), y = pad + r * (cell + gap);

@@ -186,9 +186,15 @@ Page({
     }
   },
   gameOver() {
+    if (this.data.over) return;   // 防重复
     this.stopLoop(); this.stopRaf(); this.setData({ over: true });
     const score = this.data.score;
     if (score) Store.push('gameScores', { game: 'tetris', role: room.getRole() || 'boy', score, ts: Store.now() });
+  },
+  finishGame() {   // 手动结束并记分（玩一半不想玩了也能记下来）
+    if (this.data.over) return;
+    this.gameOver();
+    wx.showToast({ title: '已记入成绩榜', icon: 'none' });
   },
 
   draw() {

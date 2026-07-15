@@ -37,7 +37,7 @@
       <view class="notify-ic"><t-icon name="notification" size="40rpx" /></view>
       <view class="notify-text">
         <view class="notify-title">消息通知</view>
-        <view class="notify-sub muted small">已攒 聊天{{quota.chat}} · 纪念日{{quota.anniv}}（点一下多攒一条）</view>
+        <view class="notify-sub muted small">可收 聊天{{quota.chat}} · 纪念日{{quota.anniv}}（点一下多攒一条）</view>
       </view>
       <view class="notify-arrow"><t-icon name="chevron-right" size="36rpx" /></view>
     </view>
