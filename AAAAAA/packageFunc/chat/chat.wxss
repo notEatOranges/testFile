@@ -277,3 +277,17 @@
   display: flex; align-items: center; justify-content: center;
 }
 .plus-label { font-size: 24rpx; color: var(--text); }
+
+/* 已撤回消息提示 */
+.recalled-tip { order: 3; align-self: center; font-size: 22rpx; color: var(--text-soft); background: var(--chip); padding: 8rpx 18rpx; border-radius: 14rpx; }
+.bubble-row.me .recalled-tip { order: 2; }   /* 自己的撤回提示：贴右但在头像左侧（与气泡一致），头像回到最右 */
+
+/* 长按消息菜单（底部抽屉） */
+.menu-mask { position: fixed; left: 0; top: 0; right: 0; bottom: 0; z-index: 70; background: rgba(0,0,0,.35); opacity: 0; pointer-events: none; transition: opacity .2s; }
+.menu-mask.show { opacity: 1; pointer-events: auto; }
+.menu-sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 71; background: var(--card); border-radius: 24rpx 24rpx 0 0; padding: 8rpx 0 calc(8rpx + env(safe-area-inset-bottom)); transform: translateY(110%); transition: transform .22s cubic-bezier(.2,.8,.2,1); box-shadow: 0 -8rpx 30rpx rgba(0,0,0,.12); }
+.menu-sheet.show { transform: translateY(0); }
+.menu-item { text-align: center; padding: 26rpx 0; font-size: 30rpx; color: var(--text); border-bottom: 1rpx solid var(--border); }
+.menu-item.danger { color: #e85a86; }
+.menu-item.cancel { border-bottom: none; color: var(--text-soft); margin-top: 6rpx; }
+.menu-item:active { background: var(--chip); }

@@ -20,7 +20,7 @@
         </view>
 
         <!-- 普通消息行 -->
-        <view wx:else id="m-{{item.uid}}" class="bubble-row {{item.mine ? 'me' : 'peer'}} {{item.emojiOnly ? 'emoji-only' : ''}} {{item.kind === 'sticker' ? 'is-sticker' : ''}} {{item.showAvatar ? '' : 'cont'}}">
+        <view wx:else id="m-{{item.uid}}" class="bubble-row {{item.mine ? 'me' : 'peer'}} {{item.emojiOnly ? 'emoji-only' : ''}} {{item.kind === 'sticker' ? 'is-sticker' : ''}} {{item.showAvatar ? '' : 'cont'}}" bindlongpress="onBubbleLongPress" data-uid="{{item.uid}}">
           <image wx:if="{{item.showAvatar}}" class="avatar {{pokeShakeTarget && ((item.mine && pokeShakeTarget === myRole) || (!item.mine && pokeShakeTarget === peer)) ? 'shake' : ''}}" src="{{item.avatar}}" mode="aspectFill" bindtap="onAvatarTap" />
           <view wx:else class="avatar avatar-ph"></view>
 
@@ -29,15 +29,17 @@
           <view wx:else class="bubble-placeholder"></view>
 
           <!-- 内容按 kind 分支 -->
+          <!-- 已撤回：只显示提示 -->
+          <view wx:if="{{item.kind === 'recalled'}}" class="recalled-tip">{{item.mine ? '你' : 'ta'}}撤回了一条消息</view>
           <!-- 表情包：小图，无气泡无进度 -->
-          <image wx:if="{{item.kind === 'sticker'}}"
+          <image wx:elif="{{item.kind === 'sticker'}}"
             class="media-img sticker-img" src="{{item.src}}" mode="widthFix" lazy-load
-            data-src="{{item.src}}" bindtap="previewImage" bindlongpress="collectSticker" />
+            data-src="{{item.src}}" bindtap="previewImage" />
 
           <!-- 图片：带上传进度蒙层 -->
           <view wx:elif="{{item.kind === 'image'}}" class="img-wrap">
             <image class="media-img bubble-img" src="{{item.src}}" mode="widthFix" lazy-load
-              data-src="{{item.src}}" bindtap="previewImage" bindlongpress="collectSticker" />
+              data-src="{{item.src}}" bindtap="previewImage" />
             <view wx:if="{{item.status === 'sending' && item.progress != null}}" class="upload-progress">
               <t-loading theme="circular" size="32rpx" />
               <text class="up-pct">{{item.progress}}%</text>
@@ -133,8 +135,7 @@
     </view>
   </view>
 
-  <!-- 图片全屏预览 -->
-  <t-image-viewer visible="{{imgView}}" images="{{imgViewList}}" bind:close="onImgViewClose" />
+  <!-- 图片全屏预览改用系统 wx.previewImage（无灰遮罩） -->
 
   <!-- 全屏输入 -->
   <view class="full-input-mask" wx:if="{{fullInput}}">
@@ -180,5 +181,12 @@
       <view class="bg-tile bg-custom" bindtap="chooseBgImage"><t-icon name="image-1" size="44rpx" /><text class="bg-tile-label">自定义</text></view>
       <view class="bg-tile bg-none" bindtap="clearBg"><t-icon name="close" size="44rpx" /><text class="bg-tile-label">无</text></view>
     </view>
+  </view>
+
+  <!-- 长按消息菜单 -->
+  <view class="menu-mask {{menuOpen ? 'show' : ''}}" bindtap="closeMenu"></view>
+  <view class="menu-sheet {{menuOpen ? 'show' : ''}}" catchtap>
+    <view wx:for="{{menuItems}}" wx:key="value" class="menu-item {{item.danger ? 'danger' : ''}}" data-v="{{item.value}}" bindtap="onMenuTap">{{item.label}}</view>
+    <view class="menu-item cancel" bindtap="closeMenu">取消</view>
   </view>
 </view>

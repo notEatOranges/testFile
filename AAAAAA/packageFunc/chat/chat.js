@@ -119,7 +119,8 @@ Page({
     bgSrc: '',                                    // 自定义背景图 fileID
     bgStyle: '',                                  // 预设背景渐变 inline
     bgPanel: false,                               // 背景选择面板
-    bgPresets: BG_PRESETS                         // 预设列表（面板渲染用）
+    bgPresets: BG_PRESETS,                        // 预设列表（面板渲染用）
+    menuOpen: false, menuItems: []                // 长按消息菜单
   },
 
   onLoad() {
@@ -244,8 +245,10 @@ Page({
         timeText: showTime ? formatChatTime(m.ts) : '',
         showTime, timeShort: fmtShort(m.ts),
         status: m._status || 'sent',
-        progress: m.progress
+        progress: m.progress,
+        cloudId: m.id || '', ts: m.ts || 0
       };
+      if (m.recalled) return Object.assign({}, base, { kind: 'recalled' });   // 已撤回：只渲染提示，不显示原内容
       if (m.type === 'image') {
         return { ...base, kind: m.sticker ? 'sticker' : 'image', src: m.fileID || m._local, w: m.w, h: m.h };
       }
@@ -430,15 +433,12 @@ Page({
     wx.hideLoading();
   },
   collectSticker(e) {
-    const fileID = e.currentTarget.dataset.src;
-    if (!fileID || fileID.indexOf('cloud://') !== 0) return toast('图片还在上传，稍后再收藏');
-    Store.push('stickers/' + this.data.myRole, { fileID, ts: Store.now() });
-    toast('已收藏到表情包');
+    this._addSticker(e.currentTarget.dataset.src);
   },
   previewImage(e) {
     const src = e.currentTarget.dataset.src;
     if (!src) return;
-    this.setData({ imgView: true, imgViewList: [src] });
+    wx.previewImage({ current: src, urls: [src] });   // 用系统图片预览，避免组件顶部灰遮罩
   },
   onImgViewClose() { this.setData({ imgView: false }); },
   openFile(e) {
@@ -611,7 +611,48 @@ Page({
 
   // —— 文本消息：长按复制 / 双击全屏查看 ——
   onBubbleLongPress(e) {
-    wx.setClipboardData({ data: e.currentTarget.dataset.text || '', success: () => wx.showToast({ title: '已复制', icon: 'none' }) });
+    const uid = e.currentTarget.dataset.uid;
+    const msg = (this.data.messages || []).find(m => m.uid === uid);
+    if (!msg) return;
+    this._menuMsg = msg;
+    const items = [];
+    if (msg.kind === 'text' || !msg.kind) items.push({ label: '复制', value: 'copy' });
+    items.push({ label: '引用', value: 'quote' });
+    if ((msg.kind === 'image' || msg.kind === 'sticker') && msg.src) items.push({ label: '收藏到表情包', value: 'addSticker' });
+    if (msg.cloudId) {   // 只有已入库的消息能撤回/删除（本地 pending 的不行）
+      if (msg.mine && Date.now() - (msg.ts || 0) < 2 * 60 * 1000) items.push({ label: '撤回', value: 'recall', danger: true });
+      items.push({ label: '删除', value: 'delete', danger: true });
+    }
+    if (!items.length) return;
+    this.setData({ menuOpen: true, menuItems: items });
+  },
+  closeMenu() { this.setData({ menuOpen: false }); },
+  async onMenuTap(e) {
+    const v = e.currentTarget.dataset.v;
+    const msg = this._menuMsg;
+    this.setData({ menuOpen: false });
+    if (!msg || !v) return;
+    if (v === 'copy') {
+      wx.setClipboardData({ data: msg.text || '', success: () => wx.showToast({ title: '已复制', icon: 'none' }) });
+    } else if (v === 'quote') {
+      const t = msg.kind === 'text' ? (msg.text || '')
+        : (msg.kind === 'image' || msg.kind === 'sticker') ? '[图片]'
+        : msg.kind === 'voice' ? '[语音]' : msg.kind === 'file' ? '[文件]' : '[消息]';
+      this.setData({ input: (this.data.input || '') + (this.data.input ? '\n' : '') + '「' + t.slice(0, 30) + '」' });
+    } else if (v === 'addSticker') {
+      this._addSticker(msg.src);
+    } else if (v === 'recall') {
+      await Store.transaction('chat', cur => { if (cur && cur[msg.cloudId]) cur[msg.cloudId].recalled = true; return cur; });
+      toast('已撤回');
+    } else if (v === 'delete') {
+      await Store.transaction('chat', cur => { if (cur && cur[msg.cloudId]) delete cur[msg.cloudId]; return cur; });
+      toast('已删除');
+    }
+  },
+  _addSticker(fileID) {
+    if (!fileID || fileID.indexOf('cloud://') !== 0) return toast('图片还在上传，稍后再收藏');
+    Store.push('stickers/' + this.data.myRole, { fileID, ts: Store.now() });
+    toast('已收藏到表情包');
   },
   onBubbleTap(e) {
     const now = Date.now();
