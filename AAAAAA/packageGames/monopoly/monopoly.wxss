@@ -28,13 +28,13 @@
 .mp-log-item { font-size: 24rpx; color: var(--text); line-height: 1.7; opacity: .65; }
 .mp-log-item.new { opacity: 1; font-weight: 600; color: var(--primary-deep); }
 
-/* 事件特效：靠上、美化、不被棋盘(canvas隐藏)盖住 */
-.mp-fx { position: fixed; left: 50%; top: 14%; transform: translateX(-50%); z-index: 360; min-width: 420rpx; padding: 30rpx 48rpx; border-radius: 28rpx; text-align: center; animation: fxPop .4s ease; }
-.mp-fx.good { background: linear-gradient(135deg, #3aa75c, #2ec24e); color: #fff; box-shadow: 0 12rpx 34rpx rgba(46,194,78,.55); }
-.mp-fx.bad { background: linear-gradient(135deg, #e85a86, #d6406a); color: #fff; box-shadow: 0 12rpx 34rpx rgba(232,90,134,.55); }
-.mp-fx-text { font-size: 46rpx; font-weight: 800; letter-spacing: 2rpx; }
-.mp-fx-sub { font-size: 28rpx; margin-top: 8rpx; opacity: .96; }
-@keyframes fxPop { from { transform: translate(-50%, -20rpx) scale(.6); opacity: 0; } to { transform: translate(-50%, 0) scale(1); opacity: 1; } }
+/* 事件特效：cover-view 盖在 canvas 上，地图不消失；靠上、美化 */
+.mp-fx { position: fixed; left: 50%; top: 60rpx; margin-left: -230rpx; width: 460rpx; z-index: 360; padding: 32rpx 40rpx; border-radius: 32rpx; text-align: center; box-sizing: border-box; animation: fxPop .35s ease; }
+.mp-fx.good { background: linear-gradient(135deg, #34d05a, #1f9e3a); box-shadow: 0 12rpx 30rpx rgba(46,194,78,.55); }
+.mp-fx.bad { background: linear-gradient(135deg, #ff6b8a, #d6406a); box-shadow: 0 12rpx 30rpx rgba(232,90,134,.55); }
+.mp-fx-text { font-size: 50rpx; font-weight: 800; color: #fff; letter-spacing: 4rpx; }
+.mp-fx-sub { font-size: 28rpx; color: #fff; margin-top: 12rpx; opacity: .96; }
+@keyframes fxPop { from { opacity: 0; } to { opacity: 1; } }
 
 .mp-actions { display: flex; flex-direction: column; gap: 12rpx; width: 92vw; max-width: 660rpx; margin-top: 16rpx; }
 .mp-row { display: flex; gap: 12rpx; }

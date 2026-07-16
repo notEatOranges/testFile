@@ -1,7 +1,7 @@
 <view class="theme-{{theme}} love-page mp-page">
 
   <view class="mp-board-wrap">
-    <canvas wx:if="{{!rulesOpen && !card && !fx}}" type="2d" id="board" class="mp-board"></canvas>
+    <canvas wx:if="{{!rulesOpen && !card}}" type="2d" id="board" class="mp-board"></canvas>
     <view wx:if="{{!started}}" class="mp-empty">
       <view class="mp-title">大富翁</view>
       <view class="mp-start" bindtap="startMatch">开始对局</view>
@@ -28,11 +28,11 @@
     <view wx:if="{{!log.length}}" class="muted small">掷骰后这里显示事件</view>
   </scroll-view>
 
-  <!-- 事件好/坏特效 -->
-  <view wx:if="{{fx}}" class="mp-fx {{fx.kind}}">
-    <view class="mp-fx-text">{{fx.kind === 'good' ? '好事！' : '糟了…'}}</view>
-    <view class="mp-fx-sub">{{fx.text}}</view>
-  </view>
+  <!-- 事件好/坏特效：用 cover-view 盖在原生 canvas 上，地图不消失 -->
+  <cover-view wx:if="{{fx}}" class="mp-fx {{fx.kind}}">
+    <cover-view class="mp-fx-text">{{fx.kind === 'good' ? '好 事 !' : '糟 了 …'}}</cover-view>
+    <cover-view class="mp-fx-sub">{{fx.text}}</cover-view>
+  </cover-view>
 
   <view class="mp-actions">
     <t-button wx:if="{{!winner}}" theme="primary" block bind:tap="roll" loading="{{rolling}}" disabled="{{!myTurn}}">{{myTurn ? '掷骰子' : (started ? '等对方掷骰' : '开始后掷骰')}}</t-button>

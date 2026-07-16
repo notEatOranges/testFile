@@ -133,7 +133,7 @@ Page({
 
   showFx(kind, text) {
     this.setData({ fx: { kind, text } });
-    setTimeout(() => { this.setData({ fx: null }); setTimeout(() => this.setupCanvas(), 50); }, 1300);
+    setTimeout(() => { if (this.data.fx) this.setData({ fx: null }); }, 1400);
   },
 
   async roll() {
@@ -174,10 +174,10 @@ Page({
     return new Promise(res => {
       if (!this.cv) { res(); return; }
       const target = to < from ? to + BOARD : to;
-      const t0 = Date.now(); const dur = 520;
+      const t0 = Date.now(); const dur = 760;
       const step = () => {
         const p = Math.min(1, (Date.now() - t0) / dur);
-        const hop = Math.abs(Math.sin(p * Math.PI * 3)) * this.cs * 0.45;   // 跳动效果
+        const hop = Math.abs(Math.sin(p * Math.PI * 2)) * this.cs * 0.4;   // 放慢的跳动
         this._moving = { role, f: from + (target - from) * p, hop };
         this.draw();
         if (p < 1) this._raf = this.cv.requestAnimationFrame(step);
