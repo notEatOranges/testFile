@@ -9,13 +9,15 @@
 
   <view wx:if="{{requestPending}}" class="jq-pending">已请求重新开局，等 {{peerName}} 同意 <text class="jq-link" bindtap="cancelReq">取消</text></view>
 
-  <view wx:if="{{started}}" class="jq-board">
-    <view wx:for="{{view}}" wx:key="c" class="jq-cell {{item.camp ? 'camp' : ''}} {{item.rail ? 'rail' : ''}} {{item.side === 'red' ? 'red' : (item.side === 'black' ? 'black' : '')}}"
-          data-r="{{item.r}}" data-c="{{item.c}}" bindtap="onCellTap"
-          style="{{sel && sel.r === item.r && sel.c === item.c ? 'box-shadow:0 0 0 4rpx var(--primary);' : ''}} {{targets[item.r + '_' + item.c] ? 'background:rgba(46,194,78,.2);' : ''}}">
-      <text wx:if="{{item.mine}}" class="jq-name">{{item.mine}}</text>
+  <scroll-view wx:if="{{started}}" scroll-y class="jq-board-scroll">
+    <view class="jq-board">
+      <view wx:for="{{view}}" wx:key="c" class="jq-cell {{item.camp ? 'camp' : ''}} {{item.rail ? 'rail' : ''}}"
+            data-r="{{item.r}}" data-c="{{item.c}}" bindtap="onCellTap"
+            style="{{sel && sel.r === item.r && sel.c === item.c ? 'box-shadow:0 0 0 3rpx var(--primary);' : ''}} {{targets[item.r + '_' + item.c] ? 'background:rgba(46,194,78,.22);' : ''}}">
+        <view wx:if="{{item.text}}" class="jq-chip {{item.own ? (myColor === 'red' ? 'own-red' : 'own-black') : 'hidden'}}">{{item.text}}</view>
+      </view>
     </view>
-  </view>
+  </scroll-view>
 
   <view wx:else class="jq-empty">
     <view class="jq-title">陆战棋</view>
@@ -30,4 +32,5 @@
   </view>
 
   <game-rules game-key="junqi" open="{{rulesOpen}}" bind:close="closeRules" />
+  <roll-first open="{{rollFirst.open}}" result="{{rollFirst.result}}" my-name="{{myName}}" peer-name="{{peerName}}" />
 </view>

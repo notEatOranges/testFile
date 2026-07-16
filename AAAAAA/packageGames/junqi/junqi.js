@@ -99,12 +99,14 @@ function hasMovable(board, side) {
   for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) { const p = board[r][c]; if (p && p.side === side && movableType(p) && Object.keys(reachable(board, r, c)).length) return true; }
   return false;
 }
+const wait = ms => new Promise(r => setTimeout(r, ms));
 
 Page({
   data: {
     theme: 'sakura', role: 'boy', peer: 'girl', myName: '我', myAvatar: '', peerName: 'ta', peerAvatar: '',
     started: false, mySeat: 'red', myColor: 'red', myTurn: false,
-    view: [], sel: null, targets: {}, winner: null, winnerText: '', requestPending: false, rulesOpen: false
+    view: [], sel: null, targets: {}, winner: null, winnerText: '', requestPending: false, rulesOpen: false,
+    rollFirst: { open: false, result: '' }
   },
 
   onLoad() {
@@ -122,8 +124,17 @@ Page({
   },
   onUnload() { rt.teardown(this); ident.teardown(this); },
 
-  fresh() { return { board: buildBoard(), turn: 'red', winner: null, req: null }; },
-  startMatch() { this._recorded = false; rt.setState('junqi', this.fresh()); },
+  fresh(first) { return { board: buildBoard(), turn: first || (Math.random() < 0.5 ? 'red' : 'black'), winner: null, req: null }; },
+  async startMatch() {
+    this._recorded = false;
+    const first = Math.random() < 0.5 ? 'red' : 'black';
+    this.setData({ rollFirst: { open: true, result: '' } });
+    await wait(820);
+    this.setData({ rollFirst: { open: true, result: first === this.data.myColor ? 'me' : 'peer' } });
+    await wait(950);
+    this.setData({ rollFirst: { open: false, result: '' } });
+    rt.setState('junqi', this.fresh(first));
+  },
   requestRestart() { rt.requestRestart('junqi', this._state, room.getRole(), !!this.data.winner, () => this.fresh()); },
   cancelReq() { rt.cancelRestart('junqi', this._state); },
   resign() {
@@ -157,9 +168,9 @@ Page({
     const view = [];
     for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) {
       const cell = s.board[r][c];
-      view.push({ r, c, camp: isCamp(r, c), rail: isRail(r, c),
-        mine: cell && cell.side === myColor ? (cell.name) : (cell ? '军' : ''),  // 己方明、对方暗牌
-        side: cell && cell.side });
+      const own = cell && cell.side === myColor;
+      view.push({ r, c, camp: isCamp(r, c), rail: isRail(r, c), own: !!own, hidden: !!(!own && cell),
+        text: cell ? (own ? cell.name : '军') : '', side: cell && cell.side });
     }
     Object.assign(patch, { started: true, myTurn: !winner && turn === myColor, view, winner, winnerText });
     this.setData(patch);
