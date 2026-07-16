@@ -7,11 +7,11 @@ Page({
     games: [
       { key: 'game2048', name: '2048', desc: '滑动合成大数字', icon: 'grid-view' },
       { key: 'tetris', name: '俄罗斯方块', desc: '经典消行挑战', icon: 'app' },
+      { key: 'monopoly', name: '大富翁', desc: '买地收租·机会卡', icon: 'shop' },
       { key: 'drawguess', name: '你画我猜', desc: '画给 ta 猜', icon: 'edit-1' },
       { key: 'gomoku', name: '五子棋', desc: '双人实时对弈', icon: 'dashboard' },
       { key: 'memory', name: '记忆翻牌', desc: '翻牌配对·比记性', icon: 'heart' },
       { key: 'othello', name: '黑白棋', desc: '夹住翻转·比子数', icon: 'user' },
-      { key: 'monopoly', name: '大富翁', desc: '买地收租·机会卡', icon: 'shop' },
       { key: 'banqi', name: '翻翻棋', desc: '暗棋·翻面吃子', icon: 'gift' },
       { key: 'xiangqi', name: '象棋', desc: '完整规则·将军将死', icon: 'dashboard' },
       { key: 'junqi', name: '军棋', desc: '暗牌·铁路·夺军旗', icon: 'flag' }

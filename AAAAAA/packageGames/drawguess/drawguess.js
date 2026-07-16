@@ -162,7 +162,8 @@ Page({
   drawStart(e) {
     if (!this._dctx) return;
     const t = e.touches[0];
-    const x = t.clientX - this._drect.left, y = t.clientY - this._drect.top;
+    const x = (t.x != null ? t.x : t.clientX - (this._drect ? this._drect.left : 0));
+    const y = (t.y != null ? t.y : t.clientY - (this._drect ? this._drect.top : 0));
     const eraser = this.data.tool === 'eraser';
     this._cur = { c: eraser ? '#ffffff' : this.data.color, w: eraser ? this.data.width * 2.4 : this.data.width, pts: [[x / this._cw, y / this._ch]] };
     this._last = { x, y };
@@ -170,7 +171,8 @@ Page({
   drawMove(e) {
     if (!this._dctx || !this._cur) return;
     const t = e.touches[0];
-    const x = t.clientX - this._drect.left, y = t.clientY - this._drect.top;
+    const x = (t.x != null ? t.x : t.clientX - (this._drect ? this._drect.left : 0));
+    const y = (t.y != null ? t.y : t.clientY - (this._drect ? this._drect.top : 0));
     this._cur.pts.push([x / this._cw, y / this._ch]);
     const ctx = this._dctx;
     ctx.strokeStyle = this._cur.c; ctx.lineWidth = this._cur.w; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
