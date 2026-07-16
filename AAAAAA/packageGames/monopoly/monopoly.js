@@ -9,29 +9,31 @@ const rt = require('@utils/rtgame.js');
 const { toast } = require('@utils/util.js');
 
 const START_CASH = 1500;
-const GRID = 10;
-const BOARD = 4 * GRID - 4;   // 外圈格数 = 36（更长赛道）
+const GRID = 12;
+const BOARD = 4 * GRID - 4;   // 外圈格数 = 44（更长赛道）
+// 双卡组：机会(偏移动/机缘) + 公共基金(偏金钱事件)。cash 自己加减；cashPeer 对方给/收；to 回起点；back 后退；skip 停一回合
 const DECK = [
-  { t: '生日红包 +200', cash: 200 }, { t: '修车费 -100', cash: -100 }, { t: '中奖 +150', cash: 150 },
-  { t: '请客吃饭 -80', cash: -80 }, { t: '理财收益 +120', cash: 120 }, { t: '违章罚款 -90', cash: -90 },
-  { t: '退税 +100', cash: 100 }, { t: '医药费 -150', cash: -150 }, { t: '前进到起点', to: 0 },
-  { t: '进了医院，停一回合', skip: true }, { t: '捡到钱包 +80', cash: 80 }, { t: '爱心捐款 -60', cash: -60 },
-  { t: '股票大涨 +180', cash: 180 }, { t: '丢了手机 -120', cash: -120 }
+  { t: '银行分红 +50', cash: 50 }, { t: '生日红包 对方送你 +100', cashPeer: 100 }, { t: '遗产继承 +100', cash: 100 },
+  { t: '股票大涨 +150', cash: 150 }, { t: '退税 +40', cash: 40 }, { t: '中奖 +200', cash: 200 }, { t: '捡到钱包 +80', cash: 80 },
+  { t: '前进到起点 +200', to: 0 }, { t: '对方请客 你 +60', cashPeer: 60 }, { t: '利息到账 +30', cash: 30 },
+  { t: '修缮费 -120', cash: -120 }, { t: '医药费 -150', cash: -150 }, { t: '违章 -90', cash: -90 }, { t: '丢手机 -120', cash: -120 },
+  { t: '进修学费 -150', cash: -150 }, { t: '爱心捐款 -60', cash: -60 }, { t: '请客吃饭 -80', cash: -80 }, { t: '进监狱 停一回合', skip: true },
+  { t: '后退 3 格', back: 3 }
 ];
 const GROUP_COLOR = ['#9b7fd4', '#3a86ff', '#06d6a0', '#ffb703', '#e85a86', '#fb8500'];
 
 function buildCells() {
   const cells = [{ name: '起点', type: 'start' }];
-  const names = ['棉花糖摊', '奶茶店', '电影院', '咖啡馆', '书店', '花店', '游乐场', '海滩', '摩天轮', '甜品屋', '民宿', '烟火大会', '星空营地', '音乐节', '滑雪场', '温泉', '灯塔', '古镇', '甜品街', '画廊', '酒庄', '马场', '茶园', '果园', '城堡', '集市'];
+  const names = ['棉花糖摊', '奶茶店', '电影院', '咖啡馆', '书店', '花店', '游乐场', '海滩', '摩天轮', '甜品屋', '民宿', '烟火大会', '星空营地', '音乐节', '滑雪场', '温泉', '灯塔', '古镇', '画廊', '酒庄', '马场', '茶园', '果园', '城堡', '集市', '甜品街', '玩具店', '面包房'];
   let ni = 0;
   for (let i = 1; i < BOARD; i++) {
-    const m = i % 5;
-    if (m === 0) cells.push({ name: '机会', type: 'card', kind: 'chance' });
-    else if (i === 8 || i === 19 || i === 30) cells.push({ name: '突发事件', type: 'card', kind: 'fate' });
-    else if (i === 13 || i === 27) cells.push({ name: '缴税', type: 'tax', amt: 100 + (ni % 3) * 40 });
-    else if (i === 17) cells.push({ name: '监狱', type: 'jail' });
-    else if (i === 23 || i === 33) cells.push({ name: '奖金', type: 'bonus', amt: 150 });
-    else { const g = ni % 6; const price = 80 + g * 60 + ni * 4; cells.push({ name: names[ni % names.length] + (ni >= names.length ? ' ' + (Math.floor(ni / names.length) + 1) : ''), type: 'property', group: g, price, rent: Math.round(price * 0.3), owner: null, level: 0 }); ni++; }
+    const m = i % 6;
+    if (m === 0) cells.push({ name: i % 12 === 0 ? '公共基金' : '机会', type: 'card', kind: i % 12 === 0 ? 'fate' : 'chance' });
+    else if (i === 11 || i === 22 || i === 33) cells.push({ name: '缴税', type: 'tax', amt: 100 + (ni % 3) * 50 });
+    else if (i === 16) cells.push({ name: '监狱', type: 'jail' });
+    else if (i === 27 || i === 38) cells.push({ name: '奖金', type: 'bonus', amt: 180 });
+    else if (i === 21 || i === 43) cells.push({ name: '免费停车', type: 'freepark' });
+    else { const g = ni % 6; const price = 80 + g * 60 + ni * 4; cells.push({ name: names[ni % names.length], type: 'property', group: g, price, rent: Math.round(price * 0.3), owner: null, level: 0 }); ni++; }
   }
   return cells;
 }
@@ -51,12 +53,13 @@ function shade(hex, amt) {
   let r = Math.max(0, Math.min(255, (n >> 16) + amt)), g = Math.max(0, Math.min(255, ((n >> 8) & 0xff) + amt)), b = Math.max(0, Math.min(255, (n & 0xff) + amt));
   return '#' + ((r << 16) | (g << 8) | b).toString(16).padStart(6, '0');
 }
+function rr(ctx, x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
 
 Page({
   data: {
     theme: 'sakura', role: 'boy', peer: 'girl', myName: '我', myAvatar: '', peerName: 'ta', peerAvatar: '',
     started: false, turnSeat: 'red', mySeat: 'red', myTurn: false,
-    dice: [1, 1], diceAnim: false, log: [], myCash: START_CASH, peerCash: START_CASH, myPos: 0, peerPos: 0,
+    dice: 1, log: [], myCash: START_CASH, peerCash: START_CASH, myPos: 0, peerPos: 0,
     winner: null, winnerText: '', rolling: false, requestPending: false, rulesOpen: false,
     card: null, fx: null,   // fx: {kind:'good'|'bad', text} 事件特效
     bankOpen: false, mySavings: 0, peerSavings: 0, myLoan: 0, peerLoan: 0, myProps: [], sellReqPending: false
@@ -78,7 +81,7 @@ Page({
   onUnload() { rt.teardown(this); ident.teardown(this); if (this._diceTimer) clearInterval(this._diceTimer); if (this._raf && this.cv) this.cv.cancelAnimationFrame(this._raf); },
 
   fresh() {
-    return { cells: buildCells(), pos: { boy: 0, girl: 0 }, cash: { boy: START_CASH, girl: START_CASH }, savings: { boy: 0, girl: 0 }, loan: { boy: 0, girl: 0 }, skip: { boy: 0, girl: 0 }, turn: Math.random() < 0.5 ? rt.RED : rt.BLUE, dice: [1, 1], log: [], winner: null, req: null, sellReq: null };
+    return { cells: buildCells(), pos: { boy: 0, girl: 0 }, cash: { boy: START_CASH, girl: START_CASH }, savings: { boy: 0, girl: 0 }, loan: { boy: 0, girl: 0 }, skip: { boy: 0, girl: 0 }, turn: Math.random() < 0.5 ? rt.RED : rt.BLUE, dice: 1, log: [], winner: null, req: null, sellReq: null };
   },
   startMatch() { this._recorded = false; rt.setState('monopoly', this.fresh()); },
   requestRestart() { rt.requestRestart('monopoly', this._state, room.getRole(), !!this.data.winner, () => this.fresh()); },
@@ -152,7 +155,7 @@ Page({
     cells.forEach((c, idx) => { if (c && c.type === 'property' && c.owner === role) myProps.push({ idx, name: c.name, price: c.price, level: c.level || 0, sellBank: Math.round((c.price + (c.level || 0) * upgradeCost(c)) * 0.6), sellPeer: Math.round(c.price * 0.8) }); });
     Object.assign(patch, {
       started: true, turnSeat, myTurn: !winner && turnSeat === this.data.mySeat,
-      dice: s.dice || [1, 1],
+      dice: s.dice || 1,
       log: (s.log || []).slice(-30).reverse(),
       myCash: (s.cash && s.cash[role]) || 0, peerCash: (s.cash && s.cash[peer]) || 0,
       mySavings: (s.savings && s.savings[role]) || 0, peerSavings: (s.savings && s.savings[peer]) || 0,
@@ -173,17 +176,11 @@ Page({
     if (!this.data.myTurn || this.data.winner || this.data.rolling) return;
     const role = room.getRole();
     const s = this._state;
-    this.setData({ rolling: true, diceAnim: true });
-    let ticks = 0;
-    await new Promise(res => {
-      this._diceTimer = setInterval(() => {
-        this.setData({ dice: [1 + Math.floor(Math.random() * 6), 1 + Math.floor(Math.random() * 6)] });
-        if (++ticks >= 8) { clearInterval(this._diceTimer); this._diceTimer = null; res(); }
-      }, 80);
-    });
-    const a = 1 + Math.floor(Math.random() * 6), b = 1 + Math.floor(Math.random() * 6);
-    const steps = a + b;
-    this.setData({ diceAnim: false, dice: [a, b] });
+    this.setData({ rolling: true });
+    const final = 1 + Math.floor(Math.random() * 10);   // 单个 10 面骰
+    await this.rollDiceAnim(final);                      // 棋盘中央 3D 翻滚
+    const steps = final;
+    this.setData({ dice: final });
 
     const from = s.pos[role];
     const crossed = (from + steps) >= BOARD;
@@ -226,12 +223,43 @@ Page({
     });
   },
 
+  rollDiceAnim(final) {
+    return new Promise(res => {
+      if (!this.cv) { res(); return; }
+      const t0 = Date.now(); const dur = 780;
+      const step = () => {
+        const p = Math.min(1, (Date.now() - t0) / dur);
+        this._diceAnim = { val: 1 + Math.floor(Math.random() * 10), angle: Math.sin(p * Math.PI * 5) * 0.6 * (1 - p) };
+        this.draw();
+        if (p < 1) this._raf = this.cv.requestAnimationFrame(step);
+        else { this._diceAnim = null; this.draw(); res(); }
+      };
+      this._raf = this.cv.requestAnimationFrame(step);
+    });
+  },
+  drawDiceCenter(ctx) {
+    const cs = this.cs, cx = this.ox + cs * GRID / 2, cy = this.oy + cs * GRID / 2;
+    const anim = this._diceAnim;
+    const val = anim ? anim.val : (this.data.dice || 1);
+    const ang = anim ? anim.angle : 0;
+    const s = cs * 1.5;
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.fillStyle = 'rgba(0,0,0,.18)'; rr(ctx, -s / 2 + 6, -s / 2 + 9, s, s, s * 0.2); ctx.fill();   // 阴影(伪3D)
+    ctx.rotate(ang);
+    const grad = ctx.createLinearGradient(0, -s / 2, 0, s / 2); grad.addColorStop(0, '#ffffff'); grad.addColorStop(1, '#ffd6e2');
+    ctx.fillStyle = grad; rr(ctx, -s / 2, -s / 2, s, s, s * 0.2); ctx.fill();
+    ctx.strokeStyle = '#e85a86'; ctx.lineWidth = 4; ctx.stroke();
+    ctx.fillStyle = '#e85a86'; ctx.font = 'bold ' + Math.round(s * 0.62) + 'px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(String(val), 0, s * 0.04);
+    ctx.restore();
+  },
   drawCard() {
     return new Promise(res => {
       this.setData({ card: { drawing: true, text: '', kind: '' } });
       setTimeout(() => {
         const c = DECK[Math.floor(Math.random() * DECK.length)];
-        const kind = c.cash != null ? (c.cash > 0 ? 'good' : 'bad') : (c.skip ? 'bad' : 'good');
+        const kind = (c.cash != null && c.cash < 0) || c.skip || c.back ? 'bad' : 'good';
         this.setData({ card: { drawing: false, text: c.t, kind } });   // 卡片本身用好/坏配色，与好事坏事结合
         setTimeout(() => { this.setData({ card: null }); }, 1500);
         res(c);
@@ -259,11 +287,14 @@ Page({
     else if (cell.type === 'tax') { cash[role] -= cell.amt; log.push(cell.name + ' -' + cell.amt); this.showFx('bad', '缴税 -' + cell.amt); }
     else if (cell.type === 'bonus') { cash[role] += cell.amt; log.push(cell.name + ' +' + cell.amt); this.showFx('good', cell.name + ' +' + cell.amt); }
     else if (cell.type === 'jail') { skip[role] = (skip[role] || 0) + 1; log.push('进了监狱，下回合停留'); this.showFx('bad', '进监狱，停一回合'); }
+    else if (cell.type === 'freepark') { cash[role] = (cash[role] || 0) + 50; log.push('免费停车 +50'); this.showFx('good', '免费停车 +50'); }
     else if (cell.type === 'card') {
       const card = await this.drawCard();
-      log.push((cell.kind === 'fate' ? '突发事件：' : '机会：') + card.t);
+      log.push((cell.kind === 'fate' ? '公共基金：' : '机会：') + card.t);
       if (card.cash) cash[role] = (cash[role] || 0) + card.cash;
+      if (card.cashPeer) { cash[role] = (cash[role] || 0) + card.cashPeer; cash[peer] = (cash[peer] || 0) - card.cashPeer; }
       if (card.to === 0) { cash[role] += 200; toIdx = 0; log.push('回到起点 +200'); }
+      if (card.back) { toIdx = (idx - card.back + BOARD) % BOARD; log.push('后退 ' + card.back + ' 格'); }
       if (card.skip) skip[role] = (skip[role] || 0) + 1;
       this.syncLog(cells, cash, log, pos, skip);
     } else if (cell.type === 'property') {
@@ -358,7 +389,7 @@ Page({
     hop = hop || 0;
     const [x, y0] = this.tokenXY(f);
     const y = y0 - hop;
-    const s = this.cs * 0.22;
+    const s = this.cs * 0.32;   // 放大棋子，更醒目
     ctx.save();
     ctx.shadowColor = 'rgba(0,0,0,.3)'; ctx.shadowBlur = 6; ctx.shadowOffsetY = 2;
     const grad = ctx.createLinearGradient(x, y - s, x, y + s);
@@ -376,10 +407,8 @@ Page({
     ctx.fillStyle = '#f3e9d2'; ctx.fillRect(ox, oy, cs * GRID, cs * GRID);
     ctx.fillStyle = '#fff8ec'; ctx.fillRect(ox + cs, oy + cs, cs * (GRID - 2), cs * (GRID - 2));
     ctx.fillStyle = '#b58a5a'; ctx.font = 'bold ' + Math.round(cs * 0.5) + 'px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText('大富翁', ox + cs * GRID / 2, oy + cs * GRID / 2 - cs * 0.35);
-    ctx.font = Math.round(cs * 0.24) + 'px sans-serif'; ctx.fillStyle = '#9a7a52';
-    const dn = this.data.dice;
-    ctx.fillText('骰 ' + dn[0] + '+' + dn[1] + '=' + (dn[0] + dn[1]), ox + cs * GRID / 2, oy + cs * GRID / 2 + cs * 0.25);
+    ctx.fillText('大富翁', ox + cs * GRID / 2, oy + cs * GRID / 2 - cs * 1.9);
+    this.drawDiceCenter(ctx);
 
     const cells = this._cells || [];
     for (let i = 0; i < BOARD; i++) {
@@ -388,11 +417,10 @@ Page({
       const cell = cells[i] || {};
       ctx.strokeStyle = '#cdb088'; ctx.lineWidth = 1; ctx.strokeRect(x, y, cs, cs);
       if (cell.type === 'property') {
-        ctx.fillStyle = GROUP_COLOR[cell.group] || '#999'; ctx.fillRect(x, y, cs, 8);   // 顶部色组条
-        ctx.fillStyle = '#6b4a2a'; ctx.font = Math.round(cs * 0.17) + 'px sans-serif'; ctx.textAlign = 'right'; ctx.textBaseline = 'top';
-        ctx.fillText('$' + cell.price, x + cs - 3, y + 9);                              // 价格(右上角小字=等级)
-        if (cell.level) { ctx.fillStyle = '#b58a5a'; ctx.textAlign = 'left'; let star = ''; for (let k = 0; k < cell.level; k++) star += '★'; ctx.fillText(star, x + 3, y + 10); }
-        if (cell.owner) this.drawShape(ctx, x + cs / 2, y + cs - 13, cs * 0.13, seatShape(cell.owner), seatColor(cell.owner), '#fff');  // 归属形状(心/星)+玩家色
+        if (cell.owner) { ctx.strokeStyle = seatColor(cell.owner); ctx.lineWidth = 4; ctx.strokeRect(x + 2, y + 2, cs - 4, cs - 4); }  // 归属=粗边框(玩家色)
+        ctx.fillStyle = GROUP_COLOR[cell.group] || '#666'; ctx.font = 'bold ' + Math.round(cs * 0.2) + 'px sans-serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+        ctx.fillText('$' + cell.price, x + 4, y + 4);                                   // 价格左上角，颜色=等级(值钱程度)
+        if (cell.level) { ctx.fillStyle = '#b58a5a'; ctx.font = Math.round(cs * 0.2) + 'px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom'; let st = ''; for (let k = 0; k < cell.level; k++) st += '★'; ctx.fillText(st, x + cs / 2, y + cs - 2); }  // 等级星在底部
       }
       const cmap = { start: '#3aa75c', card: '#e8b94d', tax: '#e85a86', jail: '#7a5c3a', bonus: '#3a86ff', property: '#5a4030' };
       ctx.fillStyle = cmap[cell.type] || '#5a4030';

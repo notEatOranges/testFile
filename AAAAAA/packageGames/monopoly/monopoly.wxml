@@ -12,10 +12,6 @@
 
   <view class="mp-pair">
     <view class="mp-p me"><text class="mp-n">{{myName}}</text><text class="mp-cash">{{myCash}}</text></view>
-    <view class="mp-dice-wrap">
-      <view class="mp-die {{diceAnim ? 'rolling' : ''}}">{{dice[0]}}</view>
-      <view class="mp-die {{diceAnim ? 'rolling' : ''}}">{{dice[1]}}</view>
-    </view>
     <view class="mp-p"><text class="mp-n">{{peerName}}</text><text class="mp-cash">{{peerCash}}</text></view>
   </view>
 
