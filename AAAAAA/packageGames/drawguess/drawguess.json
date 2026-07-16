@@ -2,5 +2,8 @@
   "navigationStyle": "default",
   "navigationBarTitleText": "你画我猜",
   "navigationBarBackgroundColor": "#fff5f7",
-  "navigationBarTextStyle": "black"
+  "navigationBarTextStyle": "black",
+  "usingComponents": {
+    "game-rules": "../components/game-rules/game-rules"
+  }
 }

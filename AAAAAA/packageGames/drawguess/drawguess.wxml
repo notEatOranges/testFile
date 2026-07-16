@@ -1,123 +1,87 @@
 <view class="theme-{{theme}} love-page dg-page">
 
-  <!-- 顶部分数 + 历史 -->
   <view class="dg-top">
     <view class="dg-score">
       <view class="ds-item"><text class="lbl">{{myName}}</text><text class="val">{{myScore}}</text></view>
       <view class="ds-vs">VS</view>
       <view class="ds-item"><text class="lbl">{{peerName}}</text><text class="val">{{peerScore}}</text></view>
     </view>
-    <view class="dg-history-btn" bindtap="openHistory"><t-icon name="time" size="36rpx" /></view>
+    <view class="dg-rules-btn" bindtap="openRules"><t-icon name="info-circle" size="36rpx" /></view>
   </view>
 
-  <!-- 空闲：开始 -->
-  <block wx:if="{{mode === 'idle'}}">
-    <view class="dg-center">
-      <view class="dg-big-ic"><t-icon name="edit-1" size="72rpx" /></view>
-      <view class="dg-title">你画我猜</view>
-      <view class="muted small">一局画 3 张，对方堆叠卡片逐张猜，猜对得分，轮流来</view>
-      <t-button theme="primary" class="love-btn" loading="{{starting}}" bind:tap="startAsDrawer" icon="edit-1">我来出题画画</t-button>
-    </view>
-  </block>
+  <t-button theme="primary" block class="love-btn" bind:tap="openDraw" icon="edit-1">我来画一幅</t-button>
 
-  <!-- 我画（3 张）-->
-  <block wx:elif="{{mode === 'drawing'}}">
-    <view class="word-bar">
-      <text class="wb-tip">第 {{drawIdx + 1}} / 3 张 · 你抽到的词</text>
-      <text class="wb-word">{{word}}</text>
-      <text class="wb-hint muted small">提示给 ta：{{hint}}</text>
+  <!-- 画作信息流（双向：都能画、都能猜） -->
+  <view class="dg-feed">
+    <block wx:if="{{items.length}}">
+      <view wx:for="{{items}}" wx:key="id" class="love-card dg-card">
+        <image wx:if="{{item.src}}" class="dc-img" src="{{item.src}}" mode="widthFix" />
+        <view wx:else class="dc-rendering">渲染中…</view>
+        <view class="dc-sub muted small">由 {{item.creatorName}} 画</view>
+        <block wx:if="{{item.winner}}">
+          <view class="dc-answer">答案：{{item.word}} · {{item.winnerName}} 猜中</view>
+        </block>
+        <block wx:elif="{{item.byMe}}">
+          <view class="dc-answer mine">你画的：{{item.word}}（等 ta 猜）</view>
+        </block>
+        <block wx:else>
+          <view class="dc-guess-row">
+            <input class="dc-input" placeholder="这幅画的是什么？" value="{{item.g}}" data-idx="{{index}}" bindinput="onCardGuess" />
+            <view class="dc-guess-btn" data-idx="{{index}}" bindtap="submitGuess">猜</view>
+          </view>
+          <view wx:if="{{item.hint}}" class="dc-hint muted small">提示：{{item.hint}}</view>
+        </block>
+      </view>
+    </block>
+    <view wx:else class="dg-empty muted">还没有画作，点上面画一幅发给 ta 猜吧</view>
+  </view>
+
+  <!-- 反向重绘用的隐藏画布 -->
+  <canvas type="2d" id="renderer" class="hidden-canvas"></canvas>
+
+  <!-- 画画弹层（近全屏） -->
+  <view class="dg-mask {{drawOpen ? 'show' : ''}}"></view>
+  <view class="draw-sheet {{drawOpen ? 'show' : ''}}" catchtap="noop">
+    <view class="ds-head">
+      <view class="ds-mode {{wordMode === 'random' ? 'sel' : ''}}" data-m="random" bindtap="switchWordMode">随机词</view>
+      <view class="ds-mode {{wordMode === 'custom' ? 'sel' : ''}}" data-m="custom" bindtap="switchWordMode">自定义</view>
+      <view class="ds-close" bindtap="closeDraw"><t-icon name="close" size="36rpx" /></view>
     </view>
+    <view class="ds-word">
+      <block wx:if="{{wordMode === 'random'}}">
+        <text class="ds-w">{{word}}</text>
+        <text class="ds-reroll" bindtap="rerollWord">换一词</text>
+      </block>
+      <block wx:else>
+        <input class="ds-custom" placeholder="输入要画的词" value="{{customWord}}" bindinput="onCustomWord" maxlength="8" />
+      </block>
+    </view>
+
     <canvas type="2d" id="drawCanvas" class="draw-canvas"
             bindtouchstart="drawStart" bindtouchmove="drawMove" bindtouchend="drawEnd"></canvas>
-    <view class="color-row">
-      <view wx:for="{{colors}}" wx:key="*this" class="color-dot {{color === item && tool === 'pen' ? 'sel' : ''}}" style="background:{{item}}" data-c="{{item}}" bindtap="pickColor"></view>
-      <view class="tool-btn {{tool === 'eraser' ? 'sel' : ''}}" data-tool="eraser" bindtap="pickTool"><t-icon name="edit-2" size="40rpx" /></view>
-      <view class="clear-btn" bindtap="clearCanvas"><t-icon name="delete" size="32rpx" /><text>清空</text></view>
-    </view>
-    <view class="stroke-row">
-      <view wx:for="{{strokeWs}}" wx:key="*this" class="stroke-dot {{strokeW === item && tool === 'pen' ? 'sel' : ''}}" data-w="{{item}}" bindtap="pickStroke">
-        <view class="stroke-bar" style="width:{{item + 8}}rpx;height:{{item + 8}}rpx"></view>
+
+    <view class="ds-tools">
+      <view class="ds-colors">
+        <view wx:for="{{quick}}" wx:key="*this" class="ds-color {{color === item && tool === 'pen' ? 'sel' : ''}}" style="background:{{item}}" data-c="{{item}}" bindtap="pickColor"></view>
+        <view class="ds-tool {{tool === 'eraser' ? 'sel' : ''}}" bindtap="pickTool" data-t="eraser"><t-icon name="edit-2" size="32rpx" /></view>
       </view>
-    </view>
-    <view class="dg-actions">
-      <t-button theme="default" class="love-btn ghost" bind:tap="giveUp">公布答案</t-button>
-      <t-button theme="primary" class="love-btn" loading="{{submitting}}" bind:tap="nextDrawing">{{drawIdx + 1 >= 3 ? '画好了，交给大家猜' : '画下一张'}}</t-button>
-    </view>
-  </block>
-
-  <!-- 等 ta 画 -->
-  <block wx:elif="{{mode === 'wait'}}">
-    <view class="dg-center">
-      <view class="dg-big-ic"><t-icon name="edit-1" size="72rpx" /></view>
-      <view class="dg-title">{{peerName}} 正在画</view>
-      <view class="muted small">ta 画完 3 张你来猜</view>
-    </view>
-  </block>
-
-  <!-- 我已交，等 ta 猜 -->
-  <block wx:elif="{{mode === 'submitted'}}">
-    <view class="dg-center">
-      <view class="dg-big-ic"><t-icon name="user" size="72rpx" /></view>
-      <view class="dg-title">等 {{peerName}} 来猜</view>
-      <view class="muted small">3 张已提交，等 ta 猜对得分啦</view>
-    </view>
-  </block>
-
-  <!-- 我猜：堆叠卡片逐张 -->
-  <block wx:elif="{{mode === 'guessing'}}">
-    <view wx:if="{{deckTop}}" class="dg-deck">
-      <view wx:for="{{deckRest}}" wx:key="idx" class="guess-card rest"
-            style="top:{{(index+1)*24}}rpx; left:{{(index+1)*16}}rpx; z-index:{{9-index}}; transform: scale({{1 - (index+1)*0.06}});">
-        <image class="gc-img" src="{{item.drawing}}" mode="aspectFill" />
-      </view>
-      <view class="guess-card top"
-            bindtouchstart="onDeckTouchStart" bindtouchmove="onDeckTouchMove" bindtouchend="onDeckTouchEnd"
-            style="transform: scale(1) translateX({{topDx}}px) rotate({{topDx * 0.04}}deg);">
-        <image class="gc-img" src="{{deckTop.drawing}}" mode="aspectFill" />
-        <view class="gc-tip muted small">左右滑看下一张</view>
-      </view>
-    </view>
-    <view wx:else class="dg-center"><view class="muted">没有待猜的画了</view></view>
-    <input class="dg-input" placeholder="这张画的是什么？" value="{{guess}}" bindinput="onGuess" bindconfirm="submitGuess" />
-    <view class="dg-actions">
-      <t-button theme="default" class="love-btn ghost" bind:tap="giveUpGuess">不猜了，揭晓</t-button>
-      <t-button theme="primary" class="love-btn" bind:tap="submitGuess">提交猜测</t-button>
-    </view>
-  </block>
-
-  <!-- 揭晓 -->
-  <block wx:elif="{{mode === 'revealed'}}">
-    <view class="dg-center">
-      <view class="dg-title">本局揭晓</view>
-      <view class="muted small">{{revealDrawer}} 画的</view>
-    </view>
-    <view class="reveal-grid">
-      <view wx:for="{{revealItems}}" wx:key="idx" class="reveal-card love-card">
-        <image class="rv-img" src="{{item.drawing}}" mode="aspectFill" />
-        <view class="rv-word">{{item.word}}</view>
-        <view class="rv-res {{item.winner ? 'ok' : 'no'}}">{{item.winner ? '被猜中' : '没人猜中'}}</view>
-      </view>
-    </view>
-    <t-button theme="primary" block class="love-btn" bind:tap="nextRound" icon="refresh">下一局（换人画）</t-button>
-  </block>
-
-  <!-- 历史弹层 -->
-  <view class="sf-mask {{historyOpen ? 'show' : ''}}" bindtap="closeHistory"></view>
-  <view class="sf-sheet hist-sheet {{historyOpen ? 'show' : ''}}" catchtap="noop">
-    <view class="sf-title">画作历史（{{history.length}}）</view>
-    <scroll-view scroll-y class="hist-scroll">
-      <view wx:for="{{history}}" wx:key="ts" class="hist-item">
-        <view class="muted small">{{item.timeText}}</view>
-        <view class="hist-thumbs">
-          <view wx:for="{{item.items}}" wx:for-item="it" wx:key="idx" class="hist-thumb">
-            <image class="ht-img" src="{{it.drawing}}" mode="aspectFill" />
-            <view class="ht-word small">{{it.word}}</view>
-            <view class="ht-res {{it.winner ? 'ok' : 'no'}}">{{it.winner ? '中' : '未'}}</view>
-          </view>
+      <view class="ds-widths">
+        <view wx:for="{{widths}}" wx:key="*this" class="ds-width {{width === item ? 'sel' : ''}}" data-w="{{item}}" bindtap="pickWidth">
+          <view class="dw-dot" style="width:{{item + 6}}rpx;height:{{item + 6}}rpx"></view>
         </view>
       </view>
-      <view wx:if="{{!history.length}}" class="empty muted">还没有历史，画一局吧</view>
-    </scroll-view>
-    <view class="sf-actions"><view class="sf-ok" bindtap="closeHistory">关闭</view></view>
+    </view>
+    <view class="ds-hue">
+      <text class="muted small">色相</text>
+      <slider class="ds-slider" min="0" max="360" value="{{hue}}" bindchanging="onHue" bindchange="onHue" activeColor="{{color}}" />
+      <view class="ds-curno" style="background:{{color}}"></view>
+    </view>
+
+    <view class="ds-actions">
+      <t-button theme="default" class="love-btn" bind:tap="clearDraw" icon="delete">清空</t-button>
+      <t-button theme="primary" class="love-btn" loading="{{submitting}}" bind:tap="submitDraw">画好，发给大家猜</t-button>
+    </view>
   </view>
+
+  <game-rules game-key="drawguess" open="{{rulesOpen}}" bind:close="closeRules" />
 </view>

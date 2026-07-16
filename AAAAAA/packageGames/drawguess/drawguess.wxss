@@ -1,72 +1,63 @@
-page { background-color: var(--bg-1); }
-.dg-page { padding-top: 24rpx; padding-bottom: calc(40rpx + env(safe-area-inset-bottom)); }
+.dg-page { padding-top: 16rpx; padding-bottom: calc(40rpx + env(safe-area-inset-bottom)); }
 
-/* 顶部分数 + 历史 */
-.dg-top { display: flex; align-items: center; gap: 16rpx; margin-bottom: 24rpx; }
-.dg-score { display: flex; align-items: center; justify-content: center; gap: 28rpx; flex: 1; }
-.ds-item { display: flex; flex-direction: column; align-items: center; padding: 12rpx 32rpx; border-radius: 18rpx; background: var(--card); box-shadow: 0 6rpx 20rpx var(--card-shadow); }
+.dg-top { display: flex; align-items: center; gap: 16rpx; margin-bottom: 20rpx; }
+.dg-score { flex: 1; display: flex; align-items: center; justify-content: center; gap: 28rpx; }
+.ds-item { display: flex; flex-direction: column; align-items: center; padding: 8rpx 32rpx; border-radius: 18rpx; background: var(--card); box-shadow: 0 6rpx 20rpx var(--card-shadow); }
 .ds-item .lbl { font-size: 24rpx; color: var(--text-soft); }
-.ds-item .val { font-size: 44rpx; font-weight: 800; color: var(--primary-deep); }
+.ds-item .val { font-size: 42rpx; font-weight: 800; color: var(--primary-deep); }
 .ds-vs { font-size: 26rpx; color: var(--text-soft); font-weight: 700; }
-.dg-history-btn { width: 72rpx; height: 72rpx; border-radius: 50%; background: var(--card); color: var(--primary); display: flex; align-items: center; justify-content: center; box-shadow: 0 6rpx 20rpx var(--card-shadow); flex-shrink: 0; transition: transform .12s ease; }
-.dg-history-btn:active { transform: scale(.92); }
+.dg-rules-btn { width: 64rpx; height: 64rpx; border-radius: 50%; background: var(--card); color: var(--primary); display: flex; align-items: center; justify-content: center; box-shadow: 0 4rpx 16rpx var(--card-shadow); }
 
-/* 居中状态 */
-.dg-center { display: flex; flex-direction: column; align-items: center; gap: 16rpx; padding: 40rpx 0; text-align: center; }
-.dg-big-ic { width: 120rpx; height: 120rpx; border-radius: 50%; background: var(--chip); color: var(--primary); display: flex; align-items: center; justify-content: center; margin-bottom: 8rpx; }
-.dg-title { font-size: 36rpx; font-weight: 700; color: var(--text); }
+.dg-feed { display: flex; flex-direction: column; gap: 18rpx; margin-top: 24rpx; }
+.dg-card { padding: 20rpx; }
+.dc-img { width: 100%; border-radius: 14rpx; background: #fff; }
+.dc-rendering { width: 100%; height: 300rpx; border-radius: 14rpx; background: var(--chip); color: var(--text-soft); display: flex; align-items: center; justify-content: center; font-size: 26rpx; }
+.dc-sub { margin: 12rpx 4rpx 8rpx; }
+.dc-answer { font-size: 28rpx; color: var(--primary-deep); font-weight: 600; margin-top: 4rpx; }
+.dc-answer.mine { color: var(--text-soft); font-weight: 400; }
+.dc-guess-row { display: flex; gap: 12rpx; margin-top: 8rpx; }
+.dc-input { flex: 1; height: 76rpx; line-height: 76rpx; padding: 0 22rpx; background: var(--chip); border-radius: 38rpx; font-size: 28rpx; color: var(--text); }
+.dc-guess-btn { width: 88rpx; height: 76rpx; line-height: 76rpx; text-align: center; border-radius: 38rpx; background: var(--primary); color: #fff; font-size: 28rpx; }
+.dc-hint { margin-top: 8rpx; }
+.dg-empty { text-align: center; padding: 80rpx 0; font-size: 26rpx; }
 
-/* 画手：词条 + 画布 + 工具 */
-.word-bar { display: flex; flex-direction: column; align-items: center; gap: 6rpx; margin-bottom: 18rpx; }
-.wb-tip { font-size: 24rpx; color: var(--text-soft); }
-.wb-word { font-size: 52rpx; font-weight: 800; color: var(--primary-deep); }
-.wb-hint { font-size: 24rpx; }
-.draw-canvas { width: 94vw; height: 94vw; max-width: 680rpx; max-height: 680rpx; background: #fff; border-radius: 16rpx; box-shadow: 0 8rpx 30rpx var(--card-shadow); }
-.color-row { display: flex; align-items: center; gap: 16rpx; margin: 20rpx 0; flex-wrap: wrap; justify-content: center; }
-.color-dot { width: 56rpx; height: 56rpx; border-radius: 50%; border: 4rpx solid #fff; box-shadow: 0 2rpx 8rpx rgba(0,0,0,.15); transition: transform .15s ease, box-shadow .15s ease; }
-.color-dot.sel { transform: scale(1.18); box-shadow: 0 0 0 4rpx var(--card), 0 0 0 8rpx var(--primary); }
-.color-dot:active { transform: scale(.9); }
-.clear-btn { display: flex; align-items: center; gap: 6rpx; color: var(--text-soft); font-size: 24rpx; padding: 8rpx 16rpx; transition: opacity .12s ease; }
-.clear-btn:active { opacity: .6; }
-.tool-btn { width: 56rpx; height: 56rpx; border-radius: 50%; background: var(--chip); color: var(--text-soft); display: flex; align-items: center; justify-content: center; transition: transform .15s ease, background .15s ease, color .15s ease; }
-.tool-btn.sel { background: var(--primary); color: #fff; }
-.tool-btn:active { transform: scale(.9); }
-.stroke-row { display: flex; align-items: center; justify-content: center; gap: 24rpx; margin-bottom: 4rpx; }
-.stroke-dot { width: 56rpx; height: 56rpx; border-radius: 50%; background: var(--chip); display: flex; align-items: center; justify-content: center; transition: transform .15s ease, background .15s ease; }
-.stroke-dot.sel { background: var(--primary); }
-.stroke-dot:active { transform: scale(.9); }
-.stroke-bar { background: var(--text-soft); border-radius: 50%; }
-.stroke-dot.sel .stroke-bar { background: #fff; }
-.dg-actions { display: flex; flex-direction: column; gap: 16rpx; }
-.ghost { --td-brand-color: var(--text-soft); }
+/* 反向重绘隐藏画布 */
+.hidden-canvas { position: fixed; left: -9999rpx; top: 0; width: 320px; height: 320px; opacity: 0; pointer-events: none; }
 
-/* 猜手：堆叠卡片 */
-.dg-deck { position: relative; height: 460rpx; margin-bottom: 20rpx; }
-.guess-card { position: absolute; left: 0; right: 0; background: #fff; border-radius: 20rpx; padding: 20rpx; box-shadow: 0 12rpx 36rpx var(--card-shadow); transition: transform .26s cubic-bezier(.2,.8,.2,1), top .26s ease, left .26s ease; box-sizing: border-box; }
-.guess-card.top { top: 0; left: 0; right: 0; z-index: 10; }
-.gc-img { width: 100%; height: 360rpx; border-radius: 12rpx; background: var(--chip); }
-.gc-tip { text-align: center; margin-top: 10rpx; }
-.dg-input { width: 100%; box-sizing: border-box; height: 88rpx; line-height: 88rpx; padding: 0 28rpx; background: var(--card); border-radius: 20rpx; font-size: 30rpx; color: var(--text); margin: 20rpx 0; box-shadow: 0 6rpx 20rpx var(--card-shadow); }
+/* 画画弹层：近全屏 */
+.dg-mask { position: fixed; inset: 0; z-index: 300; background: rgba(0,0,0,.4); opacity: 0; pointer-events: none; transition: opacity .2s; }
+.dg-mask.show { opacity: 1; pointer-events: auto; }
+.draw-sheet {
+  position: fixed; left: 0; right: 0; bottom: 0; top: 0; z-index: 301;
+  background: var(--bg-1); padding: calc(env(safe-area-inset-top) + 16rpx) 24rpx calc(env(safe-area-inset-bottom) + 24rpx);
+  display: flex; flex-direction: column; transform: translateY(100%); transition: transform .26s cubic-bezier(.2,.8,.2,1);
+}
+.draw-sheet.show { transform: translateY(0); }
+.ds-head { display: flex; align-items: center; gap: 14rpx; margin-bottom: 12rpx; }
+.ds-mode { padding: 8rpx 22rpx; border-radius: 24rpx; background: var(--card); color: var(--text-soft); font-size: 26rpx; }
+.ds-mode.sel { background: var(--primary); color: #fff; }
+.ds-close { margin-left: auto; color: var(--text-soft); padding: 6rpx; }
+.ds-word { display: flex; align-items: center; gap: 18rpx; margin-bottom: 14rpx; }
+.ds-w { font-size: 44rpx; font-weight: 800; color: var(--primary-deep); }
+.ds-reroll { font-size: 26rpx; color: var(--primary); padding: 8rpx 18rpx; background: var(--card); border-radius: 22rpx; }
+.ds-custom { flex: 1; height: 72rpx; line-height: 72rpx; padding: 0 22rpx; background: var(--card); border-radius: 16rpx; font-size: 30rpx; color: var(--text); }
 
-/* 揭晓九宫格 */
-.reveal-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16rpx; margin: 20rpx 0; }
-.reveal-card { padding: 16rpx; display: flex; flex-direction: column; align-items: center; gap: 8rpx; }
-.rv-img { width: 100%; height: 200rpx; border-radius: 12rpx; background: var(--chip); }
-.rv-word { font-size: 26rpx; font-weight: 600; color: var(--text); text-align: center; }
-.rv-res { font-size: 22rpx; }
-.rv-res.ok { color: var(--primary-deep); }
-.rv-res.no { color: var(--text-soft); }
+.draw-canvas { width: 92vw; height: 92vw; max-height: 56vh; background: #fff; border-radius: 16rpx; box-shadow: 0 8rpx 30rpx var(--card-shadow); align-self: center; }
 
-/* 历史弹层 */
-.hist-sheet { left: 24rpx; right: 24rpx; top: 10vh; transform: none; max-height: 80vh; display: flex; flex-direction: column; }
-.hist-sheet.show { transform: none; }
-.hist-scroll { flex: 1; min-height: 0; padding: 8rpx 4rpx; }
-.hist-item { padding: 16rpx 0; border-bottom: 1rpx solid var(--border); }
-.hist-thumbs { display: flex; gap: 14rpx; margin-top: 10rpx; }
-.hist-thumb { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4rpx; }
-.ht-img { width: 100%; height: 150rpx; border-radius: 12rpx; background: var(--chip); }
-.ht-word { font-size: 22rpx; color: var(--text); text-align: center; }
-.ht-res { font-size: 20rpx; }
-.ht-res.ok { color: var(--primary-deep); }
-.ht-res.no { color: var(--text-soft); }
-.empty { text-align: center; padding: 60rpx 0; font-size: 26rpx; }
+.ds-tools { display: flex; align-items: center; justify-content: space-between; margin-top: 14rpx; gap: 12rpx; }
+.ds-colors { display: flex; align-items: center; gap: 12rpx; }
+.ds-color { width: 52rpx; height: 52rpx; border-radius: 50%; border: 3rpx solid #fff; box-shadow: 0 2rpx 8rpx rgba(0,0,0,.18); }
+.ds-color.sel { box-shadow: 0 0 0 3rpx var(--card), 0 0 0 7rpx var(--primary); }
+.ds-tool { width: 56rpx; height: 52rpx; border-radius: 14rpx; background: var(--card); color: var(--text-soft); display: flex; align-items: center; justify-content: center; }
+.ds-tool.sel { color: var(--primary-deep); box-shadow: 0 0 0 3rpx var(--primary); }
+.ds-widths { display: flex; align-items: center; gap: 10rpx; }
+.ds-width { width: 52rpx; height: 52rpx; border-radius: 50%; background: var(--card); display: flex; align-items: center; justify-content: center; }
+.ds-width.sel { box-shadow: 0 0 0 3rpx var(--primary); }
+.dw-dot { border-radius: 50%; background: var(--text-soft); }
+
+.ds-hue { display: flex; align-items: center; gap: 12rpx; margin-top: 12rpx; }
+.ds-slider { flex: 1; margin: 0; }
+.ds-curno { width: 40rpx; height: 40rpx; border-radius: 50%; border: 3rpx solid var(--card); box-shadow: 0 2rpx 8rpx rgba(0,0,0,.18); }
+
+.ds-actions { display: flex; gap: 16rpx; margin-top: 16rpx; }
+.ds-actions .love-btn { flex: 1; }
