@@ -23,9 +23,12 @@ exports.main = async (event, context) => {
   const doc = await findDoc(room, path);
 
   // —— set：整路径覆盖写（value=null 等于清空但保留行，便于 watch 继续）——
+  // 注意：云数据库 doc.update 对嵌套对象是“递归合并”（按点路径写 value.a.b），
+  // 当 value 内某字段从 null 变成对象时会报 “Cannot create field in element {x:null}”。
+  // 因此 set 必须用 doc.set 整文档替换，才能真正覆盖（与 store.js “整路径覆盖写”契约一致）。
   if (action === 'set') {
     const value = event.value === undefined ? null : event.value;
-    if (doc) await col.doc(doc._id).update({ data: { value, ts } });
+    if (doc) await col.doc(doc._id).set({ data: { room, path, value, ts } });
     else await col.add({ data: { room, path, value, ts } });
     return { ok: true };
   }
