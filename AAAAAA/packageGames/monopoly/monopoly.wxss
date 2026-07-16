@@ -1,7 +1,7 @@
 .mp-page { display: flex; flex-direction: column; align-items: center; padding-top: 16rpx; padding-bottom: calc(40rpx + env(safe-area-inset-bottom)); }
 
 .mp-board-wrap { position: relative; }
-.mp-board { width: calc(58vh * 8 / 10); height: 58vh; max-width: 92vw; border-radius: 16rpx; box-shadow: 0 8rpx 30rpx var(--card-shadow); }
+.mp-board { width: calc(50vh * 8 / 10); height: 50vh; max-width: 92vw; border-radius: 16rpx; box-shadow: 0 8rpx 30rpx var(--card-shadow); }
 .mp-empty { position: absolute; inset: 0; border-radius: 16rpx; background: rgba(243,233,210,.95); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14rpx; }
 .mp-title { font-size: 52rpx; font-weight: 800; color: #b58a5a; }
 .mp-start { padding: 16rpx 56rpx; border-radius: 36rpx; background: var(--primary); color: #fff; font-size: 30rpx; }
@@ -28,8 +28,8 @@
 .mp-log-item { font-size: 24rpx; color: var(--text); line-height: 1.7; opacity: .65; }
 .mp-log-item.new { opacity: 1; font-weight: 600; color: var(--primary-deep); }
 
-/* 事件提示：棋盘正下方悬浮条(无 canvas 不被挡)，带 icon + 好坏色 */
-.mp-evt { display: flex; align-items: center; gap: 14rpx; width: 92vw; max-width: 620rpx; padding: 18rpx 26rpx; border-radius: 18rpx; margin: 12rpx 0; color: #fff; font-size: 28rpx; font-weight: 600; box-shadow: 0 6rpx 20rpx rgba(0,0,0,.18); animation: evtIn .25s ease; }
+/* 事件提示：固定悬浮(不挤布局/不抖动)，Skyline 下可盖在棋盘上，带 icon + 好坏色 */
+.mp-evt { position: fixed; left: 4vw; right: 4vw; top: calc(env(safe-area-inset-top) + 110rpx); z-index: 50; display: flex; align-items: center; gap: 14rpx; padding: 18rpx 26rpx; border-radius: 18rpx; color: #fff; font-size: 28rpx; font-weight: 600; box-shadow: 0 6rpx 20rpx rgba(0,0,0,.18); animation: evtIn .25s ease; }
 .mp-evt.good { background: #2ec24e; }
 .mp-evt.bad { background: #e85a86; }
 .mp-evt-text { flex: 1; }

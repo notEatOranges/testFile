@@ -1,5 +1,7 @@
 {
   "navigationStyle": "default",
+  "renderer": "skyline",
+  "componentFramework": "glass-easel",
   "navigationBarTitleText": "大富翁",
   "navigationBarBackgroundColor": "#fff5f7",
   "navigationBarTextStyle": "black",
