@@ -31,3 +31,20 @@ page { background-color: var(--bg-1); }
 .lr-score { font-size: 36rpx; font-weight: 800; color: var(--primary-deep); }
 .lr-time { font-size: 22rpx; }
 .empty { text-align: center; padding: 60rpx 0; font-size: 26rpx; }
+
+/* 对战：胜平负对比 */
+.lb-versus { display: flex; align-items: stretch; gap: 16rpx; margin: 24rpx 0 8rpx; }
+.vv-side { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6rpx; padding: 22rpx 12rpx; border-radius: 22rpx; background: var(--card); box-shadow: 0 6rpx 24rpx var(--card-shadow); }
+.vv-side.mine { background: var(--primary); color: #fff; }
+.vv-side.mine .muted { color: rgba(255,255,255,.8); }
+.vv-name { font-size: 26rpx; font-weight: 600; }
+.vv-wdl { font-size: 30rpx; font-weight: 700; }
+.vv-rate { font-size: 22rpx; opacity: .9; }
+.vv-mid { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4rpx; min-width: 150rpx; }
+.vv-pts { font-size: 30rpx; font-weight: 800; color: var(--primary-deep); }
+.lr-result { font-size: 28rpx; font-weight: 700; padding: 4rpx 20rpx; border-radius: 16rpx; background: var(--chip); color: var(--text-soft); }
+.lr-result.win { color: #fff; background: #3aa75c; }
+.lr-result.lose { color: #fff; background: #e85a86; }
+.lr-result.draw { color: var(--text); background: var(--chip); }
+.lb-row .lr-time { margin-left: auto; }
+

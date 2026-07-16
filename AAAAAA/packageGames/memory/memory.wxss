@@ -10,6 +10,8 @@
 
 .mem-result { font-size: 36rpx; font-weight: 800; color: var(--primary-deep); margin-bottom: 8rpx; }
 .mem-tip { margin-bottom: 8rpx; }
+.mem-pending { display: flex; align-items: center; gap: 16rpx; margin-bottom: 10rpx; padding: 12rpx 22rpx; border-radius: 18rpx; background: var(--card); box-shadow: 0 4rpx 16rpx var(--card-shadow); font-size: 25rpx; color: var(--primary-deep); }
+.mem-link { margin-left: auto; color: var(--text-soft); padding: 4rpx 10rpx; }
 
 .mem-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16rpx; width: 86vw; max-width: 600rpx; }
 .mcard {

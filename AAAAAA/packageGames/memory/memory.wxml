@@ -17,6 +17,11 @@
   <view wx:if="{{winner}}" class="mem-result">{{winnerText}}</view>
   <view wx:elif="{{started}}" class="mem-tip muted small">{{myTurn ? '点两张牌找配对' : '等 ' + peerName + ' 翻牌'}}</view>
 
+  <view wx:if="{{requestPending}}" class="mem-pending">
+    <text>已请求重新开局，等 {{peerName}} 同意…</text>
+    <text class="mem-link" bindtap="cancelReq">取消</text>
+  </view>
+
   <view wx:if="{{started}}" class="mem-grid">
     <view wx:for="{{cards}}" wx:key="index" class="mcard {{item.up ? 'up' : ''}} {{item.matched ? 'matched' : ''}}"
           data-i="{{index}}" bindtap="flipCard">
@@ -33,7 +38,8 @@
 
   <view class="mem-actions">
     <t-button theme="default" size="small" bind:tap="openRules" icon="info-circle">玩法</t-button>
-    <t-button theme="primary" size="small" bind:tap="restart">{{winner ? '再来一局' : (started ? '重新开局' : '开始对局')}}</t-button>
+    <t-button wx:if="{{started}}" theme="default" size="small" bind:tap="resign">认输</t-button>
+    <t-button theme="primary" size="small" bind:tap="requestRestart">{{winner ? '再来一局' : (started ? '重新开局' : '开始对局')}}</t-button>
   </view>
 
   <game-rules game-key="memory" open="{{rulesOpen}}" bind:close="closeRules" />

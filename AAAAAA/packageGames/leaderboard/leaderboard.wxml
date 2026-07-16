@@ -5,22 +5,51 @@
     <view wx:for="{{games}}" wx:key="key" class="lb-tab {{tab === item.key ? 'sel' : ''}}" data-k="{{item.key}}" bindtap="switchTab">{{item.label}}</view>
   </view>
 
-  <!-- 双方最高分对比 -->
-  <view class="lb-best">
-    <view class="bb-item mine"><text class="bb-lbl">我的最高</text><text class="bb-val">{{myBest}}</text></view>
-    <view class="bb-vs">VS</view>
-    <view class="bb-item"><text class="bb-lbl">ta 的最高</text><text class="bb-val">{{peerBest}}</text></view>
-  </view>
-
-  <!-- 历史成绩列表（按分数降序） -->
-  <view class="section-title">历史成绩 <text class="muted small">（按分数排名）</text></view>
-  <view class="lb-list">
-    <view wx:for="{{list}}" wx:key="index" class="lb-row {{item.mine ? 'mine' : ''}} {{item.top ? 'top' : ''}}">
-      <view class="lr-rank">{{item.rank}}</view>
-      <view class="lr-name">{{item.name}}</view>
-      <view class="lr-score">{{item.score}}</view>
-      <view class="lr-time muted small">{{item.time}}</view>
+  <!-- 积分类：双方最高分对比 + 历史排名 -->
+  <block wx:if="{{kind === 'score'}}">
+    <view class="lb-best">
+      <view class="bb-item mine"><text class="bb-lbl">我的最高</text><text class="bb-val">{{myBest}}</text></view>
+      <view class="bb-vs">VS</view>
+      <view class="bb-item"><text class="bb-lbl">ta 的最高</text><text class="bb-val">{{peerBest}}</text></view>
     </view>
-    <view wx:if="{{!list.length}}" class="empty muted">还没有成绩，去玩一局吧</view>
-  </view>
+    <view class="section-title">历史成绩 <text class="muted small">（按分数排名）</text></view>
+    <view class="lb-list">
+      <view wx:for="{{list}}" wx:key="index" class="lb-row {{item.mine ? 'mine' : ''}} {{item.top ? 'top' : ''}}">
+        <view class="lr-rank">{{item.rank}}</view>
+        <view class="lr-name">{{item.name}}</view>
+        <view class="lr-score">{{item.score}}</view>
+        <view class="lr-time muted small">{{item.time}}</view>
+      </view>
+      <view wx:if="{{!list.length}}" class="empty muted">还没有成绩，去玩一局吧</view>
+    </view>
+  </block>
+
+  <!-- 对战类：胜平负 / 积分 / 胜率 -->
+  <block wx:else>
+    <view class="lb-versus">
+      <view class="vv-side mine">
+        <view class="vv-name">我</view>
+        <view class="vv-wdl">{{myStat.w}} <text class="muted">胜</text> {{myStat.d}} <text class="muted">平</text> {{myStat.l}} <text class="muted">负</text></view>
+        <view class="vv-rate">胜率 {{myStat.rate}}%</view>
+      </view>
+      <view class="vv-mid">
+        <view class="vv-pts">积分 {{myStat.pts}} : {{peerStat.pts}}</view>
+        <view class="muted small">积分(胜3平1负0)</view>
+      </view>
+      <view class="vv-side">
+        <view class="vv-name">ta</view>
+        <view class="vv-wdl">{{peerStat.w}} <text class="muted">胜</text> {{peerStat.d}} <text class="muted">平</text> {{peerStat.l}} <text class="muted">负</text></view>
+        <view class="vv-rate">胜率 {{peerStat.rate}}%</view>
+      </view>
+    </view>
+    <view class="section-title">最近对局</view>
+    <view class="lb-list">
+      <view wx:for="{{recent}}" wx:key="index" class="lb-row {{item.mine ? 'mine' : ''}}">
+        <view class="lr-name">{{item.name}}</view>
+        <view class="lr-result {{item.result}}">{{item.result === 'win' ? '胜' : (item.result === 'draw' ? '平' : '负')}}</view>
+        <view class="lr-time muted small">{{item.time}}</view>
+      </view>
+      <view wx:if="{{!recent.length}}" class="empty muted">还没有对局记录</view>
+    </view>
+  </block>
 </view>

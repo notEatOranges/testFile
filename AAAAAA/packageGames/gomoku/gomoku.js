@@ -113,6 +113,7 @@ Page({
     let winnerText = '';
     if (winner === 'draw') winnerText = '平局';
     else if (winner) winnerText = (names[rt.seatRole(winner)] || '对方') + ' 赢了';
+    if (winner && !this._recorded) { this._recorded = true; rt.recordPvp('gomoku', rt.myResult(winner, this.data.mySeat), this.data.role); }
     Object.assign(patch, {
       started: true, turnSeat,
       myTurn: !winner && turnSeat === this.data.mySeat,
@@ -125,6 +126,7 @@ Page({
 
   startMatch() {
     console.log('[gomoku] startMatch 被调用');
+    this._recorded = false;
     // 乐观清盘：本地立即清空 + 重绘，不等服务器回环；再写云端让对方同步
     this._board = emptyBoard();
     this._winLine = null;
@@ -195,19 +197,10 @@ Page({
   },
 
   resign() {
-    console.log('[gomoku] resign 被点击', JSON.stringify({ started: this.data.started, winner: this.data.winner, hasState: !!this._state }));
-    if (!this.data.started || this.data.winner) { console.log('[gomoku] resign 跳过: 未开局或已有胜负'); return; }
+    if (!this.data.started || this.data.winner) return;
     wx.showModal({
       title: '认输', content: '确定认输吗？', confirmText: '认输', confirmColor: '#e85a86',
-      success: r => {
-        console.log('[gomoku] 认输确认', r.confirm);
-        if (!r.confirm) return;
-        const peerSeat = rt.peerSeatOf(room.getRole());
-        rt.setState('gomoku', Object.assign({}, this._state, { winner: peerSeat }))
-          .then(() => console.log('[gomoku] resign 写入成功 winner=', peerSeat))
-          .catch(err => console.error('[gomoku] resign 写入失败', err && err.errMsg || err));
-        toast('已认输');
-      }
+      success: r => { if (!r.confirm) return; rt.resign('gomoku', this._state, room.getRole()); toast('已认输'); }
     });
   },
 

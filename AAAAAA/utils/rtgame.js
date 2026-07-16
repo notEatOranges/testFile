@@ -44,8 +44,25 @@ function restartReqSide(req, myRole) {
   return req.by === myRole ? 'mine' : 'peer';
 }
 
+/* —— 认输：直接判负，并清掉未处理的重开/悔棋请求 —— */
+function resign(key, curState, myRole) {
+  return setState(key, Object.assign({}, curState, { winner: peerSeatOf(myRole), req: null, undoReq: null }));
+}
+
+/* —— 对战结果记入成绩榜（win/draw/lose → 积分 3/1/0）—— */
+function recordPvp(game, result, myRole) {
+  const score = result === 'win' ? 3 : (result === 'draw' ? 1 : 0);
+  return Store.push('gameScores', { game, role: myRole, score, result, ts: Store.now() });
+}
+/** 由 winner(seat|'draw') 与我的座位推我的结果 */
+function myResult(winner, mySeat) {
+  if (winner === 'draw') return 'draw';
+  return winner === mySeat ? 'win' : 'lose';
+}
+
 module.exports = {
   RED, BLUE, seatOf, peerSeatOf, seatRole, keyPath,
   bind, setState, updateState, teardown,
-  requestRestart, acceptRestart, rejectRestart, cancelRestart, restartReqSide
+  requestRestart, acceptRestart, rejectRestart, cancelRestart, restartReqSide,
+  resign, recordPvp, myResult
 };

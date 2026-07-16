@@ -79,14 +79,14 @@ Page({
   },
 
   fresh() { return { board: initBoard(), turn: rt.RED, winner: null, last: null, req: null }; },
-  startMatch() { rt.setState('othello', this.fresh()); },
+  startMatch() { this._recorded = false; rt.setState('othello', this.fresh()); },
   requestRestart() { rt.requestRestart('othello', this._state, room.getRole(), !!this.data.winner, () => this.fresh()); },
   cancelReq() { rt.cancelRestart('othello', this._state); },
   resign() {
     if (!this.data.started || this.data.winner) return;
     wx.showModal({
       title: '认输', content: '确定认输吗？', confirmText: '认输', confirmColor: '#e85a86',
-      success: r => { if (r.confirm) rt.setState('othello', Object.assign({}, this._state, { winner: rt.peerSeatOf(room.getRole()) })); }
+      success: r => { if (r.confirm) rt.resign('othello', this._state, room.getRole()); }
     });
   },
 
@@ -116,6 +116,7 @@ Page({
     let winnerText = '';
     if (winner === 'draw') winnerText = '平局';
     else if (winner) winnerText = (names[rt.seatRole(winner)] || '对方') + ' 赢了';
+    if (winner && !this._recorded) { this._recorded = true; rt.recordPvp('othello', rt.myResult(winner, mySeat), role); }
     Object.assign(patch, {
       started: true, turnSeat, myTurn: !winner && turnSeat === mySeat,
       myScore: mySeat === 'red' ? sc.red : sc.blue, peerScore: mySeat === 'red' ? sc.blue : sc.red,
