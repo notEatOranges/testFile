@@ -183,11 +183,6 @@ Page({
     this.setData({ fx: { kind, text } });
     setTimeout(() => { if (this.data.fx) this.setData({ fx: null }); }, 1400);
   },
-  // 买地/过路费等用主题卡片弹层(和机会卡一样的好/坏配色)
-  showEventCard(kind, text) {
-    this.setData({ card: { drawing: false, text, kind } });
-    setTimeout(() => { if (this.data.card && this.data.card.text === text) this.setData({ card: null }); }, 1500);
-  },
 
   async roll() {
     if (!this.data.myTurn || this.data.winner || this.data.rolling) return;
