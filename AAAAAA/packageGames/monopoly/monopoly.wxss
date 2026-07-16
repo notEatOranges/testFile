@@ -1,6 +1,6 @@
 /* 禁止滚动：100vh 固定，按钮固定底部 */
 .mp-page { height: 100vh; overflow: hidden; display: flex; flex-direction: column; align-items: center; padding: 16rpx 0 calc(140rpx + env(safe-area-inset-bottom)); box-sizing: border-box; }
-.mp-board-wrap { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; width: 100%; }
+.mp-board-wrap { flex: 1; min-height: 0; display: flex; align-items: flex-start; justify-content: center; width: 100%; padding-top: 8rpx; }
 .mp-board { width: min(94vw, calc((100vh - 340rpx) * 0.8)); height: min(calc(94vw * 1.25), calc(100vh - 340rpx)); border-radius: 16rpx; box-shadow: 0 8rpx 30rpx var(--card-shadow); }
 
 .mp-empty { position: absolute; inset: 0; border-radius: 16rpx; background: rgba(243,233,210,.95); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14rpx; }
@@ -16,7 +16,12 @@
 .mp-n { font-size: 24rpx; font-weight: 600; }
 .mp-cash { font-size: 34rpx; font-weight: 800; color: var(--primary-deep); }
 
-.mp-info { width: 92vw; max-width: 620rpx; text-align: center; min-height: 36rpx; }
+.mp-info { width: 92vw; max-width: 620rpx; text-align: center; min-height: 32rpx; }
+
+/* 迷你行为记录(最新3条，不滚动) */
+.mp-log-mini { width: 92vw; max-width: 620rpx; max-height: 90rpx; overflow: hidden; margin: 4rpx 0; }
+.ml-item { font-size: 22rpx; color: var(--text-soft); line-height: 1.5; opacity: .55; }
+.ml-item.new { opacity: 1; color: var(--primary-deep); font-weight: 600; }
 .mp-result { font-size: 30rpx; font-weight: 800; color: var(--primary-deep); }
 .mp-turn { font-size: 24rpx; color: var(--text-soft); }
 .mp-pending { font-size: 22rpx; color: var(--primary-deep); }

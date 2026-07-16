@@ -7,7 +7,6 @@
       <view class="mp-start" bindtap="startMatch">开始对局</view>
       <view class="muted small">买地收租 · 机会卡 · 让对方破产即胜</view>
     </view>
-    <view wx:if="{{winner}}" class="mp-over-mask"><view class="mp-over-text">{{winnerText}}</view></view>
   </view>
 
   <view class="mp-pair">
@@ -16,10 +15,14 @@
   </view>
 
   <view class="mp-info">
-    <text wx:if="{{winner}}" class="mp-result">{{winnerText}}</text>
-    <text wx:elif="{{started}}" class="mp-turn">{{myTurn ? '该你掷骰' : '等 ' + peerName + ' 掷骰'}}</text>
+    <text wx:if="{{started}}" class="mp-turn">{{myTurn ? '该你掷骰' : '等 ' + peerName + ' 掷骰'}}</text>
     <text wx:if="{{requestPending}}" class="mp-pending"> 已请求重开 <text class="mp-link" bindtap="cancelReq">取消</text></text>
     <text wx:if="{{sellReqPending}}" class="mp-pending"> 等对方买地 <text class="mp-link" bindtap="cancelSell">取消</text></text>
+  </view>
+
+  <!-- 迷你行为记录(最新3条，不滚动) -->
+  <view class="mp-log-mini">
+    <view wx:for="{{logRecent}}" wx:key="index" class="ml-item {{index === 0 ? 'new' : ''}}">· {{item}}</view>
   </view>
 
   <!-- 固定底部 tab 栏，安全边距，禁止滚动 -->

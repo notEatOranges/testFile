@@ -169,6 +169,7 @@ Page({
       started: true, turnSeat, myTurn: !winner && turnSeat === this.data.mySeat,
       dice: s.dice || [1, 1],
       log: (s.log || []).slice(-30).reverse(),
+      logRecent: (s.log || []).slice(-3).reverse(),
       myCash: (s.cash && s.cash[role]) || 0, peerCash: (s.cash && s.cash[peer]) || 0,
       mySavings: (s.savings && s.savings[role]) || 0, peerSavings: (s.savings && s.savings[peer]) || 0,
       myLoan: (s.loan && s.loan[role]) || 0, peerLoan: (s.loan && s.loan[peer]) || 0,
@@ -545,6 +546,16 @@ Page({
     }
     this.drawCardAnim(ctx);
     this.drawFxAnim(ctx);
+    this.drawWinner(ctx);
+  },
+  drawWinner(ctx) {
+    if (!this.data.winner) return;
+    const cs = this.cs, cx = this.W / 2, cy = this.H / 2;
+    ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fillRect(0, 0, this.W, this.H);
+    ctx.fillStyle = '#fff'; ctx.font = 'bold ' + Math.round(cs * 0.75) + 'px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(this.data.winnerText || '', cx, cy);
+    ctx.font = Math.round(cs * 0.3) + 'px sans-serif'; ctx.fillStyle = 'rgba(255,255,255,.7)';
+    ctx.fillText('点底部「再来」开始新一局', cx, cy + cs * 0.8);
   },
   wrapText(ctx, text, x, y, maxW, lh) {
     let line = '';
