@@ -1,5 +1,11 @@
 <view class="theme-{{theme}} love-page mp-page">
 
+  <view class="mp-nav">
+    <view class="mp-nav-btn" bindtap="goBack"><t-icon name="chevron-left" size="44rpx" /></view>
+    <text class="mp-nav-title">大富翁</text>
+    <view class="mp-nav-btn" style="visibility:hidden"><t-icon name="chevron-left" size="44rpx" /></view>
+  </view>
+
   <view class="mp-board-wrap">
     <canvas wx:if="{{!rulesOpen}}" type="2d" id="board" class="mp-board"></canvas>
     <view wx:if="{{!started}}" class="mp-empty">

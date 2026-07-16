@@ -95,6 +95,7 @@ Page({
     return { cells: buildCells(), pos: { boy: 0, girl: 0 }, cash: { boy: START_CASH, girl: START_CASH }, savings: { boy: 0, girl: 0 }, loan: { boy: 0, girl: 0 }, skip: { boy: 0, girl: 0 }, turn: Math.random() < 0.5 ? rt.RED : rt.BLUE, dice: [1, 1], log: [], winner: null, req: null, sellReq: null };
   },
   startMatch() { this._recorded = false; rt.setState('monopoly', this.fresh()); },
+  goBack() { wx.navigateBack({ delta: 1 }); },
   requestRestart() { rt.requestRestart('monopoly', this._state, room.getRole(), !!this.data.winner, () => this.fresh()); },
   cancelReq() { rt.cancelRestart('monopoly', this._state); },
   resign() {

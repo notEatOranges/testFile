@@ -1,4 +1,7 @@
-.mp-page { display: flex; flex-direction: column; align-items: center; padding-top: 16rpx; padding-bottom: calc(40rpx + env(safe-area-inset-bottom)); }
+.mp-page { display: flex; flex-direction: column; align-items: center; padding-top: 0; padding-bottom: calc(40rpx + env(safe-area-inset-bottom)); }
+.mp-nav { width: 100%; height: calc(env(safe-area-inset-top) + 88rpx); padding-top: env(safe-area-inset-top); box-sizing: border-box; display: flex; align-items: center; justify-content: space-between; padding-left: 16rpx; padding-right: 16rpx; }
+.mp-nav-btn { width: 64rpx; height: 64rpx; display: flex; align-items: center; justify-content: center; color: var(--text); }
+.mp-nav-title { font-size: 32rpx; font-weight: 700; color: var(--text); }
 
 .mp-board-wrap { position: relative; }
 .mp-board { width: calc(50vh * 8 / 10); height: 50vh; max-width: 92vw; border-radius: 16rpx; box-shadow: 0 8rpx 30rpx var(--card-shadow); }
