@@ -257,7 +257,7 @@ Page({
     });
   },
   drawDiceCenter(ctx) {
-    const cs = this.cs, cx = this.W / 2, cy = this.H / 2 - cs * 0.7;
+    const cs = this.cs, cx = this.W / 2, cy = this.H / 2 + cs * 0.4;
     const anim = this._diceAnim;
     const val = anim ? anim.val : (this.data.dice || 1);
     const ang = anim ? anim.angle : 0;
@@ -324,8 +324,8 @@ Page({
           if (afford) wx.showModal({ title: cell.name, content: '花 ' + cell.price + ' 买下？（过路费 ' + rentOf(cell) + '）', confirmText: '买下', cancelText: '不买', success: r => res(r.confirm ? 'buy' : false) });
           else { const short = cell.price - (cash[role] || 0), fee = Math.round(short * 0.1); wx.showModal({ title: cell.name, content: '现金不足，贷款 ' + (short + fee) + ' 买下？（过路费 ' + rentOf(cell) + '）', confirmText: '贷款买', cancelText: '不买', success: r => res(r.confirm ? 'loan' : false) }); }
         });
-        if (choice === 'buy') { cash[role] -= cell.price; cells[idx] = Object.assign({}, cell, { owner: role }); log.push('买下「' + cell.name + '」-' + cell.price); this.showEventCard('good', '入手「' + cell.name + '」'); }
-        else if (choice === 'loan') { const short = cell.price - (cash[role] || 0), fee = Math.round(short * 0.1); loan[role] = (loan[role] || 0) + short + fee; cash[role] = (cash[role] || 0) + short - cell.price; cells[idx] = Object.assign({}, cell, { owner: role }); log.push('贷款买下「' + cell.name + '」(欠款 +' + (short + fee) + ')'); this.showEventCard('good', '贷款入手「' + cell.name + '」'); }
+        if (choice === 'buy') { cash[role] -= cell.price; cells[idx] = Object.assign({}, cell, { owner: role }); log.push('买下「' + cell.name + '」-' + cell.price); this.showFx('good', '入手「' + cell.name + '」'); }
+        else if (choice === 'loan') { const short = cell.price - (cash[role] || 0), fee = Math.round(short * 0.1); loan[role] = (loan[role] || 0) + short + fee; cash[role] = (cash[role] || 0) + short - cell.price; cells[idx] = Object.assign({}, cell, { owner: role }); log.push('贷款买下「' + cell.name + '」(欠款 +' + (short + fee) + ')'); this.showFx('good', '贷款入手「' + cell.name + '」'); }
       } else if (cell.owner === role) {
         // 自己的地：可升级（最高 3 级）
         if ((cell.level || 0) < 3) {
@@ -339,7 +339,7 @@ Page({
       } else {
         const r = rentOf(cell); cash[role] -= r; cash[peer] += r;
         log.push('路过' + (names[cell.owner] || 'ta') + '的「' + cell.name + '」付 ' + r);
-        this.showEventCard('bad', '付过路费 ' + r);
+        this.showFx('bad', '付过路费 ' + r);
       }
     }
 
@@ -430,7 +430,7 @@ Page({
     ctx.fillStyle = '#fff8ec'; ctx.fillRect(cw, ch, W - 2 * cw, H - 2 * ch);
     ctx.fillStyle = '#b58a5a'; ctx.font = 'bold ' + Math.round(cs * 0.5) + 'px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     this.drawDiceCenter(ctx);
-    ctx.fillText('大富翁', W / 2, H / 2 + cs * 1.7);
+    ctx.fillText('大富翁', W / 2, H / 2 + cs * 2.3);
 
     const cells = this._cells || [];
     for (let i = 0; i < BOARD; i++) {
