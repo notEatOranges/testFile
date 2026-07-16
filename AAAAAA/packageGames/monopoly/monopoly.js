@@ -177,6 +177,7 @@ Page({
     const role = room.getRole();
     const s = this._state;
     this.setData({ rolling: true });
+    try {
     const final = 1 + Math.floor(Math.random() * 10);   // 单个 10 面骰
     await this.rollDiceAnim(final);                      // 棋盘中央 3D 翻滚
     const steps = final;
@@ -197,13 +198,14 @@ Page({
     log.push(this.data.myName + ' 掷出 ' + steps + (crossed ? '，过起点 +200' : ''));
 
     // 先写一次：棋子已移动 + 日志立即可见（携带 savings/loan）
-    this._state = Object.assign({}, s, { pos: Object.assign({}, s.pos, { [role]: to }), cash, savings, loan, dice: [a, b], log });
+    this._state = Object.assign({}, s, { pos: Object.assign({}, s.pos, { [role]: to }), cash, savings, loan, dice: final, log });
     rt.setState('monopoly', this._state);
 
     // 棋子滑行动画（沿环形），完成后结算
     await this.animateMove(role, from, to);
     await this.resolve(role, to, cash, log, s.turn);
-    this.setData({ rolling: false });
+    } catch (err) { console.error('[monopoly] roll err', err); toast('出错了，请重试'); }
+    finally { this.setData({ rolling: false }); }
   },
 
   animateMove(role, from, to) {
@@ -280,6 +282,7 @@ Page({
     const peer = role === 'boy' ? 'girl' : 'boy';
     let skip = Object.assign({}, this._state.skip || { boy: 0, girl: 0 });
     let pos = Object.assign({}, this._state.pos);
+    let loan = Object.assign({}, this._state.loan || { boy: 0, girl: 0 });
     let winner = null;
     let toIdx = idx;
 
@@ -299,11 +302,13 @@ Page({
       this.syncLog(cells, cash, log, pos, skip);
     } else if (cell.type === 'property') {
       if (!cell.owner) {
-        const buy = await new Promise(res => {
-          if (cash[role] < cell.price) { res(false); return; }
-          wx.showModal({ title: cell.name, content: '花 ' + cell.price + ' 买下？（过路费 ' + rentOf(cell) + '）', confirmText: '买下', cancelText: '不买', success: r => res(!!r.confirm) });
+        const afford = (cash[role] || 0) >= cell.price;
+        const choice = await new Promise(res => {
+          if (afford) wx.showModal({ title: cell.name, content: '花 ' + cell.price + ' 买下？（过路费 ' + rentOf(cell) + '）', confirmText: '买下', cancelText: '不买', success: r => res(r.confirm ? 'buy' : false) });
+          else { const short = cell.price - (cash[role] || 0), fee = Math.round(short * 0.1); wx.showModal({ title: cell.name, content: '现金不足，贷款 ' + (short + fee) + ' 买下？（过路费 ' + rentOf(cell) + '）', confirmText: '贷款买', cancelText: '不买', success: r => res(r.confirm ? 'loan' : false) }); }
         });
-        if (buy) { cash[role] -= cell.price; cells[idx] = Object.assign({}, cell, { owner: role }); log.push('买下「' + cell.name + '」-' + cell.price); this.showFx('good', '入手「' + cell.name + '」'); }
+        if (choice === 'buy') { cash[role] -= cell.price; cells[idx] = Object.assign({}, cell, { owner: role }); log.push('买下「' + cell.name + '」-' + cell.price); this.showFx('good', '入手「' + cell.name + '」'); }
+        else if (choice === 'loan') { const short = cell.price - (cash[role] || 0), fee = Math.round(short * 0.1); loan[role] = (loan[role] || 0) + short + fee; cash[role] = (cash[role] || 0) + short - cell.price; cells[idx] = Object.assign({}, cell, { owner: role }); log.push('贷款买下「' + cell.name + '」(欠款 +' + (short + fee) + ')'); this.showFx('good', '贷款入手「' + cell.name + '」'); }
       } else if (cell.owner === role) {
         // 自己的地：可升级（最高 3 级）
         if ((cell.level || 0) < 3) {
@@ -325,7 +330,7 @@ Page({
     if (toIdx !== idx) pos = Object.assign({}, pos, { [role]: toIdx });
     let nextRole = peer;
     if (!winner && (skip[peer] || 0) > 0) { skip[peer]--; nextRole = role; log.push((names[peer] || 'ta') + ' 停一回合'); }
-    rt.setState('monopoly', Object.assign({}, this._state, { cells: cells.map(c => Object.assign({}, c)), pos, cash, skip, turn: winner ? turn : rt.seatOf(nextRole), dice: this.data.dice, log: log.slice(-30), winner, req: null }));
+    rt.setState('monopoly', Object.assign({}, this._state, { cells: cells.map(c => Object.assign({}, c)), pos, cash, skip, loan, turn: winner ? turn : rt.seatOf(nextRole), dice: this.data.dice, log: log.slice(-30), winner, req: null }));
   },
 
   dismissCard() { this.setData({ card: null }); },
