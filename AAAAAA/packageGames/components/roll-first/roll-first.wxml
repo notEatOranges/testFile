@@ -1,0 +1,12 @@
+<view wx:if="{{open}}" class="rf-mask">
+  <view class="rf-box">
+    <block wx:if="{{!result}}">
+      <view class="rf-dice">{{face}}</view>
+      <view class="rf-tip">掷骰决定先手…</view>
+    </block>
+    <block wx:else>
+      <view class="rf-result">{{result === 'me' ? myName : peerName}} 先手</view>
+      <view class="rf-sub">{{result === 'me' ? '由你先行' : '由对方先行'}}</view>
+    </block>
+  </view>
+</view>

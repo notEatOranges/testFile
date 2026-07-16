@@ -164,10 +164,11 @@ Page({
     return new Promise(res => {
       if (!this.cv) { res(); return; }
       const target = to < from ? to + BOARD : to;
-      const t0 = Date.now(); const dur = 480;
+      const t0 = Date.now(); const dur = 520;
       const step = () => {
         const p = Math.min(1, (Date.now() - t0) / dur);
-        this._moving = { role, f: from + (target - from) * p };
+        const hop = Math.abs(Math.sin(p * Math.PI * 3)) * this.cs * 0.45;   // 跳动效果
+        this._moving = { role, f: from + (target - from) * p, hop };
         this.draw();
         if (p < 1) this._raf = this.cv.requestAnimationFrame(step);
         else { this._moving = null; this.draw(); res(); }
@@ -257,13 +258,26 @@ Page({
     const c = c0 + (c1 - c0) * fr, r = r0 + (r1 - r0) * fr;
     return [this.ox + c * this.cs + this.cs / 2, this.oy + r * this.cs + this.cs * 0.58];
   },
-  drawToken(ctx, f, color, label) {
-    const [x, y] = this.tokenXY(f);
-    const rad = this.cs * 0.2;
-    ctx.fillStyle = color; ctx.beginPath(); ctx.arc(x, y, rad, 0, 7); ctx.fill();
-    ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.stroke();
-    ctx.fillStyle = '#fff'; ctx.font = 'bold ' + Math.round(rad * 1.1) + 'px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText(label, x, y);
+  drawToken(ctx, f, color, kind, hop) {
+    hop = hop || 0;
+    const [x, y0] = this.tokenXY(f);
+    const y = y0 - hop;
+    const s = this.cs * 0.22;
+    ctx.save();
+    ctx.shadowColor = 'rgba(0,0,0,.25)'; ctx.shadowBlur = 4; ctx.shadowOffsetY = 2;
+    ctx.fillStyle = color; ctx.strokeStyle = '#fff'; ctx.lineWidth = 2;
+    if (kind === 'heart') {
+      ctx.beginPath();
+      ctx.moveTo(x, y + s * 0.85);
+      ctx.bezierCurveTo(x - s * 1.3, y + s * 0.15, x - s * 0.6, y - s * 0.9, x, y - s * 0.25);
+      ctx.bezierCurveTo(x + s * 0.6, y - s * 0.9, x + s * 1.3, y + s * 0.15, x, y + s * 0.85);
+      ctx.fill(); ctx.stroke();
+    } else {
+      ctx.beginPath();
+      for (let i = 0; i < 10; i++) { const ang = -Math.PI / 2 + i * Math.PI / 5; const rr = i % 2 === 0 ? s : s * 0.45; const px = x + Math.cos(ang) * rr, py = y + Math.sin(ang) * rr; if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py); }
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+    }
+    ctx.restore();
   },
 
   draw() {
@@ -300,12 +314,12 @@ Page({
     if (this.data.started) {
       const myC = this.data.mySeat === 'red' ? '#e85a86' : '#3a86ff';
       const peC = this.data.mySeat === 'red' ? '#3a86ff' : '#e85a86';
-      const myLabel = (this.data.myName || '我').slice(0, 1);
-      const peLabel = (this.data.peerName || 'T').slice(0, 1);
+      const myKind = this.data.mySeat === 'red' ? 'heart' : 'star';
+      const peKind = this.data.mySeat === 'red' ? 'star' : 'heart';
       const moving = this._moving;
-      if (moving && moving.role === room.getRole()) { this.drawToken(ctx, moving.f, myC, myLabel); this.drawToken(ctx, this.data.peerPos, peC, peLabel); }
-      else if (moving && moving.role !== room.getRole()) { this.drawToken(ctx, this.data.myPos, myC, myLabel); this.drawToken(ctx, moving.f, peC, peLabel); }
-      else { this.drawToken(ctx, this.data.myPos, myC, myLabel); this.drawToken(ctx, this.data.peerPos, peC, peLabel); }
+      if (moving && moving.role === room.getRole()) { this.drawToken(ctx, moving.f, myC, myKind, moving.hop); this.drawToken(ctx, this.data.peerPos, peC, peKind, 0); }
+      else if (moving && moving.role !== room.getRole()) { this.drawToken(ctx, this.data.myPos, myC, myKind, 0); this.drawToken(ctx, moving.f, peC, peKind, moving.hop); }
+      else { this.drawToken(ctx, this.data.myPos, myC, myKind, 0); this.drawToken(ctx, this.data.peerPos, peC, peKind, 0); }
     }
   },
   wrapText(ctx, text, x, y, maxW, lh) {

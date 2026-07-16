@@ -87,12 +87,14 @@ function hasLegalMove(board, side) {
   for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) { const p = board[r][c]; if (p && p.side === side && legalMoves(board, r, c).length) return true; }
   return false;
 }
+const wait = ms => new Promise(r => setTimeout(r, ms));
 
 Page({
   data: {
     theme: 'sakura', role: 'boy', peer: 'girl', myName: '我', myAvatar: '', peerName: 'ta', peerAvatar: '',
     started: false, mySeat: 'red', myColor: 'red', myTurn: false,
-    sel: null, targets: {}, last: null, winner: null, winnerText: '', requestPending: false, rulesOpen: false
+    sel: null, targets: {}, last: null, winner: null, winnerText: '', requestPending: false, rulesOpen: false,
+    rollFirst: { open: false, result: '' }
   },
 
   onLoad() {
@@ -111,8 +113,17 @@ Page({
   },
   onUnload() { rt.teardown(this); ident.teardown(this); },
 
-  fresh() { return { board: initial(), turn: 'red', winner: null, req: null }; },
-  startMatch() { this._recorded = false; rt.setState('xiangqi', this.fresh()); },
+  fresh(first) { return { board: initial(), turn: first || (Math.random() < 0.5 ? 'red' : 'black'), winner: null, req: null }; },
+  async startMatch() {
+    this._recorded = false;
+    const first = Math.random() < 0.5 ? 'red' : 'black';
+    this.setData({ rollFirst: { open: true, result: '' } });
+    await wait(820);
+    this.setData({ rollFirst: { open: true, result: first === this.data.myColor ? 'me' : 'peer' } });
+    await wait(950);
+    this.setData({ rollFirst: { open: false, result: '' } });
+    rt.setState('xiangqi', this.fresh(first));
+  },
   requestRestart() { rt.requestRestart('xiangqi', this._state, room.getRole(), !!this.data.winner, () => this.fresh()); },
   cancelReq() { rt.cancelRestart('xiangqi', this._state); },
   resign() {
@@ -131,8 +142,10 @@ Page({
       const ctx = cv.getContext('2d'); ctx.scale(dpr, dpr);
       this.ctx = ctx; this.W = w; this.H = h;
       this.rect = { left: f.left, top: f.top };
-      // 9 列 × 10 行交点；按宽高算步长与原点
-      this.stepX = (w - 24) / 8; this.stepY = (h - 24) / 9; this.ox = 12; this.oy = 12;
+      // 按棋子半径留边距，确保最外圈棋子不被裁切
+      const rad0 = Math.min(w / 8, h / 9) * 0.42;
+      this.ox = rad0 + 8; this.oy = rad0 + 8;
+      this.stepX = (w - this.ox * 2) / 8; this.stepY = (h - this.oy * 2) / 9;
       this.applyState();
     });
   },
@@ -164,7 +177,8 @@ Page({
   },
 
   onBoardTap(e) {
-    if (!this.data.myTurn || this.data.winner) return;
+    if (this.data.winner) return;
+    if (!this.data.myTurn) return toast(this.data.started ? '等 ' + this.data.peerName + ' 走' : '先开始对局');
     const t = e.changedTouches && e.changedTouches[0]; if (!t) return;
     const x = (t.x != null ? t.x : t.clientX - this.rect.left), y = (t.y != null ? t.y : t.clientY - this.rect.top);
     const c = Math.round((x - this.ox) / this.stepX), r = Math.round((y - this.oy) / this.stepY);

@@ -1,0 +1,8 @@
+.rf-mask { position: fixed; inset: 0; z-index: 350; background: rgba(0,0,0,.55); display: flex; align-items: center; justify-content: center; }
+.rf-box { display: flex; flex-direction: column; align-items: center; gap: 22rpx; }
+.rf-dice { width: 150rpx; height: 150rpx; border-radius: 26rpx; background: #fff; color: var(--primary-deep, #e85a86); font-size: 86rpx; font-weight: 800; display: flex; align-items: center; justify-content: center; box-shadow: 0 10rpx 30rpx rgba(0,0,0,.3); animation: rfRoll .22s linear infinite; }
+@keyframes rfRoll { 0% { transform: rotate(0) scale(.92); } 50% { transform: rotate(180deg) scale(1.06); } 100% { transform: rotate(360deg) scale(.92); } }
+.rf-tip { color: rgba(255,255,255,.9); font-size: 28rpx; }
+.rf-result { color: #fff; font-size: 48rpx; font-weight: 800; animation: rfPop .35s ease; }
+.rf-sub { color: rgba(255,255,255,.85); font-size: 28rpx; }
+@keyframes rfPop { from { transform: scale(.6); opacity: 0; } to { transform: scale(1); opacity: 1; } }

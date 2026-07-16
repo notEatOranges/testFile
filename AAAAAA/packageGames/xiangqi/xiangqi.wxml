@@ -25,4 +25,5 @@
   </view>
 
   <game-rules game-key="xiangqi" open="{{rulesOpen}}" bind:close="closeRules" />
+  <roll-first open="{{rollFirst.open}}" result="{{rollFirst.result}}" my-name="{{myName}}" peer-name="{{peerName}}" />
 </view>
