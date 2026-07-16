@@ -1,0 +1,35 @@
+<view class="theme-{{theme}} love-page bq-page">
+
+  <view class="bq-bar">
+    <view class="bq-side"><text class="muted small">你</text><text class="bq-color {{myColor === 'red' ? 'red' : (myColor === 'black' ? 'black' : '')}}">{{myColor === 'red' ? '红方' : (myColor === 'black' ? '黑方' : '未定')}}</text></view>
+    <view class="bq-turn">{{winner ? winnerText : (started ? (myTurn ? '你的回合' : '等 ' + peerName) : '未开局')}}</view>
+    <view class="bq-side"><text class="muted small">{{peerName}}</text></view>
+  </view>
+
+  <view wx:if="{{requestPending}}" class="bq-pending">已请求重新开局，等 {{peerName}} 同意… <text class="bq-link" bindtap="cancelReq">取消</text></view>
+
+  <view wx:if="{{started}}" class="bq-board">
+    <view wx:for="{{view}}" wx:key="c" class="bq-cell {{item.empty ? 'empty' : ''}} {{item.up ? 'up' : 'down'}} {{item.side}}"
+          data-r="{{item.r}}" data-c="{{item.c}}" bindtap="onCellTap"
+          style="{{sel && sel.r === item.r && sel.c === item.c ? 'box-shadow:0 0 0 4rpx var(--primary);' : ''}} {{targets[item.r + '_' + item.c] ? 'background:rgba(46,194,78,.18);' : ''}}">
+      <block wx:if="{{!item.empty}}">
+        <block wx:if="{{item.up}}"><text class="bq-name">{{item.name}}</text></block>
+        <block wx:else><view class="bq-back"><t-icon name="heart-filled" size="32rpx" /></view></block>
+      </block>
+    </view>
+  </view>
+
+  <view wx:else class="bq-empty">
+    <view class="be-text">中国暗棋 · 翻翻棋</view>
+    <view class="be-btn" bindtap="startMatch">开始对局</view>
+    <view class="muted small">先翻一张定红黑，再翻面/走子/吃子</view>
+  </view>
+
+  <view class="bq-actions">
+    <t-button theme="default" size="small" bind:tap="openRules" icon="info-circle">玩法</t-button>
+    <t-button wx:if="{{started}}" theme="default" size="small" bind:tap="resign">认输</t-button>
+    <t-button theme="primary" size="small" bind:tap="requestRestart">{{winner ? '再来一局' : (started ? '重新开局' : '开始对局')}}</t-button>
+  </view>
+
+  <game-rules game-key="banqi" open="{{rulesOpen}}" bind:close="closeRules" />
+</view>

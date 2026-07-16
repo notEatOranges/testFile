@@ -11,7 +11,8 @@ const GAMES = [
   { key: 'gomoku', label: '五子棋', kind: 'pvp' },
   { key: 'memory', label: '记忆翻牌', kind: 'pvp' },
   { key: 'othello', label: '黑白棋', kind: 'pvp' },
-  { key: 'monopoly', label: '大富翁', kind: 'pvp' }
+  { key: 'monopoly', label: '大富翁', kind: 'pvp' },
+  { key: 'banqi', label: '翻翻棋', kind: 'pvp' }
 ];
 
 function fmt(ts) {

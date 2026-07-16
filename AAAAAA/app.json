@@ -29,6 +29,7 @@
         "memory/memory",
         "othello/othello",
         "monopoly/monopoly",
+        "banqi/banqi",
         "leaderboard/leaderboard"
       ]
     }
