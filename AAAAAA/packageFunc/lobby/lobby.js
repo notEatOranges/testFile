@@ -12,7 +12,8 @@ Page({
       { key: 'memory', name: '记忆翻牌', desc: '翻牌配对·比记性', icon: 'heart' },
       { key: 'othello', name: '黑白棋', desc: '夹住翻转·比子数', icon: 'user' },
       { key: 'monopoly', name: '大富翁', desc: '买地收租·机会卡', icon: 'shop' },
-      { key: 'banqi', name: '翻翻棋', desc: '暗棋·翻面吃子', icon: 'gift' }
+      { key: 'banqi', name: '翻翻棋', desc: '暗棋·翻面吃子', icon: 'gift' },
+      { key: 'xiangqi', name: '象棋', desc: '完整规则·将军将死', icon: 'dashboard' }
     ]
   },
 

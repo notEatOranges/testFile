@@ -1,0 +1,28 @@
+<view class="theme-{{theme}} love-page xq-page">
+
+  <view class="xq-bar">
+    <text class="xq-side {{myColor}}">{{myColor === 'red' ? '红方' : '黑方'}} · {{myName}}</text>
+    <text wx:if="{{winner}}" class="xq-result">{{winnerText}}</text>
+    <text wx:elif="{{started}}" class="xq-turn">{{myTurn ? '该你走' : '等 ' + peerName}}</text>
+    <text class="xq-side {{myColor === 'red' ? 'black' : 'red'}}">{{peerName}}</text>
+  </view>
+
+  <view wx:if="{{requestPending}}" class="xq-pending">已请求重新开局，等 {{peerName}} 同意 <text class="xq-link" bindtap="cancelReq">取消</text></view>
+
+  <view class="xq-board-wrap">
+    <canvas wx:if="{{!rulesOpen}}" type="2d" id="board" class="xq-board" bindtouchend="onBoardTap"></canvas>
+    <view wx:if="{{!started}}" class="xq-empty">
+      <view class="xq-title">中国象棋</view>
+      <view class="xq-start" bindtap="startMatch">开始对局</view>
+      <view class="muted small">红先，将死对方或将帅即胜</view>
+    </view>
+  </view>
+
+  <view class="xq-actions">
+    <t-button theme="default" size="small" bind:tap="openRules" icon="info-circle">玩法</t-button>
+    <t-button wx:if="{{started}}" theme="default" size="small" bind:tap="resign">认输</t-button>
+    <t-button theme="primary" size="small" bind:tap="requestRestart">{{winner ? '再来一局' : (started ? '重新开局' : '开始对局')}}</t-button>
+  </view>
+
+  <game-rules game-key="xiangqi" open="{{rulesOpen}}" bind:close="closeRules" />
+</view>

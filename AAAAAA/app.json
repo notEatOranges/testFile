@@ -30,6 +30,7 @@
         "othello/othello",
         "monopoly/monopoly",
         "banqi/banqi",
+        "xiangqi/xiangqi",
         "leaderboard/leaderboard"
       ]
     }

@@ -1,0 +1,18 @@
+.xq-page { display: flex; flex-direction: column; align-items: center; padding-top: 18rpx; padding-bottom: calc(40rpx + env(safe-area-inset-bottom)); }
+
+.xq-bar { display: flex; align-items: center; justify-content: space-between; width: 90vw; margin-bottom: 12rpx; gap: 16rpx; }
+.xq-side { font-size: 26rpx; font-weight: 600; }
+.xq-side.red { color: #c0392b; }
+.xq-side.black { color: #2c2c2c; }
+.xq-result { font-size: 30rpx; font-weight: 800; color: var(--primary-deep); }
+.xq-turn { font-size: 26rpx; color: var(--text-soft); }
+.xq-pending { font-size: 24rpx; color: var(--primary-deep); margin-bottom: 8rpx; }
+.xq-link { color: var(--text-soft); padding: 0 8rpx; }
+
+.xq-board-wrap { position: relative; }
+.xq-board { width: 84vw; height: 93vw; max-width: 600rpx; max-height: 665rpx; border-radius: 12rpx; box-shadow: 0 8rpx 30rpx var(--card-shadow); }
+.xq-empty { position: absolute; inset: 0; border-radius: 12rpx; background: rgba(241,226,189,.95); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14rpx; }
+.xq-title { font-size: 46rpx; font-weight: 800; color: #7a5c3a; }
+.xq-start { padding: 16rpx 56rpx; border-radius: 36rpx; background: #c0392b; color: #fff; font-size: 30rpx; }
+
+.xq-actions { display: flex; gap: 16rpx; margin-top: 24rpx; flex-wrap: wrap; justify-content: center; }

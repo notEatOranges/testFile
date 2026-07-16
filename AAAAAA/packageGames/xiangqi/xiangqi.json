@@ -1,0 +1,9 @@
+{
+  "navigationStyle": "default",
+  "navigationBarTitleText": "象棋",
+  "navigationBarBackgroundColor": "#fff5f7",
+  "navigationBarTextStyle": "black",
+  "usingComponents": {
+    "game-rules": "../components/game-rules/game-rules"
+  }
+}
