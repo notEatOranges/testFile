@@ -23,8 +23,15 @@
   <view wx:elif="{{started}}" class="mp-turn">{{myTurn ? '该你掷骰' : '等 ' + peerName + ' 掷骰'}}</view>
   <view wx:if="{{requestPending}}" class="mp-pending">已请求重开，等 {{peerName}} 同意 <text class="mp-link" bindtap="cancelReq">取消</text></view>
 
-  <view class="mp-log">
-    <view wx:for="{{log}}" wx:key="index" class="mp-log-item">· {{item}}</view>
+  <scroll-view scroll-y class="mp-log" enhanced show-scrollbar="{{false}}">
+    <view wx:for="{{log}}" wx:key="index" class="mp-log-item {{index === 0 ? 'new' : ''}}">· {{item}}</view>
+    <view wx:if="{{!log.length}}" class="muted small">掷骰后这里显示事件</view>
+  </scroll-view>
+
+  <!-- 事件好/坏特效 -->
+  <view wx:if="{{fx}}" class="mp-fx {{fx.kind}}">
+    <view class="mp-fx-text">{{fx.kind === 'good' ? '好事！' : '糟了…'}}</view>
+    <view class="mp-fx-sub">{{fx.text}}</view>
   </view>
 
   <view class="mp-actions">

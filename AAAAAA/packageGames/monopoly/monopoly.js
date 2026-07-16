@@ -1,6 +1,6 @@
 // monopoly —— 大富翁（功能8，双人联机，竖屏）
-// 28 格环形棋盘(8×8 外圈)，6 色组地块/机会/突发事件/缴税/监狱/奖金/车站。
-// 掷骰(翻转动画)→移动→结算(抽牌有洗牌+翻牌动画)→破产判负。
+// 28 格环形棋盘。掷骰(翻转动画)→棋子滑行动画→结算→事件好/坏特效。
+// 地块 6 色组(等级递增) + 可升级(提高过路费) + 机会/突发事件/缴税/监狱/奖金/车站。
 // 状态 games/monopoly/state = { cells, pos:{boy,girl}, cash:{boy,girl}, skip:{boy,girl}, turn, dice, log, winner, req, ts }
 const user = require('@utils/user.js');
 const room = require('@utils/room.js');
@@ -20,7 +20,7 @@ const DECK = [
 const GROUP_COLOR = ['#9b7fd4', '#3a86ff', '#06d6a0', '#ffb703', '#e85a86', '#fb8500'];
 
 function buildCells() {
-  const prop = (name, g) => ({ name, type: 'property', group: g, price: 80 + g * 60, rent: 40 + g * 30, owner: null });
+  const prop = (name, g) => ({ name, type: 'property', group: g, price: 80 + g * 60, rent: 40 + g * 30, owner: null, level: 0 });
   return [
     { name: '起点', type: 'start' }, prop('棉花糖摊', 0), prop('奶茶店', 0), { name: '机会', type: 'card', kind: 'chance' },
     prop('电影院', 1), { name: '缴税', type: 'tax', amt: 100 }, prop('咖啡馆', 1), prop('书店', 1),
@@ -37,14 +37,16 @@ function cellCR(i) {
   if (i <= 21) return [21 - i, 0];
   return [0, i - 21];
 }
+function rentOf(cell) { return cell.rent * (1 + (cell.level || 0)); }
+function upgradeCost(cell) { return Math.round(cell.price * 0.5); }
 
 Page({
   data: {
     theme: 'sakura', role: 'boy', peer: 'girl', myName: '我', myAvatar: '', peerName: 'ta', peerAvatar: '',
     started: false, turnSeat: 'red', mySeat: 'red', myTurn: false,
     dice: [1, 1], diceAnim: false, log: [], myCash: START_CASH, peerCash: START_CASH, myPos: 0, peerPos: 0,
-    ownerMap: [], winner: null, winnerText: '', rolling: false, requestPending: false, rulesOpen: false,
-    card: null   // 抽牌动画：{drawing, text}
+    winner: null, winnerText: '', rolling: false, requestPending: false, rulesOpen: false,
+    card: null, fx: null   // fx: {kind:'good'|'bad', text} 事件特效
   },
 
   onLoad() {
@@ -60,7 +62,7 @@ Page({
     this._bound = true;
     rt.bind(this, 'monopoly', s => { this._state = s; this.applyState(); });
   },
-  onUnload() { rt.teardown(this); ident.teardown(this); if (this._diceTimer) clearInterval(this._diceTimer); },
+  onUnload() { rt.teardown(this); ident.teardown(this); if (this._diceTimer) clearInterval(this._diceTimer); if (this._raf && this.cv) this.cv.cancelAnimationFrame(this._raf); },
 
   fresh() {
     return { cells: buildCells(), pos: { boy: 0, girl: 0 }, cash: { boy: START_CASH, girl: START_CASH }, skip: { boy: 0, girl: 0 }, turn: rt.RED, dice: [1, 1], log: [], winner: null, req: null };
@@ -82,10 +84,9 @@ Page({
       const cv = f.node, w = f.width, h = f.height;
       cv.width = w * dpr; cv.height = h * dpr;
       const ctx = cv.getContext('2d'); ctx.scale(dpr, dpr);
-      this.ctx = ctx; this.W = w; this.H = h;
-      this.cs = Math.min(w, h) / 8;            // 8×8 棋盘，按短边缩放并居中
-      this.ox = (w - 8 * this.cs) / 2;
-      this.oy = (h - 8 * this.cs) / 2;
+      this.ctx = ctx; this.cv = cv; this.W = w; this.H = h;
+      this.cs = Math.min(w, h) / 8;
+      this.ox = (w - 8 * this.cs) / 2; this.oy = (h - 8 * this.cs) / 2;
       this.applyState();
     });
   },
@@ -107,28 +108,29 @@ Page({
     this._cells = s.cells;
     const winner = s.winner || null;
     const turnSeat = s.turn || rt.RED;
-    const ownerMap = s.cells.map(c => (c && c.type === 'property') ? (c.owner || '') : '');
     let winnerText = '';
     if (winner === 'draw') winnerText = '平局';
     else if (winner) winnerText = (names[rt.seatRole(winner)] || '对方') + ' 获胜';
     if (winner && !this._recorded) { this._recorded = true; rt.recordPvp('monopoly', rt.myResult(winner, this.data.mySeat), role); }
     Object.assign(patch, {
       started: true, turnSeat, myTurn: !winner && turnSeat === this.data.mySeat,
-      dice: s.dice || [1, 1], log: (s.log || []).slice(-7),
+      dice: s.dice || [1, 1],
+      log: (s.log || []).slice(-30).reverse(),   // 最新在前，便于滚动查看
       myCash: (s.cash && s.cash[role]) || 0, peerCash: (s.cash && s.cash[peer]) || 0,
       myPos: (s.pos && s.pos[role]) || 0, peerPos: (s.pos && s.pos[peer]) || 0,
-      ownerMap, winner, winnerText
+      winner, winnerText
     });
     this.setData(patch);
     this.draw();
   },
+
+  showFx(kind, text) { this.setData({ fx: { kind, text } }); setTimeout(() => { if (this.data.fx) this.setData({ fx: null }); }, 1300); },
 
   async roll() {
     if (!this.data.myTurn || this.data.winner || this.data.rolling) return;
     const role = room.getRole();
     const s = this._state;
     this.setData({ rolling: true, diceAnim: true });
-    // 骰子翻转动画
     let ticks = 0;
     await new Promise(res => {
       this._diceTimer = setInterval(() => {
@@ -147,10 +149,31 @@ Page({
     if (crossed) cash[role] = (cash[role] || 0) + 200;
     const log = (s.log || []).slice();
     log.push((role === 'boy' ? this.data.myName : this.data.myName) + ' 掷出 ' + steps + (crossed ? '，过起点 +200' : ''));
+
+    // 先写一次：棋子已移动 + 日志立即可见
     this._state = Object.assign({}, s, { pos: Object.assign({}, s.pos, { [role]: to }), cash, dice: [a, b], log });
-    this.applyState();
+    rt.setState('monopoly', this._state);
+
+    // 棋子滑行动画（沿环形），完成后结算
+    await this.animateMove(role, from, to);
     await this.resolve(role, to, cash, log, s.turn);
     this.setData({ rolling: false });
+  },
+
+  animateMove(role, from, to) {
+    return new Promise(res => {
+      if (!this.cv) { res(); return; }
+      const target = to < from ? to + BOARD : to;
+      const t0 = Date.now(); const dur = 480;
+      const step = () => {
+        const p = Math.min(1, (Date.now() - t0) / dur);
+        this._moving = { role, f: from + (target - from) * p };
+        this.draw();
+        if (p < 1) this._raf = this.cv.requestAnimationFrame(step);
+        else { this._moving = null; this.draw(); res(); }
+      };
+      this._raf = this.cv.requestAnimationFrame(step);
+    });
   },
 
   drawCard() {
@@ -159,71 +182,101 @@ Page({
       setTimeout(() => {
         const c = DECK[Math.floor(Math.random() * DECK.length)];
         this.setData({ card: { drawing: false, text: c.t } });
-        setTimeout(() => { this.setData({ card: null }); }, 1600);
+        this.showFx(c.cash != null ? (c.cash > 0 ? 'good' : 'bad') : (c.skip ? 'bad' : 'good'), c.t);
+        setTimeout(() => { this.setData({ card: null }); }, 1500);
         res(c);
       }, 650);
     });
   },
 
+  // 写一次中间态（让事件日志及时同步给双方）
+  syncLog(cells, cash, log, pos, skip, extra) {
+    this._state = Object.assign({}, this._state, { cells: cells.map(c => Object.assign({}, c)), cash: Object.assign({}, cash), pos: Object.assign({}, pos), skip: Object.assign({}, skip), log: log.slice(-30) }, extra || {});
+    rt.setState('monopoly', this._state);
+  },
+
   async resolve(role, idx, cash, log, turn) {
-    const cells = this._cells;
+    const cells = this._cells.map(c => Object.assign({}, c));
     const cell = cells[idx];
     const names = { boy: this.data.myName, girl: this.data.peerName };
     const peer = role === 'boy' ? 'girl' : 'boy';
     let skip = Object.assign({}, this._state.skip || { boy: 0, girl: 0 });
+    let pos = Object.assign({}, this._state.pos);
     let winner = null;
     let toIdx = idx;
 
     if (cell.type === 'start') { cash[role] += 100; log.push('到达起点 +100'); }
-    else if (cell.type === 'tax') { cash[role] -= cell.amt; log.push((cell.name) + ' -' + cell.amt); }
-    else if (cell.type === 'bonus') { cash[role] += cell.amt; log.push(cell.name + ' +' + cell.amt); }
-    else if (cell.type === 'jail') { skip[role] = (skip[role] || 0) + 1; log.push('进了监狱，下回合停留一次'); }
+    else if (cell.type === 'tax') { cash[role] -= cell.amt; log.push(cell.name + ' -' + cell.amt); this.showFx('bad', '缴税 -' + cell.amt); }
+    else if (cell.type === 'bonus') { cash[role] += cell.amt; log.push(cell.name + ' +' + cell.amt); this.showFx('good', cell.name + ' +' + cell.amt); }
+    else if (cell.type === 'jail') { skip[role] = (skip[role] || 0) + 1; log.push('进了监狱，下回合停留'); this.showFx('bad', '进监狱，停一回合'); }
     else if (cell.type === 'card') {
       const card = await this.drawCard();
       log.push((cell.kind === 'fate' ? '突发事件：' : '机会：') + card.t);
       if (card.cash) cash[role] = (cash[role] || 0) + card.cash;
       if (card.to === 0) { cash[role] += 200; toIdx = 0; log.push('回到起点 +200'); }
       if (card.skip) skip[role] = (skip[role] || 0) + 1;
-      // 若被牌移到起点，再结算起点格
-      if (toIdx !== idx && cells[toIdx].type === 'start') cash[role] += 100;
+      this.syncLog(cells, cash, log, pos, skip);
     } else if (cell.type === 'property') {
       if (!cell.owner) {
         const buy = await new Promise(res => {
           if (cash[role] < cell.price) { res(false); return; }
-          wx.showModal({ title: cell.name, content: '花 ' + cell.price + ' 买下？（过路费 ' + cell.rent + '）', confirmText: '买下', cancelText: '不买', success: r => res(!!r.confirm) });
+          wx.showModal({ title: cell.name, content: '花 ' + cell.price + ' 买下？（过路费 ' + rentOf(cell) + '）', confirmText: '买下', cancelText: '不买', success: r => res(!!r.confirm) });
         });
-        if (buy) { cash[role] -= cell.price; cells[idx] = Object.assign({}, cell, { owner: role }); log.push('买下「' + cell.name + '」-' + cell.price); }
+        if (buy) { cash[role] -= cell.price; cells[idx] = Object.assign({}, cell, { owner: role }); log.push('买下「' + cell.name + '」-' + cell.price); this.showFx('good', '入手「' + cell.name + '」'); }
       } else if (cell.owner === role) {
-        log.push('回到自己的「' + cell.name + '」');
+        // 自己的地：可升级（最高 3 级）
+        if ((cell.level || 0) < 3) {
+          const up = await new Promise(res => {
+            const cost = upgradeCost(cell);
+            if (cash[role] < cost) { res(false); return; }
+            wx.showModal({ title: '升级「' + cell.name + '」', content: '升到 ' + ((cell.level || 0) + 2) + ' 级？花 ' + cost + '（过路费变 ' + (rentOf(cell) + cell.rent) + '）', confirmText: '升级', cancelText: '不了', success: r => res(!!r.confirm) });
+          });
+          if (up) { cash[role] -= upgradeCost(cell); cells[idx] = Object.assign({}, cell, { level: (cell.level || 0) + 1 }); log.push('升级「' + cell.name + '」到 ' + (cells[idx].level + 1) + ' 级'); this.showFx('good', '升级！过路费上涨'); }
+        } else { log.push('回到满级「' + cell.name + '」'); }
       } else {
-        cash[role] -= cell.rent; cash[peer] += cell.rent;
-        log.push('路过' + (names[cell.owner] || 'ta') + '的「' + cell.name + '」付 ' + cell.rent);
+        const r = rentOf(cell); cash[role] -= r; cash[peer] += r;
+        log.push('路过' + (names[cell.owner] || 'ta') + '的「' + cell.name + '」付 ' + r);
+        this.showFx('bad', '付过路费 ' + r);
       }
     }
 
     if (cash[role] < 0) { winner = role === 'boy' ? rt.BLUE : rt.RED; log.push((names[role] || 'ta') + ' 破产了！'); }
-    // 计算下一回合（含跳过）
+    if (toIdx !== idx) pos = Object.assign({}, pos, { [role]: toIdx });
     let nextRole = peer;
     if (!winner && (skip[peer] || 0) > 0) { skip[peer]--; nextRole = role; log.push((names[peer] || 'ta') + ' 停一回合'); }
-    const pos = Object.assign({}, this._state.pos, { [role]: toIdx });
-    rt.setState('monopoly', { cells: cells.map(c => Object.assign({}, c)), pos, cash, skip, turn: winner ? turn : rt.seatOf(nextRole), dice: this.data.dice, log: log.slice(-14), winner, req: null });
+    rt.setState('monopoly', { cells: cells.map(c => Object.assign({}, c)), pos, cash, skip, turn: winner ? turn : rt.seatOf(nextRole), dice: this.data.dice, log: log.slice(-30), winner, req: null });
   },
 
   dismissCard() { this.setData({ card: null }); },
   openRules() { this.setData({ rulesOpen: true }); },
   closeRules() { this.setData({ rulesOpen: false }); setTimeout(() => this.setupCanvas(), 60); },
 
+  tokenXY(f) {
+    const i0 = Math.floor(f) % BOARD, i1 = (i0 + 1) % BOARD, fr = f - Math.floor(f);
+    const [c0, r0] = cellCR(i0), [c1, r1] = cellCR(i1);
+    const c = c0 + (c1 - c0) * fr, r = r0 + (r1 - r0) * fr;
+    return [this.ox + c * this.cs + this.cs / 2, this.oy + r * this.cs + this.cs * 0.58];
+  },
+  drawToken(ctx, f, color, label) {
+    const [x, y] = this.tokenXY(f);
+    const rad = this.cs * 0.2;
+    ctx.fillStyle = color; ctx.beginPath(); ctx.arc(x, y, rad, 0, 7); ctx.fill();
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.stroke();
+    ctx.fillStyle = '#fff'; ctx.font = 'bold ' + Math.round(rad * 1.1) + 'px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(label, x, y);
+  },
+
   draw() {
     if (!this.ctx) return;
-    const ctx = this.ctx, W = this.W, H = this.H, cs = this.cs, ox = this.ox || 0, oy = this.oy || 0;
+    const ctx = this.ctx, W = this.W, H = this.H, cs = this.cs, ox = this.ox, oy = this.oy;
     ctx.clearRect(0, 0, W, H);
     ctx.fillStyle = '#f3e9d2'; ctx.fillRect(ox, oy, cs * 8, cs * 8);
     ctx.fillStyle = '#fff8ec'; ctx.fillRect(ox + cs, oy + cs, cs * 6, cs * 6);
-    ctx.fillStyle = '#b58a5a'; ctx.font = 'bold ' + Math.round(cs * 0.5) + 'px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText('大富翁', ox + cs * 4, oy + cs * 4 - cs * 0.35);
-    ctx.font = Math.round(cs * 0.24) + 'px sans-serif'; ctx.fillStyle = '#9a7a52';
+    ctx.fillStyle = '#b58a5a'; ctx.font = 'bold ' + Math.round(cs * 0.46) + 'px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('大富翁', ox + cs * 4, oy + cs * 3.7);
+    ctx.font = Math.round(cs * 0.22) + 'px sans-serif'; ctx.fillStyle = '#9a7a52';
     const dn = this.data.dice;
-    ctx.fillText('骰 ' + dn[0] + ' + ' + dn[1] + ' = ' + (dn[0] + dn[1]), ox + cs * 4, oy + cs * 4 + cs * 0.25);
+    ctx.fillText('骰 ' + dn[0] + '+' + dn[1] + '=' + (dn[0] + dn[1]), ox + cs * 4, oy + cs * 4.4);
 
     const cells = this._cells || [];
     for (let i = 0; i < BOARD; i++) {
@@ -231,21 +284,28 @@ Page({
       const x = ox + c * cs, y = oy + r * cs;
       const cell = cells[i] || {};
       ctx.strokeStyle = '#cdb088'; ctx.lineWidth = 1; ctx.strokeRect(x, y, cs, cs);
-      if (cell.type === 'property') { ctx.fillStyle = GROUP_COLOR[cell.group] || '#999'; ctx.fillRect(x, y, cs, 7); if (cell.owner) { ctx.fillStyle = cell.owner === 'boy' ? '#e85a86' : '#3a86ff'; ctx.fillRect(x, y + cs - 7, cs, 7); } }
-      const cmap = { start: '#3aa75c', card: '#e8b94d', tax: '#e85a86', jail: '#7a5c3a', bonus: '#3a86ff', property: '#7a5c3a' };
-      ctx.fillStyle = cmap[cell.type] || '#7a5c3a';
+      if (cell.type === 'property') {
+        ctx.fillStyle = GROUP_COLOR[cell.group] || '#999'; ctx.fillRect(x, y, cs, 9);          // 顶部色组条
+        if (cell.owner) { ctx.fillStyle = cell.owner === 'boy' ? '#e85a86' : '#3a86ff'; ctx.fillRect(x, y + cs - 11, cs, 11); }  // 底部归属条
+        // 等级星
+        ctx.fillStyle = '#fff'; ctx.font = Math.round(cs * 0.22) + 'px sans-serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+        if (cell.level) { let star = ''; for (let k = 0; k < cell.level; k++) star += '★'; ctx.fillText(star, x + 3, y + cs - 6); }
+      }
+      const cmap = { start: '#3aa75c', card: '#e8b94d', tax: '#e85a86', jail: '#7a5c3a', bonus: '#3a86ff', property: '#5a4030' };
+      ctx.fillStyle = cmap[cell.type] || '#5a4030';
       ctx.font = Math.round(cs * 0.2) + 'px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
-      this.wrapText(ctx, cell.name || '', x + cs / 2, y + (cell.type === 'property' ? 12 : 4), cs - 4, cs * 0.22);
+      this.wrapText(ctx, cell.name || '', x + cs / 2, y + (cell.type === 'property' ? 13 : 5), cs - 4, cs * 0.22);
     }
-    const drawTok = (pos, color, off) => {
-      const [c, r] = cellCR(pos);
-      ctx.fillStyle = color; ctx.beginPath(); ctx.arc(ox + c * cs + cs / 2 + off, oy + r * cs + cs * 0.62, cs * 0.12, 0, 7); ctx.fill();
-      ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
-    };
+
     if (this.data.started) {
       const myC = this.data.mySeat === 'red' ? '#e85a86' : '#3a86ff';
       const peC = this.data.mySeat === 'red' ? '#3a86ff' : '#e85a86';
-      drawTok(this.data.myPos, myC, -cs * 0.14); drawTok(this.data.peerPos, peC, cs * 0.14);
+      const myLabel = (this.data.myName || '我').slice(0, 1);
+      const peLabel = (this.data.peerName || 'T').slice(0, 1);
+      const moving = this._moving;
+      if (moving && moving.role === room.getRole()) { this.drawToken(ctx, moving.f, myC, myLabel); this.drawToken(ctx, this.data.peerPos, peC, peLabel); }
+      else if (moving && moving.role !== room.getRole()) { this.drawToken(ctx, this.data.myPos, myC, myLabel); this.drawToken(ctx, moving.f, peC, peLabel); }
+      else { this.drawToken(ctx, this.data.myPos, myC, myLabel); this.drawToken(ctx, this.data.peerPos, peC, peLabel); }
     }
   },
   wrapText(ctx, text, x, y, maxW, lh) {

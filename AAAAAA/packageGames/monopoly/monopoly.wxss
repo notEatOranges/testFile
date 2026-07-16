@@ -24,8 +24,17 @@
 .mp-pending { font-size: 24rpx; color: var(--primary-deep); }
 .mp-link { color: var(--text-soft); padding: 0 8rpx; }
 
-.mp-log { width: 92vw; max-width: 660rpx; min-height: 120rpx; max-height: 180rpx; overflow: hidden; padding: 14rpx 20rpx; border-radius: 18rpx; background: var(--card); box-shadow: 0 4rpx 16rpx var(--card-shadow); margin-top: 12rpx; box-sizing: border-box; }
-.mp-log-item { font-size: 24rpx; color: var(--text); line-height: 1.6; }
+.mp-log { width: 92vw; max-width: 620rpx; height: 170rpx; padding: 14rpx 20rpx; border-radius: 18rpx; background: var(--card); box-shadow: 0 4rpx 16rpx var(--card-shadow); margin-top: 12rpx; box-sizing: border-box; }
+.mp-log-item { font-size: 24rpx; color: var(--text); line-height: 1.7; opacity: .65; }
+.mp-log-item.new { opacity: 1; font-weight: 600; color: var(--primary-deep); }
+
+/* 事件特效 */
+.mp-fx { position: fixed; left: 50%; top: 38%; transform: translateX(-50%); z-index: 320; padding: 28rpx 44rpx; border-radius: 24rpx; text-align: center; animation: fxPop .4s ease; }
+.mp-fx.good { background: linear-gradient(135deg, #3aa75c, #2ec24e); color: #fff; box-shadow: 0 10rpx 30rpx rgba(46,194,78,.5); }
+.mp-fx.bad { background: linear-gradient(135deg, #e85a86, #cf4f73); color: #fff; box-shadow: 0 10rpx 30rpx rgba(232,90,134,.5); }
+.mp-fx-text { font-size: 40rpx; font-weight: 800; }
+.mp-fx-sub { font-size: 26rpx; margin-top: 6rpx; opacity: .95; }
+@keyframes fxPop { from { transform: translateX(-50%) scale(.6); opacity: 0; } to { transform: translateX(-50%) scale(1); opacity: 1; } }
 
 .mp-actions { display: flex; flex-direction: column; gap: 12rpx; width: 92vw; max-width: 660rpx; margin-top: 16rpx; }
 .mp-row { display: flex; gap: 12rpx; }
