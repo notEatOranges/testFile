@@ -1,0 +1,26 @@
+<view class="sf-mask {{open ? 'show' : ''}}" bindtap="close"></view>
+<view class="sf-sheet gr-sheet {{open ? 'show' : ''}}" catchtap="noop" wx:if="{{rules}}">
+  <view class="gr-head">
+    <view class="gr-ic"><t-icon name="{{rules.icon}}" size="44rpx" /></view>
+    <view class="sf-title gr-title">{{rules.name}} · 玩法</view>
+  </view>
+  <view class="gr-goal">{{rules.goal}}</view>
+
+  <view class="gr-label">怎么玩</view>
+  <view class="gr-step" wx:for="{{rules.steps}}" wx:key="*this">
+    <view class="gr-num">{{index + 1}}</view>
+    <view class="gr-txt">{{item}}</view>
+  </view>
+
+  <block wx:if="{{rules.tips && rules.tips.length}}">
+    <view class="gr-label">小贴士</view>
+    <view class="gr-tip" wx:for="{{rules.tips}}" wx:key="*this">
+      <t-icon name="heart" size="24rpx" />
+      <text>{{item}}</text>
+    </view>
+  </block>
+
+  <view class="sf-actions">
+    <view class="sf-ok" bindtap="close">知道啦</view>
+  </view>
+</view>

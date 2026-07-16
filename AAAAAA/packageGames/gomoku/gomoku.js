@@ -28,7 +28,8 @@ Page({
     theme: 'sakura',
     role: 'boy', peer: 'girl', myName: '我', myAvatar: '', peerName: 'ta', peerAvatar: '',
     started: false, mySeat: 'red', myTurn: false, turnSeat: 'red',
-    winner: null, winnerText: '', last: null, moves: 0
+    winner: null, winnerText: '', last: null, moves: 0,
+    rulesOpen: false
   },
 
   onLoad() {
@@ -87,6 +88,8 @@ Page({
     rt.setState('gomoku', { board: emptyBoard(), turn: rt.RED, last: null, winner: null, moves: 0 });
   },
   restart() { this.startMatch(); },
+  openRules() { this.setData({ rulesOpen: true }); },
+  closeRules() { this.setData({ rulesOpen: false }); },
 
   resign() {
     if (!this.data.started || this.data.winner) return;

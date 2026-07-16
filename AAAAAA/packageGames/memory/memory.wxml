@@ -1,0 +1,40 @@
+<view class="theme-{{theme}} love-page mem-page">
+
+  <view class="mem-bar">
+    <view class="seat {{mySeat}}">
+      <view class="seat-name">{{myName}}</view>
+      <view class="seat-score">{{myScore}}</view>
+      <view class="muted small">{{myTurn && !winner ? '你的回合' : (mySeat === 'red' ? '红方' : '蓝方')}}</view>
+    </view>
+    <view class="vs">VS</view>
+    <view class="seat {{mySeat === 'red' ? 'blue' : 'red'}}">
+      <view class="seat-name">{{peerName}}</view>
+      <view class="seat-score">{{peerScore}}</view>
+      <view class="muted small">{{!myTurn && !winner ? 'ta 的回合' : (mySeat === 'red' ? '蓝方' : '红方')}}</view>
+    </view>
+  </view>
+
+  <view wx:if="{{winner}}" class="mem-result">{{winnerText}}</view>
+  <view wx:elif="{{started}}" class="mem-tip muted small">{{myTurn ? '点两张牌找配对' : '等 ' + peerName + ' 翻牌'}}</view>
+
+  <view wx:if="{{started}}" class="mem-grid">
+    <view wx:for="{{cards}}" wx:key="index" class="mcard {{item.up ? 'up' : ''}} {{item.matched ? 'matched' : ''}}"
+          data-i="{{index}}" bindtap="flipCard">
+      <view class="mc-back"><t-icon name="heart-filled" size="40rpx" /></view>
+      <view class="mc-face"><t-icon name="{{item.icon}}" size="52rpx" /></view>
+    </view>
+  </view>
+
+  <view wx:else class="mem-empty">
+    <view class="me-text">还没开局</view>
+    <view class="me-btn" bindtap="startMatch">开始对局</view>
+    <view class="muted small">翻两张相同图案配对，配对多者胜</view>
+  </view>
+
+  <view class="mem-actions">
+    <t-button theme="default" size="small" bind:tap="openRules" icon="info-circle">玩法</t-button>
+    <t-button theme="primary" size="small" bind:tap="restart">{{winner ? '再来一局' : (started ? '重新开局' : '开始对局')}}</t-button>
+  </view>
+
+  <game-rules game-key="memory" open="{{rulesOpen}}" bind:close="closeRules" />
+</view>

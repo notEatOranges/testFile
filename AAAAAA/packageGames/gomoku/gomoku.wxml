@@ -27,7 +27,10 @@
   </view>
 
   <view class="go-actions">
+    <t-button theme="default" size="small" bind:tap="openRules" icon="info-circle">玩法</t-button>
     <t-button wx:if="{{started}}" theme="default" size="small" bind:tap="resign">认输</t-button>
     <t-button theme="primary" size="small" bind:tap="restart">{{winner ? '再来一局' : (started ? '重新开局' : '开始对局')}}</t-button>
   </view>
+
+  <game-rules game-key="gomoku" open="{{rulesOpen}}" bind:close="closeRules" />
 </view>

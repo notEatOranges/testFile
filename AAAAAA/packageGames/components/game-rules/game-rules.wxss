@@ -1,0 +1,11 @@
+.gr-sheet { max-height: 80vh; overflow-y: auto; }
+.gr-head { display: flex; align-items: center; gap: 14rpx; justify-content: center; margin-bottom: 14rpx; }
+.gr-ic { width: 64rpx; height: 64rpx; border-radius: 16rpx; background: var(--chip); color: var(--primary); display: flex; align-items: center; justify-content: center; }
+.gr-title { margin: 0; }
+.gr-goal { background: var(--chip); border-radius: 16rpx; padding: 18rpx 22rpx; font-size: 27rpx; color: var(--text); line-height: 1.55; }
+.gr-label { font-size: 26rpx; font-weight: 700; color: var(--primary-deep); margin: 22rpx 0 10rpx; }
+.gr-step { display: flex; gap: 14rpx; align-items: flex-start; margin-bottom: 12rpx; }
+.gr-num { width: 40rpx; height: 40rpx; border-radius: 50%; background: var(--primary); color: #fff; font-size: 24rpx; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.gr-txt { font-size: 27rpx; color: var(--text); line-height: 1.55; padding-top: 4rpx; }
+.gr-tip { display: flex; gap: 10rpx; align-items: flex-start; margin-bottom: 8rpx; color: var(--text-soft); font-size: 25rpx; line-height: 1.5; }
+.gr-tip .t-icon { color: var(--primary); flex-shrink: 0; margin-top: 2rpx; }

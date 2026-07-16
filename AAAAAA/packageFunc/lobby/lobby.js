@@ -8,7 +8,8 @@ Page({
       { key: 'game2048', name: '2048', desc: '滑动合成大数字', icon: 'grid-view' },
       { key: 'tetris', name: '俄罗斯方块', desc: '经典消行挑战', icon: 'app' },
       { key: 'drawguess', name: '你画我猜', desc: '画给 ta 猜', icon: 'edit-1' },
-      { key: 'gomoku', name: '五子棋', desc: '双人实时对弈', icon: 'dashboard' }
+      { key: 'gomoku', name: '五子棋', desc: '双人实时对弈', icon: 'dashboard' },
+      { key: 'memory', name: '记忆翻牌', desc: '翻牌配对·比记性', icon: 'heart' }
     ]
   },
 
