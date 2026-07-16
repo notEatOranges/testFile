@@ -89,7 +89,7 @@ Page({
     this._bound = true;
     rt.bind(this, 'monopoly', s => { this._state = s; this.applyState(); });
   },
-  onUnload() { rt.teardown(this); ident.teardown(this); if (this._diceTimer) clearInterval(this._diceTimer); if (this._raf && this.cv) this.cv.cancelAnimationFrame(this._raf); },
+  onUnload() { rt.teardown(this); ident.teardown(this); if (this._diceTimer) clearInterval(this._diceTimer); if (this._raf && this.cv) this.cv.cancelAnimationFrame(this._raf); if (this._cardRaf && this.cv) this.cv.cancelAnimationFrame(this._cardRaf); },
 
   fresh() {
     return { cells: buildCells(), pos: { boy: 0, girl: 0 }, cash: { boy: START_CASH, girl: START_CASH }, savings: { boy: 0, girl: 0 }, loan: { boy: 0, girl: 0 }, skip: { boy: 0, girl: 0 }, turn: Math.random() < 0.5 ? rt.RED : rt.BLUE, dice: [1, 1], log: [], winner: null, req: null, sellReq: null };
@@ -289,15 +289,62 @@ Page({
   },
   drawCard() {
     return new Promise(res => {
-      this.setData({ card: { drawing: true, text: '', kind: '' } });
+      const c = DECK[Math.floor(Math.random() * DECK.length)];
+      const kind = (c.cash != null && c.cash < 0) || c.skip || c.back ? 'bad' : 'good';
+      if (!this.cv) { res(c); return; }
+      // Phase 1: 棋盘中央洗牌动画(700ms)
+      this._cardAnim = { phase: 'shuffle', t0: Date.now() };
+      this.startCardRaf();
       setTimeout(() => {
-        const c = DECK[Math.floor(Math.random() * DECK.length)];
-        const kind = (c.cash != null && c.cash < 0) || c.skip || c.back ? 'bad' : 'good';
-        this.setData({ card: { drawing: false, text: c.t, kind } });   // 卡片本身用好/坏配色，与好事坏事结合
-        setTimeout(() => { this.setData({ card: null }); }, 1500);
-        res(c);
-      }, 650);
+        // Phase 2: 翻牌揭晓(1800ms)
+        this._cardAnim = { phase: 'reveal', kind, text: c.t, revealP: 0, t0: Date.now() };
+        setTimeout(() => { this._cardAnim = null; this.draw(); res(c); }, 1800);
+      }, 700);
     });
+  },
+  startCardRaf() {
+    if (this._cardRaf) return;
+    const step = () => {
+      if (!this._cardAnim) { this._cardRaf = null; return; }
+      if (this._cardAnim.phase === 'reveal') this._cardAnim.revealP = Math.min(1, (Date.now() - this._cardAnim.t0) / 500);
+      this.draw();
+      this._cardRaf = this.cv.requestAnimationFrame(step);
+    };
+    this._cardRaf = this.cv.requestAnimationFrame(step);
+  },
+  drawCardAnim(ctx) {
+    const a = this._cardAnim; if (!a) return;
+    const cs = this.cs, cx = this.W / 2, cy = this.H / 2;
+    if (a.phase === 'shuffle') {
+      for (let i = 0; i < 3; i++) {
+        const ox = (Math.random() - 0.5) * cs * 0.4, oy = (Math.random() - 0.5) * cs * 0.2, rot = (Math.random() - 0.5) * 0.3;
+        this.drawCardBack(ctx, cx + ox + (i - 1) * cs * 0.5, cy + oy, cs * 1.3, cs * 1.8, rot);
+      }
+      ctx.fillStyle = '#8a6b78'; ctx.font = Math.round(cs * 0.3) + 'px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('洗牌中', cx, cy + cs * 1.4);
+    } else {
+      const p = a.revealP, w = cs * 3.2, h = cs * 4.2;
+      const flip = p < 0.5 ? 1 - p * 2 : (p - 0.5) * 2, showFace = p > 0.5;
+      ctx.save(); ctx.translate(cx, cy); ctx.scale(Math.max(0.02, flip), 1);
+      ctx.fillStyle = showFace ? (a.kind === 'good' ? '#2ec24e' : '#e85a86') : '#e85a86';
+      this.rr(ctx, -w / 2, -h / 2, w, h, 16); ctx.fill();
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.stroke();
+      if (showFace) {
+        ctx.fillStyle = '#fff'; ctx.font = 'bold ' + Math.round(cs * 0.55) + 'px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(a.kind === 'good' ? '好事' : '坏事', 0, -cs * 0.9);
+        ctx.font = Math.round(cs * 0.32) + 'px sans-serif';
+        this.wrapText(ctx, a.text, 0, cs * 0.4, w * 0.8, cs * 0.38);
+      } else { ctx.fillStyle = 'rgba(255,255,255,.4)'; ctx.font = 'bold ' + Math.round(cs * 0.8) + 'px sans-serif'; ctx.fillText('?', 0, 0); }
+      ctx.restore();
+    }
+  },
+  drawCardBack(ctx, cx, cy, w, h, rot) {
+    ctx.save(); ctx.translate(cx, cy); ctx.rotate(rot);
+    ctx.fillStyle = '#e85a86'; this.rr(ctx, -w / 2, -h / 2, w, h, 10); ctx.fill();
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
+    ctx.fillStyle = 'rgba(255,255,255,.4)'; ctx.font = 'bold ' + Math.round(w * 0.5) + 'px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('?', 0, 0);
+    ctx.restore();
   },
 
   // 写一次中间态（让事件日志及时同步给双方）
@@ -364,7 +411,7 @@ Page({
     rt.setState('monopoly', Object.assign({}, this._state, { cells: cells.map(c => Object.assign({}, c)), pos, cash, skip, loan, turn: winner ? turn : rt.seatOf(nextRole), dice: this.data.dice, log: log.slice(-30), winner, req: null }));
   },
 
-  dismissCard() { this.setData({ card: null }); },
+  dismissCard() { this._cardAnim = null; this.draw(); },
 
   // —— 银行/资产：存款/贷款/卖地 ——
   openBank() { this.setData({ bankOpen: true }); },
@@ -472,6 +519,7 @@ Page({
       else if (moving && moving.role !== role) { this.drawToken(ctx, this.data.myPos, myKind, myColor, 0); this.drawToken(ctx, moving.f, peKind, peColor, moving.hop); }
       else { this.drawToken(ctx, this.data.myPos, myKind, myColor, 0); this.drawToken(ctx, this.data.peerPos, peKind, peColor, 0); }
     }
+    this.drawCardAnim(ctx);
   },
   wrapText(ctx, text, x, y, maxW, lh) {
     let line = '';

@@ -42,20 +42,6 @@
     </view>
   </view>
 
-  <!-- 抽牌：底部抽屉(普通 view，位于棋盘下方不被 canvas 挡)，保留洗牌+翻牌动画 -->
-  <view wx:if="{{card}}" class="card-sheet {{card.kind}} {{card.drawing ? 'shuffling' : 'reveal'}}" catchtap="dismissCard">
-    <view wx:if="{{card.drawing}}" class="cs-deck">
-      <view class="cs-back b1"></view>
-      <view class="cs-back b2"></view>
-      <view class="cs-back b3"></view>
-      <view class="cs-tip">洗牌中…</view>
-    </view>
-    <view wx:else class="cs-face">
-      <view class="cs-title">{{card.kind === 'good' ? '好 事' : (card.kind === 'bad' ? '坏 事' : '事 件')}}</view>
-      <view class="cs-text">{{card.text}}</view>
-    </view>
-  </view>
-
   <view wx:if="{{sellReqPending}}" class="mp-pending">等对方决定是否买你的地 <text class="mp-link" bindtap="cancelSell">取消</text></view>
 
   <!-- 银行/资产面板 -->
