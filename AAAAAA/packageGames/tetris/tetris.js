@@ -38,7 +38,10 @@ Page({
       const cv = res[0].node, w = res[0].width, h = res[0].height;
       cv.width = w * dpr; cv.height = h * dpr;
       const ctx = cv.getContext('2d'); ctx.scale(dpr, dpr);
-      this.ctx = ctx; this.cv = cv; this.bw = w; this.bh = h; this.cell = w / COLS;
+      this.ctx = ctx; this.cv = cv; this.bw = w; this.bh = h;
+      this.cell = Math.min(w / COLS, h / ROWS);   // 适配容器，保持 1:2，居中绘制
+      this.ox = (w - COLS * this.cell) / 2;
+      this.oy = (h - ROWS * this.cell) / 2;
       this.newGame();
     });
   },
@@ -147,32 +150,33 @@ Page({
 
   draw() {
     if (!this.ctx) return;
-    const ctx = this.ctx, W = this.bw, H = this.bh, cell = this.cell, th = getTheme(this.data.theme);
+    const ctx = this.ctx, W = this.bw, H = this.bh, cell = this.cell, ox = this.ox || 0, oy = this.oy || 0;
+    const th = getTheme(this.data.theme);
+    const color = th.primary;   // 单色，不再五颜六色
     ctx.clearRect(0, 0, W, H);
-    ctx.fillStyle = th.bg2; ctx.fillRect(0, 0, W, H);
-    ctx.strokeStyle = 'rgba(255,255,255,0.16)'; ctx.lineWidth = 1;
-    for (let i = 1; i < COLS; i++) { ctx.beginPath(); ctx.moveTo(i * cell, 0); ctx.lineTo(i * cell, H); ctx.stroke(); }
-    for (let j = 1; j < ROWS; j++) { ctx.beginPath(); ctx.moveTo(0, j * cell); ctx.lineTo(W, j * cell); ctx.stroke(); }
-    // 已落定
-    for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) if (this.board[r][c]) this.drawCell(ctx, c, r, this.board[r][c], cell);
-    // ghost 影
+    ctx.fillStyle = th.bg1; ctx.fillRect(0, 0, W, H);
+    // 棋盘底（白色，无大黑边）
+    ctx.fillStyle = '#ffffff'; ctx.fillRect(ox, oy, COLS * cell, ROWS * cell);
+    ctx.strokeStyle = 'rgba(0,0,0,0.07)'; ctx.lineWidth = 1;
+    for (let i = 0; i <= COLS; i++) { ctx.beginPath(); ctx.moveTo(ox + i * cell, oy); ctx.lineTo(ox + i * cell, oy + ROWS * cell); ctx.stroke(); }
+    for (let j = 0; j <= ROWS; j++) { ctx.beginPath(); ctx.moveTo(ox, oy + j * cell); ctx.lineTo(ox + COLS * cell, oy + j * cell); ctx.stroke(); }
+    for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) if (this.board[r][c]) this.drawCell(ctx, ox + c * cell, oy + r * cell, color, cell);
     if (this.cur && !this.data.over) {
       let dr = 0; while (!this.collides(this.cur, dr + 1, 0)) dr++;
-      ctx.globalAlpha = 0.2;
+      ctx.globalAlpha = 0.18;
       const m = this.cur.m;
-      for (let r = 0; r < m.length; r++) for (let c = 0; c < m[r].length; c++) if (m[r][c]) { const nr = this.cur.row + dr + r, nc = this.cur.col + c; if (nr >= 0) this.drawCell(ctx, nc, nr, this.cur.c, cell); }
+      for (let r = 0; r < m.length; r++) for (let c = 0; c < m[r].length; c++) if (m[r][c]) { const nr = this.cur.row + dr + r, nc = this.cur.col + c; if (nr >= 0) this.drawCell(ctx, ox + nc * cell, oy + nr * cell, color, cell); }
       ctx.globalAlpha = 1;
     }
-    // 当前方块
     if (this.cur) {
       const m = this.cur.m;
-      for (let r = 0; r < m.length; r++) for (let c = 0; c < m[r].length; c++) if (m[r][c]) { const nr = this.cur.row + r, nc = this.cur.col + c; if (nr >= 0) this.drawCell(ctx, nc, nr, this.cur.c, cell); }
+      for (let r = 0; r < m.length; r++) for (let c = 0; c < m[r].length; c++) if (m[r][c]) { const nr = this.cur.row + r, nc = this.cur.col + c; if (nr >= 0) this.drawCell(ctx, ox + nc * cell, oy + nr * cell, color, cell); }
     }
   },
-  drawCell(ctx, c, r, color, cell) {
-    const x = c * cell, y = r * cell, pad = Math.max(1, cell * 0.06);
+  drawCell(ctx, x, y, color, cell) {
+    const pad = Math.max(1, cell * 0.06);
     ctx.fillStyle = color; roundRect(ctx, x + pad, y + pad, cell - pad * 2, cell - pad * 2, 4); ctx.fill();
-    ctx.fillStyle = 'rgba(255,255,255,0.2)'; roundRect(ctx, x + pad, y + pad, cell - pad * 2, (cell - pad * 2) / 2.6, 4); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.22)'; roundRect(ctx, x + pad, y + pad, cell - pad * 2, (cell - pad * 2) / 2.6, 4); ctx.fill();
   }
 });
 

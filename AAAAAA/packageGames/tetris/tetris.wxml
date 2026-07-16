@@ -1,48 +1,38 @@
 <view class="theme-{{theme}} love-page t-page">
-  <view class="console">
+  <view class="t-top">
+    <text class="t-score">{{score}}</text>
+    <view class="t-meta">
+      <text>第 {{level}} 关 · {{lines}} 行</text>
+      <text>最高 {{best}}</text>
+      <text class="t-finish" bindtap="finishGame">结束记分</text>
+    </view>
+  </view>
 
-    <!-- 屏幕：分数 + 棋盘 -->
-    <view class="screen">
-      <view class="scr-top">
-        <text class="scr-score">{{score}}</text>
-        <view class="scr-meta">
-          <text>第 {{level}} 关 · {{lines}} 行</text>
-          <text>最高 {{best}}</text>
-          <text class="scr-finish" bindtap="finishGame">结束记分</text>
-        </view>
-      </view>
-      <view class="t-board-wrap">
-        <canvas type="2d" id="board" class="t-board"></canvas>
-        <view wx:if="{{over}}" class="over-mask">
-          <view class="over-text">游戏结束</view>
-          <view class="over-score">{{score}} 分</view>
-          <view class="over-btn" bindtap="restart">再来一局</view>
-        </view>
-        <view wx:if="{{paused && !over}}" class="over-mask">
-          <view class="over-text">已暂停</view>
-          <view class="over-btn" bindtap="togglePause">继续</view>
-        </view>
+  <view class="t-screen">
+    <canvas type="2d" id="board" class="t-board"></canvas>
+    <view wx:if="{{over}}" class="t-mask">
+      <view class="tm-text">游戏结束</view>
+      <view class="tm-sub">{{score}} 分</view>
+      <view class="tm-btn" bindtap="restart">再来一局</view>
+    </view>
+    <view wx:if="{{paused && !over}}" class="t-mask">
+      <view class="tm-text">已暂停</view>
+      <view class="tm-btn" bindtap="togglePause">继续</view>
+    </view>
+  </view>
+
+  <view class="t-pad">
+    <view class="t-dir">
+      <view class="t-btn" bindtap="left"><t-icon name="chevron-left" size="44rpx" /></view>
+      <view class="t-btn" bindtap="softDrop"><t-icon name="chevron-down" size="44rpx" /></view>
+      <view class="t-btn" bindtap="right"><t-icon name="chevron-right" size="44rpx" /></view>
+    </view>
+    <view class="t-act">
+      <view class="t-btn primary" bindtap="rotate"><t-icon name="refresh" size="44rpx" /><text class="t-lab">旋转</text></view>
+      <view class="t-actrow">
+        <view class="t-btn sm" bindtap="hardDrop"><t-icon name="arrow-down" size="36rpx" /></view>
+        <view class="t-btn sm" bindtap="togglePause"><t-icon name="{{paused ? 'play' : 'pause'}}" size="36rpx" /></view>
       </view>
     </view>
-
-    <!-- 手柄：左十字方向键 + 右动作键 -->
-    <view class="pad">
-      <view class="dpad">
-        <view class="dp-cell"></view>
-        <view class="dp-btn" bindtap="rotate"><t-icon name="refresh" size="40rpx" /></view>
-        <view class="dp-cell"></view>
-        <view class="dp-btn" bindtap="left"><t-icon name="chevron-left" size="44rpx" /></view>
-        <view class="dp-core"></view>
-        <view class="dp-btn" bindtap="right"><t-icon name="chevron-right" size="44rpx" /></view>
-        <view class="dp-cell"></view>
-        <view class="dp-btn" bindtap="softDrop"><t-icon name="chevron-down" size="44rpx" /></view>
-        <view class="dp-cell"></view>
-      </view>
-      <view class="abtns">
-        <view class="abtn primary" bindtap="hardDrop"><t-icon name="arrow-down" size="44rpx" /><text>硬降</text></view>
-        <view class="abtn sm" bindtap="togglePause"><t-icon name="{{paused ? 'play' : 'pause'}}" size="40rpx" /></view>
-      </view>
-    </view>
-
   </view>
 </view>
