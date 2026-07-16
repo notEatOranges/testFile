@@ -233,7 +233,7 @@ Page({
         const c = DECK[Math.floor(Math.random() * DECK.length)];
         const kind = c.cash != null ? (c.cash > 0 ? 'good' : 'bad') : (c.skip ? 'bad' : 'good');
         this.setData({ card: { drawing: false, text: c.t, kind } });   // 卡片本身用好/坏配色，与好事坏事结合
-        setTimeout(() => { this.setData({ card: null }); setTimeout(() => this.setupCanvas(), 50); }, 1500);
+        setTimeout(() => { this.setData({ card: null }); }, 1500);
         res(c);
       }, 650);
     });
@@ -297,7 +297,7 @@ Page({
     rt.setState('monopoly', Object.assign({}, this._state, { cells: cells.map(c => Object.assign({}, c)), pos, cash, skip, turn: winner ? turn : rt.seatOf(nextRole), dice: this.data.dice, log: log.slice(-30), winner, req: null }));
   },
 
-  dismissCard() { this.setData({ card: null }); setTimeout(() => this.setupCanvas(), 50); },
+  dismissCard() { this.setData({ card: null }); },
 
   // —— 银行/资产：存款/贷款/卖地 ——
   openBank() { this.setData({ bankOpen: true }); },
