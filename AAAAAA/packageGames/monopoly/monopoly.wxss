@@ -1,26 +1,47 @@
-.mp-page { display: flex; gap: 18rpx; padding: 16rpx; height: 100vh; box-sizing: border-box; align-items: stretch; }
+.mp-page { display: flex; flex-direction: column; align-items: center; padding-top: 16rpx; padding-bottom: calc(40rpx + env(safe-area-inset-bottom)); }
 
-/* 棋盘（正方形，按屏高） */
-.mp-board-wrap { position: relative; flex: 0 0 auto; }
-.mp-board { width: 96vh; height: 96vh; max-width: 74vw; border-radius: 16rpx; box-shadow: 0 8rpx 30rpx var(--card-shadow); }
+.mp-board-wrap { position: relative; }
+.mp-board { width: 92vw; height: 92vw; max-width: 660rpx; max-height: 660rpx; border-radius: 16rpx; box-shadow: 0 8rpx 30rpx var(--card-shadow); }
 .mp-empty { position: absolute; inset: 0; border-radius: 16rpx; background: rgba(243,233,210,.95); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14rpx; }
 .mp-title { font-size: 52rpx; font-weight: 800; color: #b58a5a; }
 .mp-start { padding: 16rpx 56rpx; border-radius: 36rpx; background: var(--primary); color: #fff; font-size: 30rpx; }
-.mp-over { position: absolute; left: 0; right: 0; bottom: 24rpx; text-align: center; font-size: 32rpx; font-weight: 800; color: var(--primary-deep); }
+.mp-over-mask { position: absolute; inset: 0; border-radius: 16rpx; background: rgba(0,0,0,.45); display: flex; align-items: center; justify-content: center; }
+.mp-over-text { color: #fff; font-size: 44rpx; font-weight: 800; }
 
-/* 右侧面板 */
-.mp-side { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 14rpx; }
-.mp-pair { display: flex; gap: 14rpx; }
-.mp-p { flex: 1; display: flex; align-items: center; justify-content: space-between; padding: 16rpx 22rpx; border-radius: 18rpx; background: var(--card); box-shadow: 0 4rpx 16rpx var(--card-shadow); }
+.mp-pair { display: flex; align-items: center; gap: 18rpx; margin: 20rpx 0 10rpx; width: 92vw; max-width: 660rpx; }
+.mp-p { flex: 1; display: flex; align-items: center; justify-content: space-between; padding: 14rpx 22rpx; border-radius: 18rpx; background: var(--card); box-shadow: 0 4rpx 16rpx var(--card-shadow); }
 .mp-p.me { border-left: 8rpx solid #e85a86; }
-.mp-n { font-size: 26rpx; color: var(--text); font-weight: 600; }
-.mp-cash { font-size: 38rpx; font-weight: 800; color: var(--primary-deep); }
-.mp-result { font-size: 34rpx; font-weight: 800; color: var(--primary-deep); text-align: center; }
-.mp-turn { font-size: 26rpx; color: var(--text-soft); text-align: center; }
-.mp-pending { font-size: 24rpx; color: var(--primary-deep); text-align: center; }
+.mp-n { font-size: 24rpx; color: var(--text); font-weight: 600; }
+.mp-cash { font-size: 34rpx; font-weight: 800; color: var(--primary-deep); }
+
+.mp-dice-wrap { display: flex; gap: 10rpx; }
+.mp-die { width: 64rpx; height: 64rpx; border-radius: 14rpx; background: var(--card); color: var(--primary-deep); font-size: 38rpx; font-weight: 800; display: flex; align-items: center; justify-content: center; box-shadow: 0 4rpx 12rpx var(--card-shadow); }
+.mp-die.rolling { animation: diceRoll .25s linear infinite; }
+@keyframes diceRoll { 0% { transform: rotate(0) scale(.9); } 50% { transform: rotate(180deg) scale(1.05); } 100% { transform: rotate(360deg) scale(.9); } }
+
+.mp-result { font-size: 34rpx; font-weight: 800; color: var(--primary-deep); }
+.mp-turn { font-size: 26rpx; color: var(--text-soft); }
+.mp-pending { font-size: 24rpx; color: var(--primary-deep); }
 .mp-link { color: var(--text-soft); padding: 0 8rpx; }
-.mp-log { flex: 1; min-height: 0; padding: 16rpx 20rpx; border-radius: 18rpx; background: var(--card); box-shadow: 0 4rpx 16rpx var(--card-shadow); }
+
+.mp-log { width: 92vw; max-width: 660rpx; min-height: 120rpx; max-height: 180rpx; overflow: hidden; padding: 14rpx 20rpx; border-radius: 18rpx; background: var(--card); box-shadow: 0 4rpx 16rpx var(--card-shadow); margin-top: 12rpx; box-sizing: border-box; }
 .mp-log-item { font-size: 24rpx; color: var(--text); line-height: 1.6; }
-.mp-actions { display: flex; flex-direction: column; gap: 12rpx; }
+
+.mp-actions { display: flex; flex-direction: column; gap: 12rpx; width: 92vw; max-width: 660rpx; margin-top: 16rpx; }
 .mp-row { display: flex; gap: 12rpx; }
 .mp-row .t-button { flex: 1; }
+
+/* 抽牌动画 */
+.mp-card-mask { position: fixed; inset: 0; z-index: 300; background: rgba(0,0,0,.5); display: flex; align-items: center; justify-content: center; }
+.mp-card { width: 380rpx; height: 500rpx; border-radius: 24rpx; background: var(--card); box-shadow: 0 12rpx 40rpx rgba(0,0,0,.4); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24rpx; }
+.mp-card.shuffling { animation: cardShake .25s linear infinite; }
+@keyframes cardShake { 0% { transform: translateX(0) rotate(0); } 25% { transform: translateX(-8rpx) rotate(-2deg); } 75% { transform: translateX(8rpx) rotate(2deg); } 100% { transform: translateX(0) rotate(0); } }
+.mp-card-deck { position: relative; width: 160rpx; height: 220rpx; }
+.mp-card-back { position: absolute; inset: 0; border-radius: 16rpx; background: linear-gradient(135deg, var(--primary), var(--primary-deep)); }
+.mp-card-back.b1 { transform: translate(-12rpx, 6rpx) rotate(-4deg); }
+.mp-card-back.b2 { transform: translate(0, 0) rotate(0); }
+.mp-card-back.b3 { transform: translate(12rpx, -6rpx) rotate(4deg); animation: cardFly .5s ease infinite; }
+@keyframes cardFly { 0%,100% { transform: translate(12rpx, -6rpx) rotate(4deg); } 50% { transform: translate(20rpx, -16rpx) rotate(8deg); } }
+.mp-card.reveal { animation: cardFlip .4s ease; }
+@keyframes cardFlip { from { transform: rotateY(90deg); opacity: .3; } to { transform: rotateY(0); opacity: 1; } }
+.mp-card-face { font-size: 36rpx; font-weight: 700; color: var(--primary-deep); text-align: center; padding: 0 30rpx; }
