@@ -72,3 +72,20 @@
 .mp-card-face { display: flex; flex-direction: column; align-items: center; }
 .mp-card-title { font-size: 46rpx; font-weight: 800; color: #fff; letter-spacing: 4rpx; }
 .mp-card-text { font-size: 34rpx; font-weight: 600; color: #fff; margin-top: 18rpx; text-align: center; padding: 0 24rpx; }
+
+/* 抽牌：底部抽屉(普通 view，棋盘下方不被 canvas 挡) */
+.card-sheet { position: fixed; left: 24rpx; right: 24rpx; bottom: calc(20rpx + env(safe-area-inset-bottom)); z-index: 250; border-radius: 24rpx; padding: 36rpx 32rpx; box-shadow: 0 -8rpx 32rpx rgba(0,0,0,.25); animation: csSlideUp .3s ease; }
+.card-sheet.good { background: linear-gradient(135deg, #3aa75c, #2ec24e); }
+.card-sheet.bad { background: linear-gradient(135deg, #e85a86, #d6406a); }
+.card-sheet.shuffling { background: var(--card); }
+@keyframes csSlideUp { from { transform: translateY(120%); } to { transform: translateY(0); } }
+.cs-deck { position: relative; height: 200rpx; display: flex; align-items: center; justify-content: center; }
+.cs-back { position: absolute; width: 120rpx; height: 168rpx; border-radius: 14rpx; background: linear-gradient(135deg, #ff7aa2, #e85a86); }
+.cs-back.b1 { transform: translate(-20rpx, 10rpx) rotate(-5deg); }
+.cs-back.b2 { transform: translate(0, 0) rotate(0); }
+.cs-back.b3 { transform: translate(20rpx, -10rpx) rotate(5deg); animation: csFly .5s ease infinite; }
+@keyframes csFly { 0%,100% { transform: translate(20rpx, -10rpx) rotate(5deg); } 50% { transform: translate(30rpx, -20rpx) rotate(10deg); } }
+.cs-tip { position: absolute; bottom: 0; font-size: 24rpx; color: var(--text-soft); }
+.cs-face { display: flex; flex-direction: column; align-items: center; gap: 16rpx; }
+.cs-title { font-size: 44rpx; font-weight: 800; color: #fff; letter-spacing: 4rpx; }
+.cs-text { font-size: 32rpx; font-weight: 600; color: #fff; text-align: center; padding: 0 20rpx; }
