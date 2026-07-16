@@ -10,6 +10,8 @@
 
 .go-result { font-size: 36rpx; font-weight: 800; color: var(--primary-deep); margin-bottom: 8rpx; }
 .go-tip { margin-bottom: 8rpx; }
+.go-pending { display: flex; align-items: center; gap: 16rpx; margin-bottom: 10rpx; padding: 12rpx 22rpx; border-radius: 18rpx; background: var(--card); box-shadow: 0 4rpx 16rpx var(--card-shadow); font-size: 25rpx; color: var(--primary-deep); }
+.go-link { margin-left: auto; color: var(--text-soft); padding: 4rpx 10rpx; }
 
 .board-wrap { position: relative; }
 .board { width: 94vw; height: 94vw; max-width: 760rpx; max-height: 760rpx; border-radius: 16rpx; box-shadow: 0 8rpx 30rpx var(--card-shadow); }
