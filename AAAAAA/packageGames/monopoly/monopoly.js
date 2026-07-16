@@ -365,7 +365,7 @@ Page({
     ctx.translate(cx, cy);
     ctx.scale(0.6 + 0.4 * p, 0.6 + 0.4 * p);
     ctx.fillStyle = a.kind === 'good' ? '#2ec24e' : '#e85a86';
-    this.rr(ctx, -w / 2, -h / 2, w, h, 14); ctx.fill();
+    rr(ctx, -w / 2, -h / 2, w, h, 14); ctx.fill();
     ctx.fillStyle = '#fff'; ctx.font = 'bold ' + Math.round(cs * 0.34) + 'px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     this.wrapText(ctx, a.text, 0, 0, w * 0.85, cs * 0.38);
     ctx.restore();
