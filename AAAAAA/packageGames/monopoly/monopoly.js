@@ -9,8 +9,8 @@ const rt = require('@utils/rtgame.js');
 const { toast } = require('@utils/util.js');
 
 const START_CASH = 1500;
-const GRID = 12;
-const BOARD = 4 * GRID - 4;   // 外圈格数 = 44（更长赛道）
+const GW = 6, GH = 10;                 // 矩形外圈：宽 6 × 高 10
+const BOARD = 2 * (GW + GH) - 4;       // 外圈格数 = 28（竖长方形，格子更大更清晰）
 // 双卡组：机会(偏移动/机缘) + 公共基金(偏金钱事件)。cash 自己加减；cashPeer 对方给/收；to 回起点；back 后退；skip 停一回合
 const DECK = [
   { t: '银行分红 +50', cash: 50 }, { t: '生日红包 对方送你 +100', cashPeer: 100 }, { t: '遗产继承 +100', cash: 100 },
@@ -38,11 +38,10 @@ function buildCells() {
   return cells;
 }
 function cellCR(i) {
-  const N = GRID;
-  if (i <= N - 1) return [i, N - 1];
-  if (i <= 2 * N - 2) return [N - 1, (2 * N - 2) - i];
-  if (i <= 3 * N - 3) return [(3 * N - 3) - i, 0];
-  return [0, i - (3 * N - 3)];
+  if (i <= GW - 1) return [i, GH - 1];                    // 底边
+  if (i <= GW + GH - 2) return [GW - 1, GW + GH - 2 - i]; // 右边上行
+  if (i <= 2 * GW + GH - 3) return [2 * GW + GH - 3 - i, 0]; // 顶边左行
+  return [0, i - (2 * GW + GH - 3)];                      // 左边下行
 }
 function rentOf(cell) { return cell.rent * (1 + (cell.level || 0)); }
 function upgradeCost(cell) { return Math.round(cell.price * 0.5); }
@@ -101,8 +100,9 @@ Page({
       cv.width = w * dpr; cv.height = h * dpr;
       const ctx = cv.getContext('2d'); ctx.scale(dpr, dpr);
       this.ctx = ctx; this.cv = cv; this.W = w; this.H = h;
-      this.cs = Math.min(w, h) / GRID;
-      this.ox = (w - GRID * this.cs) / 2; this.oy = (h - GRID * this.cs) / 2;
+      this.cellW = w / GW; this.cellH = h / GH;
+      this.cs = Math.min(this.cellW, this.cellH);   // 字号/棋子按短边
+      this.ox = 0; this.oy = 0;
       this.applyState();
     });
   },
@@ -240,7 +240,7 @@ Page({
     });
   },
   drawDiceCenter(ctx) {
-    const cs = this.cs, cx = this.ox + cs * GRID / 2, cy = this.oy + cs * GRID / 2;
+    const cs = this.cs, cx = this.W / 2, cy = this.H / 2;
     const anim = this._diceAnim;
     const val = anim ? anim.val : (this.data.dice || 1);
     const ang = anim ? anim.angle : 0;
@@ -376,7 +376,7 @@ Page({
     const i0 = Math.floor(f) % BOARD, i1 = (i0 + 1) % BOARD, fr = f - Math.floor(f);
     const [c0, r0] = cellCR(i0), [c1, r1] = cellCR(i1);
     const c = c0 + (c1 - c0) * fr, r = r0 + (r1 - r0) * fr;
-    return [this.ox + c * this.cs + this.cs / 2, this.oy + r * this.cs + this.cs * 0.58];
+    return [c * this.cellW + this.cellW / 2, r * this.cellH + this.cellH * 0.6];
   },
   drawShape(ctx, cx, cy, s, kind, fill, stroke) {
     ctx.fillStyle = fill; ctx.strokeStyle = stroke || '#fff'; ctx.lineWidth = s * 0.18;
@@ -407,30 +407,30 @@ Page({
 
   draw() {
     if (!this.ctx) return;
-    const ctx = this.ctx, W = this.W, H = this.H, cs = this.cs, ox = this.ox, oy = this.oy;
+    const ctx = this.ctx, W = this.W, H = this.H, cs = this.cs, cw = this.cellW, ch = this.cellH;
     ctx.clearRect(0, 0, W, H);
-    ctx.fillStyle = '#f3e9d2'; ctx.fillRect(ox, oy, cs * GRID, cs * GRID);
-    ctx.fillStyle = '#fff8ec'; ctx.fillRect(ox + cs, oy + cs, cs * (GRID - 2), cs * (GRID - 2));
+    ctx.fillStyle = '#f3e9d2'; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = '#fff8ec'; ctx.fillRect(cw, ch, W - 2 * cw, H - 2 * ch);
     ctx.fillStyle = '#b58a5a'; ctx.font = 'bold ' + Math.round(cs * 0.5) + 'px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText('大富翁', ox + cs * GRID / 2, oy + cs * GRID / 2 - cs * 1.9);
+    ctx.fillText('大富翁', W / 2, H / 2 - cs * 1.9);
     this.drawDiceCenter(ctx);
 
     const cells = this._cells || [];
     for (let i = 0; i < BOARD; i++) {
       const [c, r] = cellCR(i);
-      const x = ox + c * cs, y = oy + r * cs;
+      const x = c * cw, y = r * ch;
       const cell = cells[i] || {};
-      ctx.strokeStyle = '#cdb088'; ctx.lineWidth = 1; ctx.strokeRect(x, y, cs, cs);
+      ctx.strokeStyle = '#cdb088'; ctx.lineWidth = 1; ctx.strokeRect(x, y, cw, ch);
       if (cell.type === 'property') {
-        if (cell.owner) { ctx.strokeStyle = seatColor(cell.owner); ctx.lineWidth = 4; ctx.strokeRect(x + 2, y + 2, cs - 4, cs - 4); }  // 归属=粗边框(玩家色)
+        if (cell.owner) { ctx.strokeStyle = seatColor(cell.owner); ctx.lineWidth = 4; ctx.strokeRect(x + 2, y + 2, cw - 4, ch - 4); }  // 归属=粗边框(玩家色)
         ctx.fillStyle = GROUP_COLOR[cell.group] || '#666'; ctx.font = 'bold ' + Math.round(cs * 0.2) + 'px sans-serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
-        ctx.fillText('$' + cell.price, x + 4, y + 4);                                   // 价格左上角，颜色=等级(值钱程度)
-        if (cell.level) { ctx.fillStyle = '#b58a5a'; ctx.font = Math.round(cs * 0.2) + 'px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom'; let st = ''; for (let k = 0; k < cell.level; k++) st += '★'; ctx.fillText(st, x + cs / 2, y + cs - 2); }  // 等级星在底部
+        ctx.fillText('$' + cell.price, x + 5, y + 4);                                   // 价格左上角，颜色=等级
+        if (cell.level) { ctx.fillStyle = '#b58a5a'; ctx.font = Math.round(cs * 0.2) + 'px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom'; let st = ''; for (let k = 0; k < cell.level; k++) st += '★'; ctx.fillText(st, x + cw / 2, y + ch - 2); }  // 等级星在底部
       }
-      const cmap = { start: '#3aa75c', card: '#e8b94d', tax: '#e85a86', jail: '#7a5c3a', bonus: '#3a86ff', property: '#5a4030' };
+      const cmap = { start: '#3aa75c', card: '#e8b94d', tax: '#e85a86', jail: '#7a5c3a', bonus: '#3a86ff', freepark: '#06d6a0', property: '#5a4030' };
       ctx.fillStyle = cmap[cell.type] || '#5a4030';
-      ctx.font = Math.round(cs * 0.2) + 'px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
-      this.wrapText(ctx, cell.name || '', x + cs / 2, y + (cell.type === 'property' ? cs * 0.4 : 5), cs - 4, cs * 0.22);
+      ctx.font = Math.round(cs * 0.21) + 'px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+      this.wrapText(ctx, cell.name || '', x + cw / 2, y + (cell.type === 'property' ? ch * 0.38 : 5), cw - 4, cs * 0.22);
     }
 
     if (this.data.started) {

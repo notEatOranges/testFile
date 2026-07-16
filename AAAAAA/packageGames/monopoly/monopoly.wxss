@@ -1,7 +1,7 @@
 .mp-page { display: flex; flex-direction: column; align-items: center; padding-top: 16rpx; padding-bottom: calc(40rpx + env(safe-area-inset-bottom)); }
 
 .mp-board-wrap { position: relative; }
-.mp-board { width: 86vw; height: 86vw; max-width: 620rpx; max-height: 620rpx; border-radius: 16rpx; box-shadow: 0 8rpx 30rpx var(--card-shadow); }
+.mp-board { width: calc(60vh * 6 / 10); height: 60vh; max-width: 76vw; border-radius: 16rpx; box-shadow: 0 8rpx 30rpx var(--card-shadow); }
 .mp-empty { position: absolute; inset: 0; border-radius: 16rpx; background: rgba(243,233,210,.95); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14rpx; }
 .mp-title { font-size: 52rpx; font-weight: 800; color: #b58a5a; }
 .mp-start { padding: 16rpx 56rpx; border-radius: 36rpx; background: var(--primary); color: #fff; font-size: 30rpx; }
