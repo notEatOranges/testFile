@@ -30,8 +30,8 @@
 
 /* 事件特效：cover-view 盖在 canvas 上，地图不消失；靠上、美化 */
 .mp-fx { position: fixed; left: 50%; top: 60rpx; margin-left: -230rpx; width: 460rpx; z-index: 360; padding: 32rpx 40rpx; border-radius: 32rpx; text-align: center; box-sizing: border-box; animation: fxPop .35s ease; }
-.mp-fx.good { background: linear-gradient(135deg, #34d05a, #1f9e3a); box-shadow: 0 12rpx 30rpx rgba(46,194,78,.55); }
-.mp-fx.bad { background: linear-gradient(135deg, #ff6b8a, #d6406a); box-shadow: 0 12rpx 30rpx rgba(232,90,134,.55); }
+.mp-fx.good { background-color: #2ec24e; }
+.mp-fx.bad { background-color: #e85a86; }
 .mp-fx-text { font-size: 50rpx; font-weight: 800; color: #fff; letter-spacing: 4rpx; }
 .mp-fx-sub { font-size: 28rpx; color: #fff; margin-top: 12rpx; opacity: .96; }
 @keyframes fxPop { from { opacity: 0; } to { opacity: 1; } }
@@ -66,8 +66,9 @@
 @keyframes cardFly { 0%,100% { transform: translate(12rpx, -6rpx) rotate(4deg); } 50% { transform: translate(20rpx, -16rpx) rotate(8deg); } }
 .mp-card-tip { color: #8a6b78; font-size: 26rpx; margin-top: 30rpx; }
 .mp-card.reveal { animation: cardFlip .4s ease; }
-.mp-card.good { background: linear-gradient(135deg, #3aa75c, #2ec24e); }
-.mp-card.bad { background: linear-gradient(135deg, #e85a86, #d6406a); }
-.mp-card.good .mp-card-face, .mp-card.bad .mp-card-face { color: #fff; }
+.mp-card.good { background-color: #2ec24e; }
+.mp-card.bad { background-color: #e85a86; }
 @keyframes cardFlip { from { opacity: .3; } to { opacity: 1; } }
-.mp-card-face { font-size: 38rpx; font-weight: 700; color: #e85a86; text-align: center; padding: 0 30rpx; }
+.mp-card-face { display: flex; flex-direction: column; align-items: center; }
+.mp-card-title { font-size: 46rpx; font-weight: 800; color: #fff; letter-spacing: 4rpx; }
+.mp-card-text { font-size: 34rpx; font-weight: 600; color: #fff; margin-top: 18rpx; text-align: center; padding: 0 24rpx; }

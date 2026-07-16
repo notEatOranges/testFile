@@ -53,7 +53,10 @@
         <cover-view class="mp-card-back b3"></cover-view>
       </cover-view>
       <cover-view wx:if="{{card.drawing}}" class="mp-card-tip">洗牌中…</cover-view>
-      <cover-view wx:else class="mp-card-face">{{card.text}}</cover-view>
+      <cover-view wx:else class="mp-card-face">
+        <cover-view class="mp-card-title">{{card.kind === 'good' ? '好 事' : (card.kind === 'bad' ? '坏 事' : '事 件')}}</cover-view>
+        <cover-view class="mp-card-text">{{card.text}}</cover-view>
+      </cover-view>
     </cover-view>
   </cover-view>
 
