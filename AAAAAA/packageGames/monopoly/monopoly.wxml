@@ -1,7 +1,5 @@
 <view class="theme-{{theme}} love-page mp-page">
 
-  <t-message id="tmsg" />
-
   <view class="mp-board-wrap">
     <canvas wx:if="{{!rulesOpen}}" type="2d" id="board" class="mp-board"></canvas>
     <view wx:if="{{!started}}" class="mp-empty">
@@ -10,6 +8,12 @@
       <view class="muted small">买地收租 · 机会与突发事件 · 让对方破产即胜</view>
     </view>
     <view wx:if="{{winner}}" class="mp-over-mask"><view class="mp-over-text">{{winnerText}}</view></view>
+  </view>
+
+  <!-- 事件提示：棋盘正下方(无 canvas 不被挡)，带 icon + 好坏色 -->
+  <view wx:if="{{fx}}" class="mp-evt {{fx.kind}}">
+    <t-icon name="{{fx.kind === 'good' ? 'check-circle-filled' : 'close-circle-filled'}}" size="40rpx" />
+    <text class="mp-evt-text">{{fx.text}}</text>
   </view>
 
   <view class="mp-pair">
@@ -25,12 +29,6 @@
     <view wx:for="{{log}}" wx:key="index" class="mp-log-item {{index === 0 ? 'new' : ''}}">· {{item}}</view>
     <view wx:if="{{!log.length}}" class="muted small">掷骰后这里显示事件</view>
   </scroll-view>
-
-  <!-- 事件好/坏特效：用 cover-view 盖在原生 canvas 上，地图不消失 -->
-  <cover-view wx:if="{{fx}}" class="mp-fx {{fx.kind}}">
-    <cover-view class="mp-fx-text">{{fx.kind === 'good' ? '好 事 !' : '糟 了 …'}}</cover-view>
-    <cover-view class="mp-fx-sub">{{fx.text}}</cover-view>
-  </cover-view>
 
   <view class="mp-actions">
     <t-button wx:if="{{!winner}}" theme="primary" block bind:tap="roll" loading="{{rolling}}" disabled="{{!myTurn}}">{{myTurn ? '掷骰子' : (started ? '等对方掷骰' : '开始后掷骰')}}</t-button>

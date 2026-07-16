@@ -180,10 +180,9 @@ Page({
   },
 
   showFx(kind, text) {
-    // 用 TDesign message：带 icon + 主题色(好=success 绿/坏=error 红)，页面顶部不被棋盘挡
-    const m = this.selectComponent('#tmsg');
-    if (m && m.setMessage) m.setMessage({ content: String(text), duration: 1600 }, kind === 'good' ? 'success' : 'error');
-    else wx.showToast({ title: String(text).slice(0, 14), icon: kind === 'good' ? 'success' : 'error', duration: 1500 });
+    this.setData({ fx: { kind, text } });
+    clearTimeout(this._fxT);
+    this._fxT = setTimeout(() => { if (this.data.fx) this.setData({ fx: null }); }, 1700);
   },
 
   async roll() {
@@ -192,8 +191,7 @@ Page({
     const s = this._state;
     this.setData({ rolling: true });
     try {
-    const a = 1 + Math.floor(Math.random() * 6), b = 1 + Math.floor(Math.random() * 6);   // 双骰子
-    await this.rollDiceAnim();                      // 棋盘中央 3D 翻滚
+    const [a, b] = await this.rollDiceAnim();        // 双骰子(棋盘中央 3D 翻滚 + 相加动画)
     const steps = a + b;
     this.setData({ dice: [a, b] });
 
@@ -241,14 +239,18 @@ Page({
 
   rollDiceAnim() {
     return new Promise(res => {
-      if (!this.cv) { res(); return; }
-      const t0 = Date.now(); const dur = 780;
+      const fa = 1 + Math.floor(Math.random() * 6), fb = 1 + Math.floor(Math.random() * 6);
+      if (!this.cv) { res([fa, fb]); return; }
+      const t0 = Date.now(); const tumble = 720, sumAnim = 700;
       const step = () => {
-        const p = Math.min(1, (Date.now() - t0) / dur);
-        this._diceAnim = { a: 1 + Math.floor(Math.random() * 6), b: 1 + Math.floor(Math.random() * 6), angle: Math.sin(p * Math.PI * 5) * 0.6 * (1 - p) };
+        const el = Date.now() - t0;
+        if (el < tumble) {
+          this._diceAnim = { phase: 'tumble', a: 1 + Math.floor(Math.random() * 6), b: 1 + Math.floor(Math.random() * 6), angle: Math.sin(el / tumble * Math.PI * 5) * 0.6 * (1 - el / tumble) };
+        } else if (el < tumble + sumAnim) {
+          this._diceAnim = { phase: 'sum', a: fa, b: fb, sumP: (el - tumble) / sumAnim };
+        } else { this._diceAnim = null; this.draw(); res([fa, fb]); return; }
         this.draw();
-        if (p < 1) this._raf = this.cv.requestAnimationFrame(step);
-        else { this._diceAnim = null; this.draw(); res(); }
+        this._raf = this.cv.requestAnimationFrame(step);
       };
       this._raf = this.cv.requestAnimationFrame(step);
     });
@@ -268,10 +270,22 @@ Page({
     const anim = this._diceAnim;
     const d = this.data.dice || [1, 1];
     const v1 = anim ? anim.a : d[0], v2 = anim ? anim.b : d[1];
-    const ang = anim ? anim.angle : 0;
-    const s = cs * 1.05;
-    this.drawDie(ctx, cx - s * 0.62, cy, s, v1, ang);
-    this.drawDie(ctx, cx + s * 0.62, cy, s, v2, ang);
+    const ang = anim && anim.phase === 'tumble' ? anim.angle : 0;
+    const s = cs * 1.0, gap = s * 1.25;
+    this.drawDie(ctx, cx - gap, cy, s, v1, ang);   // 左骰
+    this.drawDie(ctx, cx + gap, cy, s, v2, ang);   // 右骰
+    // 摇完后相加动画：a + b = sum 弹出
+    if (!anim || anim.phase === 'sum') {
+      const p = anim ? (anim.sumP || 1) : 1;
+      const sum = v1 + v2;
+      ctx.save();
+      ctx.globalAlpha = Math.min(1, p * 1.5);
+      const sc = 0.5 + 0.5 * Math.min(1, p);
+      ctx.translate(cx, cy + s * 1.55); ctx.scale(sc, sc);
+      ctx.fillStyle = '#e85a86'; ctx.font = 'bold ' + Math.round(cs * 0.46) + 'px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(v1 + ' + ' + v2 + ' = ' + sum, 0, 0);
+      ctx.restore();
+    }
   },
   drawCard() {
     return new Promise(res => {
@@ -428,9 +442,7 @@ Page({
     ctx.clearRect(0, 0, W, H);
     ctx.fillStyle = '#f3e9d2'; ctx.fillRect(0, 0, W, H);
     ctx.fillStyle = '#fff8ec'; ctx.fillRect(cw, ch, W - 2 * cw, H - 2 * ch);
-    ctx.fillStyle = '#b58a5a'; ctx.font = 'bold ' + Math.round(cs * 0.5) + 'px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     this.drawDiceCenter(ctx);
-    ctx.fillText('大富翁', W / 2, H / 2 + cs * 2.3);
 
     const cells = this._cells || [];
     for (let i = 0; i < BOARD; i++) {

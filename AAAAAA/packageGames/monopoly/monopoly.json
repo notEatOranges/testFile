@@ -5,7 +5,6 @@
   "navigationBarTextStyle": "black",
   "usingComponents": {
     "game-rules": "../components/game-rules/game-rules",
-    "roll-first": "../components/roll-first/roll-first",
-    "t-message": "tdesign-miniprogram/message/message"
+    "roll-first": "../components/roll-first/roll-first"
   }
 }
