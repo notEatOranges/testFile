@@ -1,5 +1,7 @@
 <view class="theme-{{theme}} love-page mp-page">
 
+  <t-message id="tmsg" />
+
   <view class="mp-board-wrap">
     <canvas wx:if="{{!rulesOpen}}" type="2d" id="board" class="mp-board"></canvas>
     <view wx:if="{{!started}}" class="mp-empty">

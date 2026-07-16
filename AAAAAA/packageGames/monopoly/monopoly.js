@@ -180,8 +180,10 @@ Page({
   },
 
   showFx(kind, text) {
-    // 用系统 toast：success/error 图标自带好(绿✓)/坏(红✗)，绝不会被棋盘/导航栏遮挡
-    wx.showToast({ title: String(text).slice(0, 14), icon: kind === 'good' ? 'success' : 'error', duration: 1500, mask: false });
+    // 用 TDesign message：带 icon + 主题色(好=success 绿/坏=error 红)，页面顶部不被棋盘挡
+    const m = this.selectComponent('#tmsg');
+    if (m && m.setMessage) m.setMessage({ content: String(text), duration: 1600 }, kind === 'good' ? 'success' : 'error');
+    else wx.showToast({ title: String(text).slice(0, 14), icon: kind === 'good' ? 'success' : 'error', duration: 1500 });
   },
 
   async roll() {
