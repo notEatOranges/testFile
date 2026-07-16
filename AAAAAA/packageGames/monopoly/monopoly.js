@@ -456,20 +456,31 @@ Page({
   },
   sellToBank(e) {
     const idx = parseInt(e.currentTarget.dataset.idx, 10), role = room.getRole(), s = this._state;
-    const cs = s.cells.map(c => Object.assign({}, c)), cell = cs[idx];
+    const cell = s.cells[idx];
     const get = Math.round((cell.price + (cell.level || 0) * upgradeCost(cell)) * 0.6);
-    const cash = Object.assign({}, s.cash); cash[role] += get;
-    cs[idx] = Object.assign({}, cell, { owner: null, level: 0 });
-    const lg = (s.log || []).slice(); lg.push('把「' + cell.name + '」卖给银行 +' + get);
-    rt.setState('monopoly', Object.assign({}, s, { cells: cs, cash, log: lg.slice(-30) }));
-    toast('卖给银行 +' + get);
+    wx.showModal({ title: '卖给银行', content: '确定把「' + cell.name + '」卖给银行，获得 ' + get + '？', confirmText: '卖出', cancelText: '取消',
+      success: r => {
+        if (!r.confirm) return;
+        const cs = s.cells.map(c => Object.assign({}, c));
+        cs[idx] = Object.assign({}, cell, { owner: null, level: 0 });
+        const cash = Object.assign({}, s.cash); cash[role] += get;
+        const lg = (s.log || []).slice(); lg.push('把「' + cell.name + '」卖给银行 +' + get);
+        rt.setState('monopoly', Object.assign({}, s, { cells: cs, cash, log: lg.slice(-30) }));
+        toast('卖给银行 +' + get);
+      }
+    });
   },
   sellToPeer(e) {
     const idx = parseInt(e.currentTarget.dataset.idx, 10), role = room.getRole(), s = this._state;
     const cell = s.cells[idx], price = Math.round(cell.price * 0.8);
-    rt.setState('monopoly', Object.assign({}, s, { sellReq: { by: role, idx, price } }));
-    this.setData({ bankOpen: false });
-    toast('已发起卖地请求(价 ' + price + ')，等对方');
+    wx.showModal({ title: '卖给对方', content: '确定把「' + cell.name + '」以 ' + price + ' 卖给对方？', confirmText: '发起', cancelText: '取消',
+      success: r => {
+        if (!r.confirm) return;
+        rt.setState('monopoly', Object.assign({}, s, { sellReq: { by: role, idx, price } }));
+        this.setData({ bankOpen: false });
+        toast('已发起卖地请求(价 ' + price + ')，等对方');
+      }
+    });
   },
   cancelSell() { rt.setState('monopoly', Object.assign({}, this._state, { sellReq: null })); toast('已取消卖地'); },
   openRules() { this.setData({ rulesOpen: true }); },
