@@ -1,13 +1,7 @@
 <view class="theme-{{theme}} love-page mp-page">
 
-  <view class="mp-nav">
-    <view class="mp-nav-btn" bindtap="goBack"><t-icon name="chevron-left" size="44rpx" /></view>
-    <text class="mp-nav-title">大富翁</text>
-    <view class="mp-nav-btn" style="visibility:hidden"><t-icon name="chevron-left" size="44rpx" /></view>
-  </view>
-
   <view class="mp-board-wrap">
-    <canvas wx:if="{{!rulesOpen}}" type="2d" id="board" class="mp-board"></canvas>
+    <canvas wx:if="{{!rulesOpen && !card}}" type="2d" id="board" class="mp-board"></canvas>
     <view wx:if="{{!started}}" class="mp-empty">
       <view class="mp-title">大富翁</view>
       <view class="mp-start" bindtap="startMatch">开始对局</view>
@@ -16,10 +10,12 @@
     <view wx:if="{{winner}}" class="mp-over-mask"><view class="mp-over-text">{{winnerText}}</view></view>
   </view>
 
-  <!-- 事件提示：棋盘正下方(无 canvas 不被挡)，带 icon + 好坏色 -->
-  <view wx:if="{{fx}}" class="mp-evt {{fx.kind}}">
-    <t-icon name="{{fx.kind === 'good' ? 'check-circle-filled' : 'close-circle-filled'}}" size="40rpx" />
-    <text class="mp-evt-text">{{fx.text}}</text>
+  <!-- 事件提示：固定高度槽位(不挤布局/不抖动)，棋盘下方无 canvas 必可见 -->
+  <view class="mp-evt-slot">
+    <view wx:if="{{fx}}" class="mp-evt {{fx.kind}}">
+      <t-icon name="{{fx.kind === 'good' ? 'check-circle-filled' : 'close-circle-filled'}}" size="40rpx" />
+      <text class="mp-evt-text">{{fx.text}}</text>
+    </view>
   </view>
 
   <view class="mp-pair">

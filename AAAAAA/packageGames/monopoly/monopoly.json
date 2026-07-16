@@ -1,8 +1,8 @@
 {
-  "navigationStyle": "custom",
-  "renderer": "skyline",
-  "componentFramework": "glass-easel",
+  "navigationStyle": "default",
   "navigationBarTitleText": "大富翁",
+  "navigationBarBackgroundColor": "#fff5f7",
+  "navigationBarTextStyle": "black",
   "usingComponents": {
     "game-rules": "../components/game-rules/game-rules",
     "roll-first": "../components/roll-first/roll-first"
