@@ -1,0 +1,10 @@
+{
+  "navigationStyle": "default",
+  "pageOrientation": "landscape",
+  "navigationBarTitleText": "大富翁",
+  "navigationBarBackgroundColor": "#fff5f7",
+  "navigationBarTextStyle": "black",
+  "usingComponents": {
+    "game-rules": "../components/game-rules/game-rules"
+  }
+}

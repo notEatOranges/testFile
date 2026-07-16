@@ -1,0 +1,39 @@
+<view class="theme-{{theme}} love-page mp-page">
+
+  <view class="mp-board-wrap">
+    <canvas wx:if="{{!rulesOpen}}" type="2d" id="board" class="mp-board"></canvas>
+    <view wx:if="{{!started}}" class="mp-empty">
+      <view class="mp-title">大富翁</view>
+      <view class="mp-start" bindtap="startMatch">开始对局</view>
+      <view class="muted small">买地收租，让对方破产即胜</view>
+    </view>
+    <view wx:if="{{winner}}" class="mp-over">{{winnerText}}</view>
+  </view>
+
+  <view class="mp-side">
+    <view class="mp-pair">
+      <view class="mp-p me"><text class="mp-n">{{myName}}</text><text class="mp-cash">{{myCash}}</text></view>
+      <view class="mp-p"><text class="mp-n">{{peerName}}</text><text class="mp-cash">{{peerCash}}</text></view>
+    </view>
+    <view wx:if="{{winner}}" class="mp-result">{{winnerText}}</view>
+    <view wx:elif="{{started}}" class="mp-turn">{{myTurn ? '该你掷骰' : '等 ' + peerName + ' 掷骰'}}</view>
+
+    <view wx:if="{{requestPending}}" class="mp-pending">已请求重开，等 {{peerName}} 同意 <text class="mp-link" bindtap="cancelReq">取消</text></view>
+
+    <scroll-view scroll-y class="mp-log">
+      <view wx:for="{{log}}" wx:key="index" class="mp-log-item">· {{item}}</view>
+      <view wx:if="{{!log.length}}" class="muted small">掷骰后这里显示事件</view>
+    </scroll-view>
+
+    <view class="mp-actions">
+      <t-button wx:if="{{!winner}}" theme="primary" block bind:tap="roll" loading="{{rolling}}" disabled="{{!myTurn}}">{{myTurn ? '掷骰子' : (started ? '等对方掷骰' : '开始后掷骰')}}</t-button>
+      <view class="mp-row">
+        <t-button theme="default" size="small" bind:tap="openRules">玩法</t-button>
+        <t-button wx:if="{{started && !winner}}" theme="default" size="small" bind:tap="resign">认输</t-button>
+        <t-button theme="default" size="small" bind:tap="requestRestart">{{winner ? '再来一局' : '重新开局'}}</t-button>
+      </view>
+    </view>
+  </view>
+
+  <game-rules game-key="monopoly" open="{{rulesOpen}}" bind:close="closeRules" />
+</view>

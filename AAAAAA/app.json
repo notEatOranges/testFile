@@ -28,6 +28,7 @@
         "gomoku/gomoku",
         "memory/memory",
         "othello/othello",
+        "monopoly/monopoly",
         "leaderboard/leaderboard"
       ]
     }

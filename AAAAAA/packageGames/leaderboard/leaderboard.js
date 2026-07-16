@@ -10,7 +10,8 @@ const GAMES = [
   { key: 'tetris', label: '俄罗斯方块', kind: 'score' },
   { key: 'gomoku', label: '五子棋', kind: 'pvp' },
   { key: 'memory', label: '记忆翻牌', kind: 'pvp' },
-  { key: 'othello', label: '黑白棋', kind: 'pvp' }
+  { key: 'othello', label: '黑白棋', kind: 'pvp' },
+  { key: 'monopoly', label: '大富翁', kind: 'pvp' }
 ];
 
 function fmt(ts) {

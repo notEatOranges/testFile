@@ -1,0 +1,26 @@
+.mp-page { display: flex; gap: 18rpx; padding: 16rpx; height: 100vh; box-sizing: border-box; align-items: stretch; }
+
+/* 棋盘（正方形，按屏高） */
+.mp-board-wrap { position: relative; flex: 0 0 auto; }
+.mp-board { width: 96vh; height: 96vh; max-width: 74vw; border-radius: 16rpx; box-shadow: 0 8rpx 30rpx var(--card-shadow); }
+.mp-empty { position: absolute; inset: 0; border-radius: 16rpx; background: rgba(243,233,210,.95); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14rpx; }
+.mp-title { font-size: 52rpx; font-weight: 800; color: #b58a5a; }
+.mp-start { padding: 16rpx 56rpx; border-radius: 36rpx; background: var(--primary); color: #fff; font-size: 30rpx; }
+.mp-over { position: absolute; left: 0; right: 0; bottom: 24rpx; text-align: center; font-size: 32rpx; font-weight: 800; color: var(--primary-deep); }
+
+/* 右侧面板 */
+.mp-side { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 14rpx; }
+.mp-pair { display: flex; gap: 14rpx; }
+.mp-p { flex: 1; display: flex; align-items: center; justify-content: space-between; padding: 16rpx 22rpx; border-radius: 18rpx; background: var(--card); box-shadow: 0 4rpx 16rpx var(--card-shadow); }
+.mp-p.me { border-left: 8rpx solid #e85a86; }
+.mp-n { font-size: 26rpx; color: var(--text); font-weight: 600; }
+.mp-cash { font-size: 38rpx; font-weight: 800; color: var(--primary-deep); }
+.mp-result { font-size: 34rpx; font-weight: 800; color: var(--primary-deep); text-align: center; }
+.mp-turn { font-size: 26rpx; color: var(--text-soft); text-align: center; }
+.mp-pending { font-size: 24rpx; color: var(--primary-deep); text-align: center; }
+.mp-link { color: var(--text-soft); padding: 0 8rpx; }
+.mp-log { flex: 1; min-height: 0; padding: 16rpx 20rpx; border-radius: 18rpx; background: var(--card); box-shadow: 0 4rpx 16rpx var(--card-shadow); }
+.mp-log-item { font-size: 24rpx; color: var(--text); line-height: 1.6; }
+.mp-actions { display: flex; flex-direction: column; gap: 12rpx; }
+.mp-row { display: flex; gap: 12rpx; }
+.mp-row .t-button { flex: 1; }
