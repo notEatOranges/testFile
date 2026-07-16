@@ -5,17 +5,9 @@
     <view wx:if="{{!started}}" class="mp-empty">
       <view class="mp-title">大富翁</view>
       <view class="mp-start" bindtap="startMatch">开始对局</view>
-      <view class="muted small">买地收租 · 机会与突发事件 · 让对方破产即胜</view>
+      <view class="muted small">买地收租 · 机会卡 · 让对方破产即胜</view>
     </view>
     <view wx:if="{{winner}}" class="mp-over-mask"><view class="mp-over-text">{{winnerText}}</view></view>
-  </view>
-
-  <!-- 事件提示：固定高度槽位(不挤布局/不抖动)，棋盘下方无 canvas 必可见 -->
-  <view class="mp-evt-slot">
-    <view wx:if="{{fx}}" class="mp-evt {{fx.kind}}">
-      <t-icon name="{{fx.kind === 'good' ? 'check-circle-filled' : 'close-circle-filled'}}" size="40rpx" />
-      <text class="mp-evt-text">{{fx.text}}</text>
-    </view>
   </view>
 
   <view class="mp-pair">
@@ -23,26 +15,23 @@
     <view class="mp-p"><text class="mp-n">{{peerName}}</text><text class="mp-cash">{{peerCash}}</text></view>
   </view>
 
-  <view wx:if="{{winner}}" class="mp-result">{{winnerText}}</view>
-  <view wx:elif="{{started}}" class="mp-turn">{{myTurn ? '该你掷骰' : '等 ' + peerName + ' 掷骰'}}</view>
-  <view wx:if="{{requestPending}}" class="mp-pending">已请求重开，等 {{peerName}} 同意 <text class="mp-link" bindtap="cancelReq">取消</text></view>
+  <view class="mp-info">
+    <text wx:if="{{winner}}" class="mp-result">{{winnerText}}</text>
+    <text wx:elif="{{started}}" class="mp-turn">{{myTurn ? '该你掷骰' : '等 ' + peerName + ' 掷骰'}}</text>
+    <text wx:if="{{requestPending}}" class="mp-pending"> 已请求重开 <text class="mp-link" bindtap="cancelReq">取消</text></text>
+    <text wx:if="{{sellReqPending}}" class="mp-pending"> 等对方买地 <text class="mp-link" bindtap="cancelSell">取消</text></text>
+  </view>
 
-  <scroll-view scroll-y class="mp-log" enhanced show-scrollbar="{{false}}">
-    <view wx:for="{{log}}" wx:key="index" class="mp-log-item {{index === 0 ? 'new' : ''}}">· {{item}}</view>
-    <view wx:if="{{!log.length}}" class="muted small">掷骰后这里显示事件</view>
-  </scroll-view>
-
-  <view class="mp-actions">
+  <!-- 固定底部 tab 栏，安全边距，禁止滚动 -->
+  <view class="mp-tabbar">
     <t-button wx:if="{{!winner}}" theme="primary" block bind:tap="roll" loading="{{rolling}}" disabled="{{!myTurn}}">{{myTurn ? '掷骰子' : (started ? '等对方掷骰' : '开始后掷骰')}}</t-button>
-    <view class="mp-row">
+    <view class="mp-tabbar-row">
       <t-button theme="default" size="small" bind:tap="openRules">玩法</t-button>
       <t-button wx:if="{{started}}" theme="default" size="small" bind:tap="openBank">银行</t-button>
       <t-button wx:if="{{started && !winner}}" theme="default" size="small" bind:tap="resign">认输</t-button>
-      <t-button theme="default" size="small" bind:tap="requestRestart">{{winner ? '再来一局' : '重新开局'}}</t-button>
+      <t-button theme="default" size="small" bind:tap="requestRestart">{{winner ? '再来' : '重开'}}</t-button>
     </view>
   </view>
-
-  <view wx:if="{{sellReqPending}}" class="mp-pending">等对方决定是否买你的地 <text class="mp-link" bindtap="cancelSell">取消</text></view>
 
   <!-- 银行/资产面板 -->
   <view class="sf-mask {{bankOpen ? 'show' : ''}}" bindtap="closeBank"></view>
@@ -55,7 +44,7 @@
       <view class="bk-btn" data-act="deposit" data-amt="500" bindtap="bankAct">存 500</view>
       <view class="bk-btn" data-act="withdraw" data-amt="100000" bindtap="bankAct">全部取出</view>
     </view>
-    <view class="bk-label">贷款(借 200 实欠 220，过起点 +10% 利息)</view>
+    <view class="bk-label">贷款(借 200 实欠 220)</view>
     <view class="bk-btns">
       <view class="bk-btn" data-act="borrow" bindtap="bankAct">贷款 +200</view>
       <view class="bk-btn" data-act="repay" bindtap="bankAct">还款</view>
@@ -75,4 +64,5 @@
   </view>
 
   <game-rules game-key="monopoly" open="{{rulesOpen}}" bind:close="closeRules" />
+  <roll-first open="{{rollFirst.open}}" result="{{rollFirst.result}}" my-name="{{myName}}" peer-name="{{peerName}}" />
 </view>

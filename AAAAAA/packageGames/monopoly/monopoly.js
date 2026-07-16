@@ -180,9 +180,16 @@ Page({
   },
 
   showFx(kind, text) {
-    this.setData({ fx: { kind, text } });
-    clearTimeout(this._fxT);
-    this._fxT = setTimeout(() => { if (this.data.fx) this.setData({ fx: null }); }, 1700);
+    this._fxAnim = { kind, text, t0: Date.now() };
+    if (!this._fxRaf && this.cv) {
+      const step = () => {
+        if (!this._fxAnim) { this._fxRaf = null; return; }
+        if (Date.now() - this._fxAnim.t0 > 1500) { this._fxAnim = null; this._fxRaf = null; this.draw(); return; }
+        this.draw();
+        this._fxRaf = this.cv.requestAnimationFrame(step);
+      };
+      this._fxRaf = this.cv.requestAnimationFrame(step);
+    }
   },
 
   async roll() {
@@ -344,6 +351,23 @@ Page({
     ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
     ctx.fillStyle = 'rgba(255,255,255,.4)'; ctx.font = 'bold ' + Math.round(w * 0.5) + 'px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText('?', 0, 0);
+    ctx.restore();
+  },
+  drawFxAnim(ctx) {
+    const a = this._fxAnim; if (!a) return;
+    const el = Date.now() - a.t0;
+    const p = Math.min(1, el / 250);
+    const fade = el > 1200 ? Math.max(0, 1 - (el - 1200) / 300) : 1;
+    const cs = this.cs, cx = this.W / 2, cy = this.H / 2;
+    const w = cs * 4.5, h = cs * 1.3;
+    ctx.save();
+    ctx.globalAlpha = fade * Math.min(1, p * 2);
+    ctx.translate(cx, cy);
+    ctx.scale(0.6 + 0.4 * p, 0.6 + 0.4 * p);
+    ctx.fillStyle = a.kind === 'good' ? '#2ec24e' : '#e85a86';
+    this.rr(ctx, -w / 2, -h / 2, w, h, 14); ctx.fill();
+    ctx.fillStyle = '#fff'; ctx.font = 'bold ' + Math.round(cs * 0.34) + 'px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    this.wrapText(ctx, a.text, 0, 0, w * 0.85, cs * 0.38);
     ctx.restore();
   },
 
@@ -520,6 +544,7 @@ Page({
       else { this.drawToken(ctx, this.data.myPos, myKind, myColor, 0); this.drawToken(ctx, this.data.peerPos, peKind, peColor, 0); }
     }
     this.drawCardAnim(ctx);
+    this.drawFxAnim(ctx);
   },
   wrapText(ctx, text, x, y, maxW, lh) {
     let line = '';
