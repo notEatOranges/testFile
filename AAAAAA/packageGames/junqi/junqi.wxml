@@ -1,0 +1,33 @@
+<view class="theme-{{theme}} love-page jq-page">
+
+  <view class="jq-bar">
+    <text class="jq-side {{myColor}}">{{myColor === 'red' ? '红方' : '黑方'}} · {{myName}}</text>
+    <text wx:if="{{winner}}" class="jq-result">{{winnerText}}</text>
+    <text wx:elif="{{started}}" class="jq-turn">{{myTurn ? '该你行动' : '等 ' + peerName}}</text>
+    <text class="jq-side {{myColor === 'red' ? 'black' : 'red'}}">{{peerName}}</text>
+  </view>
+
+  <view wx:if="{{requestPending}}" class="jq-pending">已请求重新开局，等 {{peerName}} 同意 <text class="jq-link" bindtap="cancelReq">取消</text></view>
+
+  <view wx:if="{{started}}" class="jq-board">
+    <view wx:for="{{view}}" wx:key="c" class="jq-cell {{item.camp ? 'camp' : ''}} {{item.rail ? 'rail' : ''}} {{item.side === 'red' ? 'red' : (item.side === 'black' ? 'black' : '')}}"
+          data-r="{{item.r}}" data-c="{{item.c}}" bindtap="onCellTap"
+          style="{{sel && sel.r === item.r && sel.c === item.c ? 'box-shadow:0 0 0 4rpx var(--primary);' : ''}} {{targets[item.r + '_' + item.c] ? 'background:rgba(46,194,78,.2);' : ''}}">
+      <text wx:if="{{item.mine}}" class="jq-name">{{item.mine}}</text>
+    </view>
+  </view>
+
+  <view wx:else class="jq-empty">
+    <view class="jq-title">陆战棋</view>
+    <view class="jq-start" bindtap="startMatch">开始对局（自动布阵）</view>
+    <view class="muted small">铁路急行·工兵挖雷·夺军旗即胜</view>
+  </view>
+
+  <view class="jq-actions">
+    <t-button theme="default" size="small" bind:tap="openRules" icon="info-circle">玩法</t-button>
+    <t-button wx:if="{{started}}" theme="default" size="small" bind:tap="resign">认输</t-button>
+    <t-button theme="primary" size="small" bind:tap="requestRestart">{{winner ? '再来一局' : (started ? '重新开局' : '开始对局')}}</t-button>
+  </view>
+
+  <game-rules game-key="junqi" open="{{rulesOpen}}" bind:close="closeRules" />
+</view>
