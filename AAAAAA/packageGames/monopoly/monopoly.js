@@ -9,7 +9,8 @@ const rt = require('@utils/rtgame.js');
 const { toast } = require('@utils/util.js');
 
 const START_CASH = 1500;
-const BOARD = 28;
+const GRID = 10;
+const BOARD = 4 * GRID - 4;   // 外圈格数 = 36（更长赛道）
 const DECK = [
   { t: '生日红包 +200', cash: 200 }, { t: '修车费 -100', cash: -100 }, { t: '中奖 +150', cash: 150 },
   { t: '请客吃饭 -80', cash: -80 }, { t: '理财收益 +120', cash: 120 }, { t: '违章罚款 -90', cash: -90 },
@@ -20,22 +21,26 @@ const DECK = [
 const GROUP_COLOR = ['#9b7fd4', '#3a86ff', '#06d6a0', '#ffb703', '#e85a86', '#fb8500'];
 
 function buildCells() {
-  const prop = (name, g) => ({ name, type: 'property', group: g, price: 80 + g * 60, rent: 40 + g * 30, owner: null, level: 0 });
-  return [
-    { name: '起点', type: 'start' }, prop('棉花糖摊', 0), prop('奶茶店', 0), { name: '机会', type: 'card', kind: 'chance' },
-    prop('电影院', 1), { name: '缴税', type: 'tax', amt: 100 }, prop('咖啡馆', 1), prop('书店', 1),
-    { name: '监狱', type: 'jail' }, prop('花店', 2), { name: '奖金', type: 'bonus', amt: 150 }, prop('游乐场', 2),
-    { name: '突发事件', type: 'card', kind: 'fate' }, prop('海滩', 2), prop('摩天轮', 3), { name: '缴税', type: 'tax', amt: 120 },
-    prop('甜品屋', 3), { name: '机会', type: 'card', kind: 'chance' }, prop('民宿', 3), prop('烟火大会', 4),
-    { name: '车站', type: 'bonus', amt: 100 }, prop('星空营地', 4), { name: '突发事件', type: 'card', kind: 'fate' },
-    prop('音乐节', 4), prop('滑雪场', 5), { name: '缴税', type: 'tax', amt: 150 }, prop('温泉', 5), prop('灯塔', 5)
-  ];
+  const cells = [{ name: '起点', type: 'start' }];
+  const names = ['棉花糖摊', '奶茶店', '电影院', '咖啡馆', '书店', '花店', '游乐场', '海滩', '摩天轮', '甜品屋', '民宿', '烟火大会', '星空营地', '音乐节', '滑雪场', '温泉', '灯塔', '古镇', '甜品街', '画廊', '酒庄', '马场', '茶园', '果园', '城堡', '集市'];
+  let ni = 0;
+  for (let i = 1; i < BOARD; i++) {
+    const m = i % 5;
+    if (m === 0) cells.push({ name: '机会', type: 'card', kind: 'chance' });
+    else if (i === 8 || i === 19 || i === 30) cells.push({ name: '突发事件', type: 'card', kind: 'fate' });
+    else if (i === 13 || i === 27) cells.push({ name: '缴税', type: 'tax', amt: 100 + (ni % 3) * 40 });
+    else if (i === 17) cells.push({ name: '监狱', type: 'jail' });
+    else if (i === 23 || i === 33) cells.push({ name: '奖金', type: 'bonus', amt: 150 });
+    else { const g = ni % 6; const price = 80 + g * 60 + ni * 4; cells.push({ name: names[ni % names.length] + (ni >= names.length ? ' ' + (Math.floor(ni / names.length) + 1) : ''), type: 'property', group: g, price, rent: Math.round(price * 0.3), owner: null, level: 0 }); ni++; }
+  }
+  return cells;
 }
 function cellCR(i) {
-  if (i <= 7) return [i, 7];
-  if (i <= 14) return [7, 14 - i];
-  if (i <= 21) return [21 - i, 0];
-  return [0, i - 21];
+  const N = GRID;
+  if (i <= N - 1) return [i, N - 1];
+  if (i <= 2 * N - 2) return [N - 1, (2 * N - 2) - i];
+  if (i <= 3 * N - 3) return [(3 * N - 3) - i, 0];
+  return [0, i - (3 * N - 3)];
 }
 function rentOf(cell) { return cell.rent * (1 + (cell.level || 0)); }
 function upgradeCost(cell) { return Math.round(cell.price * 0.5); }
@@ -92,8 +97,8 @@ Page({
       cv.width = w * dpr; cv.height = h * dpr;
       const ctx = cv.getContext('2d'); ctx.scale(dpr, dpr);
       this.ctx = ctx; this.cv = cv; this.W = w; this.H = h;
-      this.cs = Math.min(w, h) / 8;
-      this.ox = (w - 8 * this.cs) / 2; this.oy = (h - 8 * this.cs) / 2;
+      this.cs = Math.min(w, h) / GRID;
+      this.ox = (w - GRID * this.cs) / 2; this.oy = (h - GRID * this.cs) / 2;
       this.applyState();
     });
   },
@@ -299,13 +304,13 @@ Page({
     if (!this.ctx) return;
     const ctx = this.ctx, W = this.W, H = this.H, cs = this.cs, ox = this.ox, oy = this.oy;
     ctx.clearRect(0, 0, W, H);
-    ctx.fillStyle = '#f3e9d2'; ctx.fillRect(ox, oy, cs * 8, cs * 8);
-    ctx.fillStyle = '#fff8ec'; ctx.fillRect(ox + cs, oy + cs, cs * 6, cs * 6);
-    ctx.fillStyle = '#b58a5a'; ctx.font = 'bold ' + Math.round(cs * 0.46) + 'px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText('大富翁', ox + cs * 4, oy + cs * 3.7);
-    ctx.font = Math.round(cs * 0.22) + 'px sans-serif'; ctx.fillStyle = '#9a7a52';
+    ctx.fillStyle = '#f3e9d2'; ctx.fillRect(ox, oy, cs * GRID, cs * GRID);
+    ctx.fillStyle = '#fff8ec'; ctx.fillRect(ox + cs, oy + cs, cs * (GRID - 2), cs * (GRID - 2));
+    ctx.fillStyle = '#b58a5a'; ctx.font = 'bold ' + Math.round(cs * 0.5) + 'px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('大富翁', ox + cs * GRID / 2, oy + cs * GRID / 2 - cs * 0.35);
+    ctx.font = Math.round(cs * 0.24) + 'px sans-serif'; ctx.fillStyle = '#9a7a52';
     const dn = this.data.dice;
-    ctx.fillText('骰 ' + dn[0] + '+' + dn[1] + '=' + (dn[0] + dn[1]), ox + cs * 4, oy + cs * 4.4);
+    ctx.fillText('骰 ' + dn[0] + '+' + dn[1] + '=' + (dn[0] + dn[1]), ox + cs * GRID / 2, oy + cs * GRID / 2 + cs * 0.25);
 
     const cells = this._cells || [];
     for (let i = 0; i < BOARD; i++) {
