@@ -18,7 +18,7 @@
   <view wx:elif="{{started}}" class="go-tip muted small">第 {{moves}} 手 · {{turnSeat === mySeat ? '该你落子，点交叉点' : '等 ' + peerName + ' 落子'}}</view>
 
   <view class="board-wrap">
-    <canvas type="2d" id="board" class="board" bindtouchend="onTouchEnd"></canvas>
+    <canvas wx:if="{{!rulesOpen}}" type="2d" id="board" class="board" bindtap="onBoardTap"></canvas>
     <view wx:if="{{!started}}" class="board-empty">
       <view class="be-text">还没开局</view>
       <view class="be-btn" bindtap="startMatch">开始对局</view>

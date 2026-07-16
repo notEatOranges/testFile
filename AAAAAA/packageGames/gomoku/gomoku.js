@@ -89,7 +89,12 @@ Page({
   },
   restart() { this.startMatch(); },
   openRules() { this.setData({ rulesOpen: true }); },
-  closeRules() { this.setData({ rulesOpen: false }); },
+  closeRules() {
+    this.setData({ rulesOpen: false });
+    // canvas 被 wx:if 隐藏过，重新挂载后需重建上下文并重绘
+    this._drawReady = false;
+    setTimeout(() => this.setupCanvas(), 60);
+  },
 
   resign() {
     if (!this.data.started || this.data.winner) return;
@@ -104,12 +109,13 @@ Page({
     });
   },
 
-  onTouchEnd(e) {
+  onBoardTap(e) {
     if (!this.data.started) return;
     if (this.data.winner) return;
     if (!this.data.myTurn) return toast('等对方落子');
-    const t = e.changedTouches[0];
-    const x = t.clientX - this.rect.left, y = t.clientY - this.rect.top;
+    // canvas 的 tap 事件 detail.x/y 为相对 canvas 左上角的坐标
+    const x = e.detail.x, y = e.detail.y;
+    if (x == null || y == null || !this.step) return;
     const c = Math.round(x / this.step - 1), r = Math.round(y / this.step - 1);
     if (r < 0 || r >= N || c < 0 || c >= N) return;
     const board = this._board.map(row => row.slice());
