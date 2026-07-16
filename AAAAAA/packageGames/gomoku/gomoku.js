@@ -104,6 +104,15 @@ Page({
   },
 
   startMatch() {
+    // 乐观清盘：本地立即清空 + 重绘，不等服务器回环；再写云端让对方同步
+    this._board = emptyBoard();
+    this._winLine = null;
+    this.setData({
+      started: true, turnSeat: rt.RED,
+      myTurn: this.data.mySeat === rt.RED,
+      winner: null, winnerText: '', last: null, moves: 0, requestPending: false
+    });
+    this.draw();
     rt.setState('gomoku', { board: emptyBoard(), turn: rt.RED, last: null, winner: null, winLine: null, moves: 0, req: null });
   },
 
