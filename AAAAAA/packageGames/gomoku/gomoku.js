@@ -104,6 +104,7 @@ Page({
   },
 
   startMatch() {
+    console.log('[gomoku] startMatch 被调用');
     // 乐观清盘：本地立即清空 + 重绘，不等服务器回环；再写云端让对方同步
     this._board = emptyBoard();
     this._winLine = null;
@@ -113,20 +114,25 @@ Page({
       winner: null, winnerText: '', last: null, moves: 0, requestPending: false
     });
     this.draw();
-    rt.setState('gomoku', { board: emptyBoard(), turn: rt.RED, last: null, winner: null, winLine: null, moves: 0, req: null });
+    rt.setState('gomoku', { board: emptyBoard(), turn: rt.RED, last: null, winner: null, winLine: null, moves: 0, req: null })
+      .then(() => console.log('[gomoku] startMatch 写入成功'))
+      .catch(err => console.error('[gomoku] startMatch 写入失败', err && err.errMsg || err));
   },
 
   // —— 重新开局：未开局/已结束直接开；进行中需二次确认 + 对方同意 ——
   requestRestart() {
+    console.log('[gomoku] requestRestart', JSON.stringify({ started: this.data.started, winner: this.data.winner }));
     if (!this.data.started || this.data.winner) { this.startMatch(); return; }
     wx.showModal({
       title: '重新开局', content: '将向对方发起请求，需对方同意才会重开当前棋局', confirmText: '发起请求',
-      success: r => { if (r.confirm) this.sendReq(); }
+      success: r => { console.log('[gomoku] 重开确认', r.confirm); if (r.confirm) this.sendReq(); }
     });
   },
   sendReq() {
-    if (!this._state) return;
-    rt.setState('gomoku', Object.assign({}, this._state, { req: { by: room.getRole(), ts: Date.now() } }));
+    if (!this._state) { console.warn('[gomoku] sendReq: _state 为空'); return; }
+    rt.setState('gomoku', Object.assign({}, this._state, { req: { by: room.getRole(), ts: Date.now() } }))
+      .then(() => console.log('[gomoku] sendReq 写入成功'))
+      .catch(err => console.error('[gomoku] sendReq 写入失败', err && err.errMsg || err));
     toast('已发起请求，等对方同意');
   },
   cancelReq() {
@@ -139,13 +145,17 @@ Page({
   },
 
   resign() {
-    if (!this.data.started || this.data.winner) return;
+    console.log('[gomoku] resign 被点击', JSON.stringify({ started: this.data.started, winner: this.data.winner, hasState: !!this._state }));
+    if (!this.data.started || this.data.winner) { console.log('[gomoku] resign 跳过: 未开局或已有胜负'); return; }
     wx.showModal({
       title: '认输', content: '确定认输吗？', confirmText: '认输', confirmColor: '#e85a86',
-      success: async r => {
+      success: r => {
+        console.log('[gomoku] 认输确认', r.confirm);
         if (!r.confirm) return;
         const peerSeat = rt.peerSeatOf(room.getRole());
-        rt.setState('gomoku', Object.assign({}, this._state, { winner: peerSeat }));
+        rt.setState('gomoku', Object.assign({}, this._state, { winner: peerSeat }))
+          .then(() => console.log('[gomoku] resign 写入成功 winner=', peerSeat))
+          .catch(err => console.error('[gomoku] resign 写入失败', err && err.errMsg || err));
         toast('已认输');
       }
     });
@@ -173,7 +183,9 @@ Page({
     const next = Object.assign({}, this._state, { board, turn: winLine ? mySeat : nextTurn, last: { r, c }, winner: null, moves });
     if (winLine) { next.winner = mySeat; next.winLine = winLine; }
     else if (moves >= N * N) { next.winner = 'draw'; }
-    rt.setState('gomoku', next);
+    rt.setState('gomoku', next)
+      .then(() => console.log('[gomoku] 落子写入成功 r,c=', r, c))
+      .catch(err => console.error('[gomoku] 落子写入失败', err && err.errMsg || err));
   },
 
   openRules() { this.setData({ rulesOpen: true }); },
