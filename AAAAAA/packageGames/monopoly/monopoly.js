@@ -70,7 +70,7 @@ Page({
   data: {
     theme: 'sakura', role: 'boy', peer: 'girl', myName: '我', myAvatar: '', peerName: 'ta', peerAvatar: '',
     started: false, turnSeat: 'red', mySeat: 'red', myTurn: false,
-    dice: 1, log: [], myCash: START_CASH, peerCash: START_CASH, myPos: 0, peerPos: 0,
+    dice: [1, 1], log: [], myCash: START_CASH, peerCash: START_CASH, myPos: 0, peerPos: 0,
     winner: null, winnerText: '', rolling: false, requestPending: false, rulesOpen: false,
     card: null, fx: null,   // fx: {kind:'good'|'bad', text} 事件特效
     bankOpen: false, mySavings: 0, peerSavings: 0, myLoan: 0, peerLoan: 0, myProps: [], sellReqPending: false
@@ -92,7 +92,7 @@ Page({
   onUnload() { rt.teardown(this); ident.teardown(this); if (this._diceTimer) clearInterval(this._diceTimer); if (this._raf && this.cv) this.cv.cancelAnimationFrame(this._raf); },
 
   fresh() {
-    return { cells: buildCells(), pos: { boy: 0, girl: 0 }, cash: { boy: START_CASH, girl: START_CASH }, savings: { boy: 0, girl: 0 }, loan: { boy: 0, girl: 0 }, skip: { boy: 0, girl: 0 }, turn: Math.random() < 0.5 ? rt.RED : rt.BLUE, dice: 1, log: [], winner: null, req: null, sellReq: null };
+    return { cells: buildCells(), pos: { boy: 0, girl: 0 }, cash: { boy: START_CASH, girl: START_CASH }, savings: { boy: 0, girl: 0 }, loan: { boy: 0, girl: 0 }, skip: { boy: 0, girl: 0 }, turn: Math.random() < 0.5 ? rt.RED : rt.BLUE, dice: [1, 1], log: [], winner: null, req: null, sellReq: null };
   },
   startMatch() { this._recorded = false; rt.setState('monopoly', this.fresh()); },
   requestRestart() { rt.requestRestart('monopoly', this._state, room.getRole(), !!this.data.winner, () => this.fresh()); },
@@ -167,7 +167,7 @@ Page({
     cells.forEach((c, idx) => { if (c && c.type === 'property' && c.owner === role) myProps.push({ idx, name: c.name, price: c.price, level: c.level || 0, sellBank: Math.round((c.price + (c.level || 0) * upgradeCost(c)) * 0.6), sellPeer: Math.round(c.price * 0.8) }); });
     Object.assign(patch, {
       started: true, turnSeat, myTurn: !winner && turnSeat === this.data.mySeat,
-      dice: s.dice || 1,
+      dice: s.dice || [1, 1],
       log: (s.log || []).slice(-30).reverse(),
       myCash: (s.cash && s.cash[role]) || 0, peerCash: (s.cash && s.cash[peer]) || 0,
       mySavings: (s.savings && s.savings[role]) || 0, peerSavings: (s.savings && s.savings[peer]) || 0,
@@ -180,8 +180,8 @@ Page({
   },
 
   showFx(kind, text) {
-    this.setData({ fx: { kind, text } });
-    setTimeout(() => { if (this.data.fx) this.setData({ fx: null }); }, 1400);
+    // 用系统 toast：success/error 图标自带好(绿✓)/坏(红✗)，绝不会被棋盘/导航栏遮挡
+    wx.showToast({ title: String(text).slice(0, 14), icon: kind === 'good' ? 'success' : 'error', duration: 1500, mask: false });
   },
 
   async roll() {
@@ -190,10 +190,10 @@ Page({
     const s = this._state;
     this.setData({ rolling: true });
     try {
-    const final = 1 + Math.floor(Math.random() * 10);   // 单个 10 面骰
-    await this.rollDiceAnim(final);                      // 棋盘中央 3D 翻滚
-    const steps = final;
-    this.setData({ dice: final });
+    const a = 1 + Math.floor(Math.random() * 6), b = 1 + Math.floor(Math.random() * 6);   // 双骰子
+    await this.rollDiceAnim();                      // 棋盘中央 3D 翻滚
+    const steps = a + b;
+    this.setData({ dice: [a, b] });
 
     const from = s.pos[role];
     const crossed = (from + steps) >= BOARD;
@@ -210,7 +210,7 @@ Page({
     log.push(this.data.myName + ' 掷出 ' + steps + (crossed ? '，过起点 +200' : ''));
 
     // 先写一次：棋子已移动 + 日志立即可见（携带 savings/loan）
-    this._state = Object.assign({}, s, { pos: Object.assign({}, s.pos, { [role]: to }), cash, savings, loan, dice: final, log });
+    this._state = Object.assign({}, s, { pos: Object.assign({}, s.pos, { [role]: to }), cash, savings, loan, dice: [a, b], log });
     rt.setState('monopoly', this._state);
 
     // 棋子滑行动画（沿环形），完成后结算
@@ -237,13 +237,13 @@ Page({
     });
   },
 
-  rollDiceAnim(final) {
+  rollDiceAnim() {
     return new Promise(res => {
       if (!this.cv) { res(); return; }
       const t0 = Date.now(); const dur = 780;
       const step = () => {
         const p = Math.min(1, (Date.now() - t0) / dur);
-        this._diceAnim = { val: 1 + Math.floor(Math.random() * 10), angle: Math.sin(p * Math.PI * 5) * 0.6 * (1 - p) };
+        this._diceAnim = { a: 1 + Math.floor(Math.random() * 6), b: 1 + Math.floor(Math.random() * 6), angle: Math.sin(p * Math.PI * 5) * 0.6 * (1 - p) };
         this.draw();
         if (p < 1) this._raf = this.cv.requestAnimationFrame(step);
         else { this._diceAnim = null; this.draw(); res(); }
@@ -251,22 +251,25 @@ Page({
       this._raf = this.cv.requestAnimationFrame(step);
     });
   },
+  drawDie(ctx, cx, cy, s, val, ang) {
+    ctx.save(); ctx.translate(cx, cy); ctx.rotate(ang);
+    ctx.fillStyle = 'rgba(0,0,0,.18)'; rr(ctx, -s / 2 + 5, -s / 2 + 8, s, s, s * 0.2); ctx.fill();
+    const grad = ctx.createLinearGradient(0, -s / 2, 0, s / 2); grad.addColorStop(0, '#ffffff'); grad.addColorStop(1, '#ffd6e2');
+    ctx.fillStyle = grad; rr(ctx, -s / 2, -s / 2, s, s, s * 0.2); ctx.fill();
+    ctx.strokeStyle = '#e85a86'; ctx.lineWidth = 3; ctx.stroke();
+    ctx.fillStyle = '#e85a86'; ctx.font = 'bold ' + Math.round(s * 0.55) + 'px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(String(val), 0, s * 0.04);
+    ctx.restore();
+  },
   drawDiceCenter(ctx) {
     const cs = this.cs, cx = this.W / 2, cy = this.H / 2 + cs * 0.4;
     const anim = this._diceAnim;
-    const val = anim ? anim.val : (this.data.dice || 1);
+    const d = this.data.dice || [1, 1];
+    const v1 = anim ? anim.a : d[0], v2 = anim ? anim.b : d[1];
     const ang = anim ? anim.angle : 0;
-    const s = cs * 1.5;
-    ctx.save();
-    ctx.translate(cx, cy);
-    ctx.fillStyle = 'rgba(0,0,0,.18)'; rr(ctx, -s / 2 + 6, -s / 2 + 9, s, s, s * 0.2); ctx.fill();   // 阴影(伪3D)
-    ctx.rotate(ang);
-    const grad = ctx.createLinearGradient(0, -s / 2, 0, s / 2); grad.addColorStop(0, '#ffffff'); grad.addColorStop(1, '#ffd6e2');
-    ctx.fillStyle = grad; rr(ctx, -s / 2, -s / 2, s, s, s * 0.2); ctx.fill();
-    ctx.strokeStyle = '#e85a86'; ctx.lineWidth = 4; ctx.stroke();
-    ctx.fillStyle = '#e85a86'; ctx.font = 'bold ' + Math.round(s * 0.62) + 'px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText(String(val), 0, s * 0.04);
-    ctx.restore();
+    const s = cs * 1.05;
+    this.drawDie(ctx, cx - s * 0.62, cy, s, v1, ang);
+    this.drawDie(ctx, cx + s * 0.62, cy, s, v2, ang);
   },
   drawCard() {
     return new Promise(res => {
