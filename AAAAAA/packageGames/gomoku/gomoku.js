@@ -14,6 +14,7 @@ const STONE = { [RED]: '#e85a86', [BLUE]: '#3a86ff' };
 
 function emptyBoard() { return Array.from({ length: N }, () => Array(N).fill(0)); }
 function rebuild(history) { const b = emptyBoard(); (history || []).forEach(m => { b[m.r][m.c] = m.v; }); return b; }
+const wait = ms => new Promise(r => setTimeout(r, ms));
 function checkWin(b, r, c, v) {
   const dirs = [[0, 1], [1, 0], [1, 1], [1, -1]];
   for (const [dr, dc] of dirs) {
@@ -34,7 +35,8 @@ Page({
     requestPending: false,   // 我已发起重开请求，等对方同意
     undoPending: false,      // 我已发起悔棋请求，等对方同意
     canUndo: false,          // 当前是否有可悔的棋
-    rulesOpen: false
+    rulesOpen: false,
+    rollFirst: { open: false, result: '' }
   },
 
   onLoad() {
@@ -124,21 +126,18 @@ Page({
     this.draw();
   },
 
-  startMatch() {
-    console.log('[gomoku] startMatch 被调用');
+  async startMatch() {
     this._recorded = false;
-    // 乐观清盘：本地立即清空 + 重绘，不等服务器回环；再写云端让对方同步
-    this._board = emptyBoard();
-    this._winLine = null;
-    this.setData({
-      started: true, turnSeat: rt.RED,
-      myTurn: this.data.mySeat === rt.RED,
-      winner: null, winnerText: '', last: null, moves: 0, requestPending: false, undoPending: false, canUndo: false
-    });
+    const first = Math.random() < 0.5 ? rt.RED : rt.BLUE;
+    this.setData({ rollFirst: { open: true, result: '' } });
+    await wait(820);
+    this.setData({ rollFirst: { open: true, result: first === this.data.mySeat ? 'me' : 'peer' } });
+    await wait(950);
+    this.setData({ rollFirst: { open: false, result: '' } });
+    this._board = emptyBoard(); this._winLine = null;
+    this.setData({ started: true, turnSeat: first, myTurn: this.data.mySeat === first, winner: null, winnerText: '', last: null, moves: 0, requestPending: false, undoPending: false, canUndo: false });
     this.draw();
-    rt.setState('gomoku', { board: emptyBoard(), turn: rt.RED, last: null, winner: null, winLine: null, moves: 0, history: [], req: null, undoReq: null })
-      .then(() => console.log('[gomoku] startMatch 写入成功'))
-      .catch(err => console.error('[gomoku] startMatch 写入失败', err && err.errMsg || err));
+    rt.setState('gomoku', { board: emptyBoard(), turn: first, last: null, winner: null, winLine: null, moves: 0, history: [], req: null, undoReq: null });
   },
 
   // —— 重新开局：未开局/已结束直接开；进行中需二次确认 + 对方同意 ——

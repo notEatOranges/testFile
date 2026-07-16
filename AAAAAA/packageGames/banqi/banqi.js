@@ -59,12 +59,14 @@ function hasAction(board, role, red) {
   }
   return false;
 }
+const wait = ms => new Promise(r => setTimeout(r, ms));
 
 Page({
   data: {
     theme: 'sakura', role: 'boy', peer: 'girl', myName: '我', myAvatar: '', peerName: 'ta', peerAvatar: '',
     started: false, turnSeat: 'red', mySeat: 'red', myTurn: false, myColor: null,
-    view: [], sel: null, targets: {}, winner: null, winnerText: '', requestPending: false, rulesOpen: false
+    view: [], sel: null, targets: {}, winner: null, winnerText: '', requestPending: false, rulesOpen: false,
+    rollFirst: { open: false, result: '' }
   },
 
   onLoad() {
@@ -81,8 +83,17 @@ Page({
   },
   onUnload() { rt.teardown(this); ident.teardown(this); },
 
-  fresh() { return { board: buildBoard(), turn: rt.RED, red: null, winner: null, req: null }; },
-  startMatch() { this._recorded = false; rt.setState('banqi', this.fresh()); },
+  fresh(first) { return { board: buildBoard(), turn: first || (Math.random() < 0.5 ? rt.RED : rt.BLUE), red: null, winner: null, req: null }; },
+  async startMatch() {
+    this._recorded = false;
+    const first = Math.random() < 0.5 ? rt.RED : rt.BLUE;
+    this.setData({ rollFirst: { open: true, result: '' } });
+    await wait(820);
+    this.setData({ rollFirst: { open: true, result: first === this.data.mySeat ? 'me' : 'peer' } });
+    await wait(950);
+    this.setData({ rollFirst: { open: false, result: '' } });
+    rt.setState('banqi', this.fresh(first));
+  },
   requestRestart() { rt.requestRestart('banqi', this._state, room.getRole(), !!this.data.winner, () => this.fresh()); },
   cancelReq() { rt.cancelRestart('banqi', this._state); },
   resign() {

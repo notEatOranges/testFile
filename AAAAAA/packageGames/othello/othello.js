@@ -37,13 +37,15 @@ function validMoves(b, val) {
   return m;
 }
 function count(b) { let red = 0, blue = 0; for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) { if (b[r][c] === RED) red++; else if (b[r][c] === BLUE) blue++; } return { red, blue }; }
+const wait = ms => new Promise(r => setTimeout(r, ms));
 
 Page({
   data: {
     theme: 'sakura', role: 'boy', peer: 'girl', myName: '我', myAvatar: '', peerName: 'ta', peerAvatar: '',
     started: false, mySeat: 'red', myTurn: false, turnSeat: 'red',
     myScore: 0, peerScore: 0, winner: null, winnerText: '',
-    hints: [], last: null, requestPending: false, rulesOpen: false
+    hints: [], last: null, requestPending: false, rulesOpen: false,
+    rollFirst: { open: false, result: '' }
   },
 
   onLoad() {
@@ -78,8 +80,17 @@ Page({
     });
   },
 
-  fresh() { return { board: initBoard(), turn: rt.RED, winner: null, last: null, req: null }; },
-  startMatch() { this._recorded = false; rt.setState('othello', this.fresh()); },
+  fresh(first) { return { board: initBoard(), turn: first || (Math.random() < 0.5 ? rt.RED : rt.BLUE), winner: null, last: null, req: null }; },
+  async startMatch() {
+    this._recorded = false;
+    const first = Math.random() < 0.5 ? rt.RED : rt.BLUE;
+    this.setData({ rollFirst: { open: true, result: '' } });
+    await wait(820);
+    this.setData({ rollFirst: { open: true, result: first === this.data.mySeat ? 'me' : 'peer' } });
+    await wait(950);
+    this.setData({ rollFirst: { open: false, result: '' } });
+    rt.setState('othello', this.fresh(first));
+  },
   requestRestart() { rt.requestRestart('othello', this._state, room.getRole(), !!this.data.winner, () => this.fresh()); },
   cancelReq() { rt.cancelRestart('othello', this._state); },
   resign() {

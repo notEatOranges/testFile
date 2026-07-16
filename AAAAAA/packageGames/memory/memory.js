@@ -14,6 +14,7 @@ function buildCards() {
   for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); const t = arr[i]; arr[i] = arr[j]; arr[j] = t; }
   return arr.map(icon => ({ icon, matched: false }));
 }
+const wait = ms => new Promise(r => setTimeout(r, ms));
 
 Page({
   data: {
@@ -21,7 +22,8 @@ Page({
     role: 'boy', peer: 'girl', myName: '我', myAvatar: '', peerName: 'ta', peerAvatar: '',
     started: false, mySeat: 'red', turnSeat: 'red', myTurn: false,
     cards: [], myScore: 0, peerScore: 0, winner: null, winnerText: '',
-    requestPending: false, rulesOpen: false
+    requestPending: false, rulesOpen: false,
+    rollFirst: { open: false, result: '' }
   },
 
   onLoad() {
@@ -38,8 +40,17 @@ Page({
   },
   onUnload() { rt.teardown(this); ident.teardown(this); if (this._flipTimer) clearTimeout(this._flipTimer); },
 
-  fresh() { return { cards: buildCards(), open: [], turn: rt.RED, scores: { red: 0, blue: 0 }, winner: null, req: null }; },
-  startMatch() { this._recorded = false; rt.setState('memory', this.fresh()); },
+  fresh(first) { return { cards: buildCards(), open: [], turn: first || (Math.random() < 0.5 ? rt.RED : rt.BLUE), scores: { red: 0, blue: 0 }, winner: null, req: null }; },
+  async startMatch() {
+    this._recorded = false;
+    const first = Math.random() < 0.5 ? rt.RED : rt.BLUE;
+    this.setData({ rollFirst: { open: true, result: '' } });
+    await wait(820);
+    this.setData({ rollFirst: { open: true, result: first === this.data.mySeat ? 'me' : 'peer' } });
+    await wait(950);
+    this.setData({ rollFirst: { open: false, result: '' } });
+    rt.setState('memory', this.fresh(first));
+  },
 
   applyState() {
     const s = this._state, role = this.data.role, peer = this.data.peer;
