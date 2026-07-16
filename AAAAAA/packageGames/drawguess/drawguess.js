@@ -1,8 +1,9 @@
 // drawguess —— 你画我猜（一局 3 张：画手画 3 个词，猜手堆叠卡片逐张猜，完整历史归档）
 // 数据：
-//   games/dg/round   = { drawer, state:'drawing'|'guessing'|'revealed', items:[{word,hint,drawing,winner}], ts }
+//   games/dg/round   = { drawer, phase:'draw'|'guess'|'reveal', words:[{w,h}x3], items:[{word,hint,drawing,winner}], idx, ts }
 //   games/dg/scores  = { boy, girl }
-//   games/dg/history = [ { drawer, items, ts } ]   revealed 时归档，可回看画作
+//   games/dg/history = [ { drawer, items, ts } ]   reveal 时归档，可回看画作
+// 关键：词库 words 与每张画都即时写进 round（持久化），断线/刷新/对方进入都不丢、不卡死。
 const user = require('@utils/user.js');
 const room = require('@utils/room.js');
 const { Store } = require('@utils/store.js');
@@ -63,27 +64,28 @@ Page({
 
   applyRound() {
     const r = this._round, role = this.data.role;
-    if (!r || !r.drawer) { this.setData({ mode: 'idle', isDrawer: false }); return; }
-    if (r.state === 'revealed') {
-      this.setData({ mode: 'revealed', isDrawer: false, revealItems: (r.items || []).map((it, i) => ({ word: it.word, hint: it.hint, drawing: it.drawing, winner: it.winner, idx: i })), revealDrawer: r.drawer === role ? this.data.myName : this.data.peerName });
+    if (!r || !r.drawer || !r.phase) { this.setData({ mode: 'idle', isDrawer: false }); return; }
+    if (r.phase === 'reveal') {
+      this.setData({
+        mode: 'revealed', isDrawer: false,
+        revealItems: (r.items || []).map((it, i) => ({ word: it.word, hint: it.hint, drawing: it.drawing, winner: it.winner, idx: i })),
+        revealDrawer: r.drawer === role ? this.data.myName : this.data.peerName
+      });
       return;
     }
     const isDrawer = r.drawer === role;
-    if (r.state === 'guessing') {
-      if (isDrawer) {
-        this.setData({ mode: 'submitted', isDrawer: true });
-      } else {
-        const items = r.items || [];
-        const deck = items.map((it, i) => ({ word: it.word, drawing: it.drawing, idx: i })).filter(it => !(r.items[it.idx].winner === role));
-        this.setData({ mode: 'guessing', isDrawer: false, deck, deckTop: deck[0] || null, deckRest: deck.slice(1), topDx: 0, guess: '' });
-      }
+    if (r.phase === 'guess') {
+      if (isDrawer) { this.setData({ mode: 'submitted', isDrawer: true }); return; }
+      const items = r.items || [];
+      const deck = items.map((it, i) => ({ word: it.word, drawing: it.drawing, idx: i })).filter(it => !(items[it.idx].winner));
+      this.setData({ mode: 'guessing', isDrawer: false, deck, deckTop: deck[0] || null, deckRest: deck.slice(1), topDx: 0, guess: '' });
       return;
     }
-    // drawing：画手本地画（云里 items 为空），对方 wait
+    // phase 'draw'
     if (isDrawer) {
-      const idx = this.data.drawIdx || 0;
-      const w = this._words && this._words[idx];
-      this.setData({ mode: 'drawing', isDrawer: true, drawIdx: idx, word: (w && w.w) || '', hint: (w && w.h) || '' });
+      const idx = r.idx || 0;
+      const w = (r.words && r.words[idx]) || {};
+      this.setData({ mode: 'drawing', isDrawer: true, drawIdx: idx, word: w.w || '', hint: w.h || '' });
       this.setupDraw();
     } else {
       this.setData({ mode: 'wait', isDrawer: false });
@@ -92,22 +94,21 @@ Page({
 
   // —— 画手 ——
   async startAsDrawer() {
-    this._words = [dg.rand(), dg.rand(), dg.rand()];
-    this._drawings = [];
+    const words = [dg.rand(), dg.rand(), dg.rand()];
     this.setData({ starting: true });
-    await Store.set('games/dg/round', { drawer: room.getRole(), state: 'drawing', items: [], ts: Store.now() });
-    this.setData({ starting: false, mode: 'drawing', isDrawer: true, drawIdx: 0, word: this._words[0].w, hint: this._words[0].h });
-    this.setupDraw();
+    await Store.set('games/dg/round', { drawer: room.getRole(), phase: 'draw', words, items: [], idx: 0, ts: Store.now() });
+    this.setData({ starting: false });
   },
   setupDraw() {
     if (this._drawReady) { this.clearCanvas(); return; }
     const dpr = wx.getSystemInfoSync().pixelRatio;
-    wx.createSelectorQuery().in(this).select('#drawCanvas').fields({ node: true, size: true, rect: true }).exec(res => {
+    wx.createSelectorQuery().in(this).select('#drawCanvas').fields({ node: true, size: true }).exec(res => {
       if (!res[0]) return;
       const cv = res[0].node, w = res[0].width, h = res[0].height;
       cv.width = w * dpr; cv.height = h * dpr;
       const ctx = cv.getContext('2d'); ctx.scale(dpr, dpr);
-      this.cv = cv; this.ctx = ctx; this.cw = w; this.ch = h; this.rect = { left: res[0].left, top: res[0].top };
+      this.cv = cv; this.ctx = ctx; this.cw = w; this.ch = h;
+      this.rect = { left: 0, top: 0 };   // 画布内触点是 canvas 相对坐标，无需页面偏移
       this._drawReady = true; this.clearCanvas();
     });
   },
@@ -115,11 +116,11 @@ Page({
   pickColor(e) { this.setData({ color: e.currentTarget.dataset.c, tool: 'pen' }); },
   pickTool(e) { this.setData({ tool: e.currentTarget.dataset.tool }); },
   pickStroke(e) { this.setData({ strokeW: e.currentTarget.dataset.w, tool: 'pen' }); },
-  drawStart(e) { const t = e.touches[0]; this.lastPt = { x: t.clientX - this.rect.left, y: t.clientY - this.rect.top }; this.lastMid = this.lastPt; },
+  drawStart(e) { const t = e.touches[0]; const x = t.x != null ? t.x : t.clientX; const y = t.y != null ? t.y : t.clientY; this.lastPt = { x, y }; this.lastMid = { x, y }; },
   drawMove(e) {
     if (!this.ctx || !this.lastPt) return;
     const t = e.touches[0];
-    const x = t.clientX - this.rect.left, y = t.clientY - this.rect.top;
+    const x = t.x != null ? t.x : t.clientX, y = t.y != null ? t.y : t.clientY;
     const mid = { x: (this.lastPt.x + x) / 2, y: (this.lastPt.y + y) / 2 };
     const ctx = this.ctx;
     const eraser = this.data.tool === 'eraser';
@@ -134,37 +135,39 @@ Page({
   },
   drawEnd() { this.lastPt = null; this.lastMid = null; },
 
-  // 画完当前张 → 上传暂存 → 下一张或全部提交
+  // 画完当前张 → 上传并写进 round.items → 推进 idx 或进入 guess
   async nextDrawing() {
-    if (!this.cv) return;
-    const idx = this.data.drawIdx;
-    const w = this._words[idx];
+    if (!this.cv || this.data.submitting) return;
+    const r = this._round;
+    if (!r || r.phase !== 'draw') return;
+    const idx = r.idx || 0;
+    const wObj = (r.words && r.words[idx]) || {};
     this.setData({ submitting: true });
+    let fileID = '';
     try {
       const tmp = await new Promise((res, rej) => wx.canvasToTempFilePath({ canvas: this.cv, success: x => res(x.tempFilePath), fail: rej }, this));
       const cloudPath = `drawguess/${room.getRoom() || 'free'}/${Date.now()}_${idx}.jpg`;
       const up = await wx.cloud.uploadFile({ cloudPath, filePath: tmp });
-      this._drawings.push({ word: w.w, hint: w.h, drawing: up.fileID });
+      fileID = up.fileID;
     } catch (e) {
-      toast('这张上传失败，重试');
+      console.warn('[dg] 上传失败', e);
       this.setData({ submitting: false });
+      toast('这张没上传成功，再点一次重试');
       return;
     }
-    this.setData({ submitting: false });
-    const next = idx + 1;
-    if (next >= ROUND_SIZE) {
-      await this.submitAll();
+    const items = (r.items || []).slice();
+    items[idx] = { word: wObj.w || '', hint: wObj.h || '', drawing: fileID, winner: null };
+    const nextIdx = idx + 1;
+    if (nextIdx >= ROUND_SIZE) {
+      await Store.set('games/dg/round', Object.assign({}, r, { phase: 'guess', items, ts: Store.now() }));
+      toast('3 张已提交，等 ta 猜');
     } else {
-      this.setData({ drawIdx: next, word: this._words[next].w, hint: this._words[next].h });
+      await Store.set('games/dg/round', Object.assign({}, r, { items, idx: nextIdx, ts: Store.now() }));
       this.clearCanvas();
     }
+    this.setData({ submitting: false });
   },
-  async submitAll() {
-    await Store.set('games/dg/round', { drawer: room.getRole(), state: 'guessing', items: this._drawings, ts: Store.now() });
-    this.setData({ mode: 'submitted', isDrawer: true });
-    toast('3 张已提交，等 ta 猜');
-  },
-  async giveUp() { await this.reveal(); },   // 画手公布答案
+  async giveUp() { await this.reveal(); },
 
   // —— 猜手：堆叠卡片逐张猜 ——
   onGuess(e) { this.setData({ guess: e.detail.value }); },
@@ -181,9 +184,9 @@ Page({
       const r = this._round;
       const items = (r.items || []).slice();
       items[top.idx] = Object.assign({}, items[top.idx], { winner: role });
-      await Store.update('games/dg/round', { items });       // 触发 applyRound 重建 deck（猜对的被滤掉）
+      await Store.update('games/dg/round', { items });
       toast('猜对啦 +1');
-      if (items.every(it => it.winner)) await this.reveal();  // 全猜完 → 揭晓归档
+      if (items.every(it => it.winner)) await this.reveal();
     } else {
       toast('再猜猜～');
       this.setData({ guess: '' });
@@ -213,17 +216,15 @@ Page({
     const r = this._round;
     if (!r) return;
     const items = r.items || [];
-    await Store.set('games/dg/round', { drawer: r.drawer, state: 'revealed', items, ts: Store.now() });
+    await Store.set('games/dg/round', Object.assign({}, r, { phase: 'reveal', items, ts: Store.now() }));
     await Store.push('games/dg/history', { drawer: r.drawer, items, ts: Store.now() });
   },
 
   // —— 下一局（换画手）——
   async nextRound() {
+    const words = [dg.rand(), dg.rand(), dg.rand()];
     const drawer = peerRole((this._round || {}).drawer || room.getRole());
-    this._words = [dg.rand(), dg.rand(), dg.rand()];
-    this._drawings = [];
-    this.setData({ drawIdx: 0 });
-    await Store.set('games/dg/round', { drawer, state: 'drawing', items: [], ts: Store.now() });
+    await Store.set('games/dg/round', { drawer, phase: 'draw', words, items: [], idx: 0, ts: Store.now() });
   },
 
   noop() {},
