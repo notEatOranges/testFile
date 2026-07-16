@@ -441,7 +441,7 @@ Page({
   // —— 银行/资产：存款/贷款/卖地 ——
   openBank() { this.setData({ bankOpen: true }); },
   noop() {},
-  closeBank() { this.setData({ bankOpen: false }); },
+  closeBank() { this.setData({ bankOpen: false }); setTimeout(() => this.setupCanvas(), 50); },
   bankAct(e) {
     const act = e.currentTarget.dataset.act, amt = parseInt(e.currentTarget.dataset.amt || '0', 10);
     const role = room.getRole(), s = this._state; if (!s) return;
