@@ -334,7 +334,7 @@ Page({
       const flip = p < 0.5 ? 1 - p * 2 : (p - 0.5) * 2, showFace = p > 0.5;
       ctx.save(); ctx.translate(cx, cy); ctx.scale(Math.max(0.02, flip), 1);
       ctx.fillStyle = showFace ? (a.kind === 'good' ? '#2ec24e' : '#e85a86') : '#e85a86';
-      this.rr(ctx, -w / 2, -h / 2, w, h, 16); ctx.fill();
+      rr(ctx, -w / 2, -h / 2, w, h, 16); ctx.fill();
       ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.stroke();
       if (showFace) {
         ctx.fillStyle = '#fff'; ctx.font = 'bold ' + Math.round(cs * 0.55) + 'px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
@@ -347,7 +347,7 @@ Page({
   },
   drawCardBack(ctx, cx, cy, w, h, rot) {
     ctx.save(); ctx.translate(cx, cy); ctx.rotate(rot);
-    ctx.fillStyle = '#e85a86'; this.rr(ctx, -w / 2, -h / 2, w, h, 10); ctx.fill();
+    ctx.fillStyle = '#e85a86'; rr(ctx, -w / 2, -h / 2, w, h, 10); ctx.fill();
     ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
     ctx.fillStyle = 'rgba(255,255,255,.4)'; ctx.font = 'bold ' + Math.round(w * 0.5) + 'px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText('?', 0, 0);
