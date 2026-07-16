@@ -79,10 +79,13 @@ Page({
     wx.createSelectorQuery().in(this).select('#board').fields({ node: true, size: true }).exec(res => {
       const f = res[0];
       if (!f || !f.node) { setTimeout(() => this.setupCanvas(), 80); return; }
-      const cv = f.node, w = f.width;
-      cv.width = w * dpr; cv.height = w * dpr;
+      const cv = f.node, w = f.width, h = f.height;
+      cv.width = w * dpr; cv.height = h * dpr;
       const ctx = cv.getContext('2d'); ctx.scale(dpr, dpr);
-      this.ctx = ctx; this.S = w; this.cs = w / 8;
+      this.ctx = ctx; this.W = w; this.H = h;
+      this.cs = Math.min(w, h) / 8;            // 8×8 棋盘，按短边缩放并居中
+      this.ox = (w - 8 * this.cs) / 2;
+      this.oy = (h - 8 * this.cs) / 2;
       this.applyState();
     });
   },
@@ -212,20 +215,20 @@ Page({
 
   draw() {
     if (!this.ctx) return;
-    const ctx = this.ctx, S = this.S, cs = this.cs;
-    ctx.clearRect(0, 0, S, S);
-    ctx.fillStyle = '#f3e9d2'; ctx.fillRect(0, 0, S, S);
-    ctx.fillStyle = '#fff8ec'; ctx.fillRect(cs, cs, S - cs * 2, S - cs * 2);
+    const ctx = this.ctx, W = this.W, H = this.H, cs = this.cs, ox = this.ox || 0, oy = this.oy || 0;
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#f3e9d2'; ctx.fillRect(ox, oy, cs * 8, cs * 8);
+    ctx.fillStyle = '#fff8ec'; ctx.fillRect(ox + cs, oy + cs, cs * 6, cs * 6);
     ctx.fillStyle = '#b58a5a'; ctx.font = 'bold ' + Math.round(cs * 0.5) + 'px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText('大富翁', S / 2, S / 2 - cs * 0.35);
+    ctx.fillText('大富翁', ox + cs * 4, oy + cs * 4 - cs * 0.35);
     ctx.font = Math.round(cs * 0.24) + 'px sans-serif'; ctx.fillStyle = '#9a7a52';
     const dn = this.data.dice;
-    ctx.fillText('骰 ' + dn[0] + ' + ' + dn[1] + ' = ' + (dn[0] + dn[1]), S / 2, S / 2 + cs * 0.25);
+    ctx.fillText('骰 ' + dn[0] + ' + ' + dn[1] + ' = ' + (dn[0] + dn[1]), ox + cs * 4, oy + cs * 4 + cs * 0.25);
 
     const cells = this._cells || [];
     for (let i = 0; i < BOARD; i++) {
       const [c, r] = cellCR(i);
-      const x = c * cs, y = r * cs;
+      const x = ox + c * cs, y = oy + r * cs;
       const cell = cells[i] || {};
       ctx.strokeStyle = '#cdb088'; ctx.lineWidth = 1; ctx.strokeRect(x, y, cs, cs);
       if (cell.type === 'property') { ctx.fillStyle = GROUP_COLOR[cell.group] || '#999'; ctx.fillRect(x, y, cs, 7); if (cell.owner) { ctx.fillStyle = cell.owner === 'boy' ? '#e85a86' : '#3a86ff'; ctx.fillRect(x, y + cs - 7, cs, 7); } }
@@ -234,10 +237,9 @@ Page({
       ctx.font = Math.round(cs * 0.2) + 'px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
       this.wrapText(ctx, cell.name || '', x + cs / 2, y + (cell.type === 'property' ? 12 : 4), cs - 4, cs * 0.22);
     }
-    // 棋子
     const drawTok = (pos, color, off) => {
       const [c, r] = cellCR(pos);
-      ctx.fillStyle = color; ctx.beginPath(); ctx.arc(c * cs + cs / 2 + off, r * cs + cs * 0.62, cs * 0.12, 0, 7); ctx.fill();
+      ctx.fillStyle = color; ctx.beginPath(); ctx.arc(ox + c * cs + cs / 2 + off, oy + r * cs + cs * 0.62, cs * 0.12, 0, 7); ctx.fill();
       ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
     };
     if (this.data.started) {
