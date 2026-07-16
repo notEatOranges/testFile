@@ -1,6 +1,6 @@
 // gomoku —— 五子棋（功能8，双人实时联机）
-// 状态 games/gomoku/state = { board:15×15(0空/1红/2蓝), turn:'red'|'blue', last:{r,c}, winner, winLine, moves, req, ts }
-// req = 重新开局握手：{ by: role } | null。发起方二次确认→写入 req→对方同意才重开。
+// 状态 games/gomoku/state = { board:15×15(0空/1红/2蓝), turn, last, winner, winLine, moves, history:[{r,c,v}], req, undoReq, ts }
+// req = 重开握手；undoReq = 悔棋握手；history 用于悔棋回放。
 const user = require('@utils/user.js');
 const room = require('@utils/room.js');
 const ident = require('@utils/ident.js');
@@ -13,6 +13,7 @@ const SEAT_VAL = { red: RED, blue: BLUE };
 const STONE = { [RED]: '#e85a86', [BLUE]: '#3a86ff' };
 
 function emptyBoard() { return Array.from({ length: N }, () => Array(N).fill(0)); }
+function rebuild(history) { const b = emptyBoard(); (history || []).forEach(m => { b[m.r][m.c] = m.v; }); return b; }
 function checkWin(b, r, c, v) {
   const dirs = [[0, 1], [1, 0], [1, 1], [1, -1]];
   for (const [dr, dc] of dirs) {
@@ -31,6 +32,8 @@ Page({
     started: false, mySeat: 'red', myTurn: false, turnSeat: 'red',
     winner: null, winnerText: '', last: null, moves: 0,
     requestPending: false,   // 我已发起重开请求，等对方同意
+    undoPending: false,      // 我已发起悔棋请求，等对方同意
+    canUndo: false,          // 当前是否有可悔的棋
     rulesOpen: false
   },
 
@@ -86,6 +89,22 @@ Page({
       this._restartPrompted = false;
       patch.requestPending = false;
     }
+    // 悔棋请求握手
+    const undoReq = s && s.undoReq ? s.undoReq : null;
+    if (undoReq && undoReq.by) {
+      if (undoReq.by === role) { patch.undoPending = true; }
+      else if (!this._undoPrompted) {
+        this._undoPrompted = true;
+        const me = this;
+        wx.showModal({
+          title: '悔棋请求', content: (names[undoReq.by] || '对方') + ' 请求悔棋（撤销上一步），同意？', confirmText: '同意', cancelText: '拒绝',
+          success: r => { if (r.confirm) me.doUndo(); else me.clearUndoReq(); }
+        });
+      }
+    } else {
+      this._undoPrompted = false;
+      patch.undoPending = false;
+    }
     if (!s || !s.board) { this.setData(Object.assign({ started: false }, patch)); this.draw(); return; }
     this._board = s.board;
     this._winLine = s.winLine || null;
@@ -97,7 +116,8 @@ Page({
     Object.assign(patch, {
       started: true, turnSeat,
       myTurn: !winner && turnSeat === this.data.mySeat,
-      winner, winnerText, last: s.last || null, moves: s.moves || 0
+      winner, winnerText, last: s.last || null, moves: s.moves || 0,
+      canUndo: !winner && ((s.history || []).length > 0)
     });
     this.setData(patch);
     this.draw();
@@ -111,10 +131,10 @@ Page({
     this.setData({
       started: true, turnSeat: rt.RED,
       myTurn: this.data.mySeat === rt.RED,
-      winner: null, winnerText: '', last: null, moves: 0, requestPending: false
+      winner: null, winnerText: '', last: null, moves: 0, requestPending: false, undoPending: false, canUndo: false
     });
     this.draw();
-    rt.setState('gomoku', { board: emptyBoard(), turn: rt.RED, last: null, winner: null, winLine: null, moves: 0, req: null })
+    rt.setState('gomoku', { board: emptyBoard(), turn: rt.RED, last: null, winner: null, winLine: null, moves: 0, history: [], req: null, undoReq: null })
       .then(() => console.log('[gomoku] startMatch 写入成功'))
       .catch(err => console.error('[gomoku] startMatch 写入失败', err && err.errMsg || err));
   },
@@ -142,6 +162,36 @@ Page({
   clearReq() {
     if (!this._state) return;
     rt.setState('gomoku', Object.assign({}, this._state, { req: null }));
+  },
+
+  // —— 悔棋：撤销上一步，需对方同意 ——
+  requestUndo() {
+    if (!this.data.started || this.data.winner) return;
+    if (!this._state || !(this._state.history || []).length) return toast('还没有可悔的棋');
+    wx.showModal({
+      title: '悔棋', content: '撤销上一步，需对方同意', confirmText: '发起请求',
+      success: r => {
+        if (!r.confirm) return;
+        rt.setState('gomoku', Object.assign({}, this._state, { undoReq: { by: room.getRole() } }));
+        toast('已发起悔棋请求');
+      }
+    });
+  },
+  cancelUndo() { this.clearUndoReq(); toast('已取消'); },
+  clearUndoReq() {
+    if (!this._state) return;
+    rt.setState('gomoku', Object.assign({}, this._state, { undoReq: null }));
+  },
+  doUndo() {
+    const s = this._state;
+    if (!s || !s.history || !s.history.length) { this.clearUndoReq(); return; }
+    const hist = s.history.slice();
+    const lastMove = hist.pop();
+    const board = rebuild(hist);
+    const undoneSeat = lastMove.v === RED ? rt.RED : rt.BLUE;   // 回到下这步的人
+    const newLast = hist.length ? { r: hist[hist.length - 1].r, c: hist[hist.length - 1].c } : null;
+    rt.setState('gomoku', { board, turn: undoneSeat, last: newLast, winner: null, winLine: null, moves: hist.length, history: hist, req: null, undoReq: null });
+    toast('已悔棋一步');
   },
 
   resign() {
@@ -180,7 +230,9 @@ Page({
     const moves = (this.data.moves || 0) + 1;
     const mySeat = this.data.mySeat;
     const nextTurn = mySeat === rt.RED ? rt.BLUE : rt.RED;
-    const next = Object.assign({}, this._state, { board, turn: winLine ? mySeat : nextTurn, last: { r, c }, winner: null, moves });
+    const history = ((this._state && this._state.history) || []).slice();
+    history.push({ r, c, v: me });
+    const next = Object.assign({}, this._state, { board, turn: winLine ? mySeat : nextTurn, last: { r, c }, winner: null, moves, history, undoReq: null });
     if (winLine) { next.winner = mySeat; next.winLine = winLine; }
     else if (moves >= N * N) { next.winner = 'draw'; }
     rt.setState('gomoku', next)

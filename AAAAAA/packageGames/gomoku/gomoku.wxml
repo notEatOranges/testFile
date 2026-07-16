@@ -22,6 +22,11 @@
     <text class="go-link" bindtap="cancelReq">取消</text>
   </view>
 
+  <view wx:if="{{undoPending}}" class="go-pending">
+    <text>已请求悔棋，等 {{peerName}} 同意…</text>
+    <text class="go-link" bindtap="cancelUndo">取消</text>
+  </view>
+
   <view class="board-wrap">
     <canvas wx:if="{{!rulesOpen}}" type="2d" id="board" class="board" bindtouchend="onBoardTap"></canvas>
     <view wx:if="{{!started}}" class="board-empty">
@@ -34,6 +39,7 @@
   <view class="go-actions">
     <t-button theme="default" size="small" bind:tap="openRules" icon="info-circle">玩法</t-button>
     <t-button wx:if="{{started}}" theme="default" size="small" bind:tap="resign">认输</t-button>
+    <t-button wx:if="{{canUndo}}" theme="default" size="small" bind:tap="requestUndo">悔棋</t-button>
     <t-button theme="primary" size="small" bind:tap="requestRestart">{{winner ? '再来一局' : (started ? '重新开局' : '开始对局')}}</t-button>
   </view>
 
