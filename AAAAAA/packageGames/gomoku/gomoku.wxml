@@ -1,0 +1,33 @@
+<view class="theme-{{theme}} love-page go-page">
+
+  <view class="go-bar">
+    <view class="seat {{mySeat === 'red' ? 'red' : 'blue'}}">
+      <view class="stone-dot {{mySeat}}"></view>
+      <view class="seat-name">{{myName}}</view>
+      <view class="muted small">{{mySeat === 'red' ? '红方' : '蓝方'}}{{myTurn && !winner ? ' · 思考中' : ''}}</view>
+    </view>
+    <view class="vs">VS</view>
+    <view class="seat {{mySeat === 'red' ? 'blue' : 'red'}}">
+      <view class="stone-dot {{mySeat === 'red' ? 'blue' : 'red'}}"></view>
+      <view class="seat-name">{{peerName}}</view>
+      <view class="muted small">{{mySeat === 'red' ? '蓝方' : '红方'}}{{!myTurn && !winner && turnSeat !== mySeat ? ' · 思考中' : ''}}</view>
+    </view>
+  </view>
+
+  <view wx:if="{{winner}}" class="go-result">{{winnerText}}</view>
+  <view wx:elif="{{started}}" class="go-tip muted small">第 {{moves}} 手 · {{turnSeat === mySeat ? '该你落子，点交叉点' : '等 ' + peerName + ' 落子'}}</view>
+
+  <view class="board-wrap">
+    <canvas type="2d" id="board" class="board" bindtouchend="onTouchEnd"></canvas>
+    <view wx:if="{{!started}}" class="board-empty">
+      <view class="be-text">还没开局</view>
+      <view class="be-btn" bindtap="startMatch">开始对局</view>
+      <view class="muted small">红方先手，五子连珠者胜</view>
+    </view>
+  </view>
+
+  <view class="go-actions">
+    <t-button wx:if="{{started}}" theme="default" size="small" bind:tap="resign">认输</t-button>
+    <t-button theme="primary" size="small" bind:tap="restart">{{winner ? '再来一局' : (started ? '重新开局' : '开始对局')}}</t-button>
+  </view>
+</view>
