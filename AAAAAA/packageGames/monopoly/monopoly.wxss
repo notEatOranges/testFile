@@ -40,6 +40,19 @@
 .mp-row { display: flex; gap: 12rpx; }
 .mp-row .t-button { flex: 1; }
 
+/* 银行/资产面板 */
+.bank-sheet { position: fixed; left: 0; right: 0; bottom: 0; z-index: 301; background: var(--card); border-radius: 28rpx 28rpx 0 0; padding: 24rpx 32rpx calc(36rpx + env(safe-area-inset-bottom)); transform: translateY(110%); transition: transform .26s cubic-bezier(.2,.8,.2,1); box-shadow: 0 -8rpx 32rpx var(--card-shadow); max-height: 80vh; display: flex; flex-direction: column; }
+.bank-sheet.show { transform: translateY(0); }
+.bk-sum { font-size: 28rpx; color: var(--primary-deep); font-weight: 600; margin: 8rpx 0 16rpx; }
+.bk-label { font-size: 24rpx; color: var(--text-soft); margin: 14rpx 0 10rpx; }
+.bk-btns { display: flex; flex-wrap: wrap; gap: 12rpx; }
+.bk-btn { padding: 12rpx 22rpx; border-radius: 28rpx; background: var(--chip); color: var(--primary-deep); font-size: 26rpx; }
+.bk-btn.sm { padding: 8rpx 16rpx; font-size: 24rpx; }
+.bk-props { max-height: 320rpx; }
+.bk-prop { display: flex; align-items: center; justify-content: space-between; gap: 12rpx; padding: 12rpx 0; border-bottom: 1rpx solid var(--border); }
+.bp-name { font-size: 26rpx; color: var(--text); }
+.bp-acts { display: flex; gap: 10rpx; }
+
 /* 抽牌动画 */
 .mp-card-mask { position: fixed; inset: 0; z-index: 300; background: rgba(0,0,0,.5); display: flex; align-items: center; justify-content: center; }
 .mp-card { width: 380rpx; height: 500rpx; border-radius: 24rpx; background: var(--card); box-shadow: 0 12rpx 40rpx rgba(0,0,0,.4); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24rpx; }

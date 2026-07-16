@@ -38,6 +38,7 @@
     <t-button wx:if="{{!winner}}" theme="primary" block bind:tap="roll" loading="{{rolling}}" disabled="{{!myTurn}}">{{myTurn ? '掷骰子' : (started ? '等对方掷骰' : '开始后掷骰')}}</t-button>
     <view class="mp-row">
       <t-button theme="default" size="small" bind:tap="openRules">玩法</t-button>
+      <t-button wx:if="{{started}}" theme="default" size="small" bind:tap="openBank">银行</t-button>
       <t-button wx:if="{{started && !winner}}" theme="default" size="small" bind:tap="resign">认输</t-button>
       <t-button theme="default" size="small" bind:tap="requestRestart">{{winner ? '再来一局' : '重新开局'}}</t-button>
     </view>
@@ -56,6 +57,38 @@
         <view class="mp-card-face">{{card.text}}</view>
       </block>
     </view>
+  </view>
+
+  <view wx:if="{{sellReqPending}}" class="mp-pending">等对方决定是否买你的地 <text class="mp-link" bindtap="cancelSell">取消</text></view>
+
+  <!-- 银行/资产面板 -->
+  <view class="sf-mask {{bankOpen ? 'show' : ''}}" bindtap="closeBank"></view>
+  <view class="bank-sheet {{bankOpen ? 'show' : ''}}" catchtap="noop">
+    <view class="sf-title">银行 / 资产</view>
+    <view class="bk-sum">现金 {{myCash}}　存款 {{mySavings}}　贷款 {{myLoan}}</view>
+    <view class="bk-label">存款(过起点 +5% 利息)</view>
+    <view class="bk-btns">
+      <view class="bk-btn" data-act="deposit" data-amt="100" bindtap="bankAct">存 100</view>
+      <view class="bk-btn" data-act="deposit" data-amt="500" bindtap="bankAct">存 500</view>
+      <view class="bk-btn" data-act="withdraw" data-amt="100000" bindtap="bankAct">全部取出</view>
+    </view>
+    <view class="bk-label">贷款(借 200 实欠 220，过起点 +10% 利息)</view>
+    <view class="bk-btns">
+      <view class="bk-btn" data-act="borrow" bindtap="bankAct">贷款 +200</view>
+      <view class="bk-btn" data-act="repay" bindtap="bankAct">还款</view>
+    </view>
+    <view class="bk-label">我的地皮（卖银行按 60%/卖对方按 80%）</view>
+    <scroll-view scroll-y class="bk-props">
+      <view wx:for="{{myProps}}" wx:key="idx" class="bk-prop">
+        <view class="bp-name">{{item.name}} <text class="muted small">Lv{{item.level + 1}}</text></view>
+        <view class="bp-acts">
+          <view class="bk-btn sm" data-idx="{{item.idx}}" bindtap="sellToBank">卖银行 +{{item.sellBank}}</view>
+          <view class="bk-btn sm" data-idx="{{item.idx}}" bindtap="sellToPeer">卖对方 {{item.sellPeer}}</view>
+        </view>
+      </view>
+      <view wx:if="{{!myProps.length}}" class="muted small" style="padding:20rpx 0">还没有地皮</view>
+    </scroll-view>
+    <view class="sf-actions"><view class="sf-ok" bindtap="closeBank">关闭</view></view>
   </view>
 
   <game-rules game-key="monopoly" open="{{rulesOpen}}" bind:close="closeRules" />
