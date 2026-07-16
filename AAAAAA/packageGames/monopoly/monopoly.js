@@ -39,6 +39,13 @@ function cellCR(i) {
 }
 function rentOf(cell) { return cell.rent * (1 + (cell.level || 0)); }
 function upgradeCost(cell) { return Math.round(cell.price * 0.5); }
+function seatShape(role) { return rt.seatOf(role) === rt.RED ? 'heart' : 'star'; }
+function seatColor(role) { return rt.seatOf(role) === rt.RED ? '#ff5a5f' : '#00b8d4'; }   // 珊瑚红/青，避开地皮 6 色
+function shade(hex, amt) {
+  const n = parseInt(hex.slice(1), 16);
+  let r = Math.max(0, Math.min(255, (n >> 16) + amt)), g = Math.max(0, Math.min(255, ((n >> 8) & 0xff) + amt)), b = Math.max(0, Math.min(255, (n & 0xff) + amt));
+  return '#' + ((r << 16) | (g << 8) | b).toString(16).padStart(6, '0');
+}
 
 Page({
   data: {
@@ -124,7 +131,10 @@ Page({
     this.draw();
   },
 
-  showFx(kind, text) { this.setData({ fx: { kind, text } }); setTimeout(() => { if (this.data.fx) this.setData({ fx: null }); }, 1300); },
+  showFx(kind, text) {
+    this.setData({ fx: { kind, text } });
+    setTimeout(() => { this.setData({ fx: null }); setTimeout(() => this.setupCanvas(), 50); }, 1300);
+  },
 
   async roll() {
     if (!this.data.myTurn || this.data.winner || this.data.rolling) return;
@@ -179,12 +189,12 @@ Page({
 
   drawCard() {
     return new Promise(res => {
-      this.setData({ card: { drawing: true, text: '' } });
+      this.setData({ card: { drawing: true, text: '', kind: '' } });
       setTimeout(() => {
         const c = DECK[Math.floor(Math.random() * DECK.length)];
-        this.setData({ card: { drawing: false, text: c.t } });
-        this.showFx(c.cash != null ? (c.cash > 0 ? 'good' : 'bad') : (c.skip ? 'bad' : 'good'), c.t);
-        setTimeout(() => { this.setData({ card: null }); }, 1500);
+        const kind = c.cash != null ? (c.cash > 0 ? 'good' : 'bad') : (c.skip ? 'bad' : 'good');
+        this.setData({ card: { drawing: false, text: c.t, kind } });   // 卡片本身用好/坏配色，与好事坏事结合
+        setTimeout(() => { this.setData({ card: null }); setTimeout(() => this.setupCanvas(), 50); }, 1500);
         res(c);
       }, 650);
     });
@@ -248,7 +258,7 @@ Page({
     rt.setState('monopoly', { cells: cells.map(c => Object.assign({}, c)), pos, cash, skip, turn: winner ? turn : rt.seatOf(nextRole), dice: this.data.dice, log: log.slice(-30), winner, req: null });
   },
 
-  dismissCard() { this.setData({ card: null }); },
+  dismissCard() { this.setData({ card: null }); setTimeout(() => this.setupCanvas(), 50); },
   openRules() { this.setData({ rulesOpen: true }); },
   closeRules() { this.setData({ rulesOpen: false }); setTimeout(() => this.setupCanvas(), 60); },
 
@@ -258,25 +268,30 @@ Page({
     const c = c0 + (c1 - c0) * fr, r = r0 + (r1 - r0) * fr;
     return [this.ox + c * this.cs + this.cs / 2, this.oy + r * this.cs + this.cs * 0.58];
   },
-  drawToken(ctx, f, color, kind, hop) {
+  drawShape(ctx, cx, cy, s, kind, fill, stroke) {
+    ctx.fillStyle = fill; ctx.strokeStyle = stroke || '#fff'; ctx.lineWidth = s * 0.18;
+    ctx.beginPath();
+    if (kind === 'heart') {
+      ctx.moveTo(cx, cy + s * 0.85);
+      ctx.bezierCurveTo(cx - s * 1.3, cy + s * 0.15, cx - s * 0.6, cy - s * 0.9, cx, cy - s * 0.25);
+      ctx.bezierCurveTo(cx + s * 0.6, cy - s * 0.9, cx + s * 1.3, cy + s * 0.15, cx, cy + s * 0.85);
+    } else {
+      for (let i = 0; i < 10; i++) { const ang = -Math.PI / 2 + i * Math.PI / 5; const rr = i % 2 === 0 ? s : s * 0.45; const px = cx + Math.cos(ang) * rr, py = cy + Math.sin(ang) * rr; if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py); }
+    }
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+  },
+  drawToken(ctx, f, kind, color, hop) {
     hop = hop || 0;
     const [x, y0] = this.tokenXY(f);
     const y = y0 - hop;
     const s = this.cs * 0.22;
     ctx.save();
-    ctx.shadowColor = 'rgba(0,0,0,.25)'; ctx.shadowBlur = 4; ctx.shadowOffsetY = 2;
-    ctx.fillStyle = color; ctx.strokeStyle = '#fff'; ctx.lineWidth = 2;
-    if (kind === 'heart') {
-      ctx.beginPath();
-      ctx.moveTo(x, y + s * 0.85);
-      ctx.bezierCurveTo(x - s * 1.3, y + s * 0.15, x - s * 0.6, y - s * 0.9, x, y - s * 0.25);
-      ctx.bezierCurveTo(x + s * 0.6, y - s * 0.9, x + s * 1.3, y + s * 0.15, x, y + s * 0.85);
-      ctx.fill(); ctx.stroke();
-    } else {
-      ctx.beginPath();
-      for (let i = 0; i < 10; i++) { const ang = -Math.PI / 2 + i * Math.PI / 5; const rr = i % 2 === 0 ? s : s * 0.45; const px = x + Math.cos(ang) * rr, py = y + Math.sin(ang) * rr; if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py); }
-      ctx.closePath(); ctx.fill(); ctx.stroke();
-    }
+    ctx.shadowColor = 'rgba(0,0,0,.3)'; ctx.shadowBlur = 6; ctx.shadowOffsetY = 2;
+    const grad = ctx.createLinearGradient(x, y - s, x, y + s);
+    grad.addColorStop(0, color); grad.addColorStop(1, shade(color, -22));
+    this.drawShape(ctx, x, y, s, kind, grad, '#fff');
+    // 高光
+    ctx.fillStyle = 'rgba(255,255,255,.4)'; ctx.beginPath(); ctx.ellipse(x - s * 0.3, y - s * 0.35, s * 0.3, s * 0.18, -0.5, 0, 7); ctx.fill();
     ctx.restore();
   },
 
@@ -299,27 +314,27 @@ Page({
       const cell = cells[i] || {};
       ctx.strokeStyle = '#cdb088'; ctx.lineWidth = 1; ctx.strokeRect(x, y, cs, cs);
       if (cell.type === 'property') {
-        ctx.fillStyle = GROUP_COLOR[cell.group] || '#999'; ctx.fillRect(x, y, cs, 9);          // 顶部色组条
-        if (cell.owner) { ctx.fillStyle = cell.owner === 'boy' ? '#e85a86' : '#3a86ff'; ctx.fillRect(x, y + cs - 11, cs, 11); }  // 底部归属条
-        // 等级星
-        ctx.fillStyle = '#fff'; ctx.font = Math.round(cs * 0.22) + 'px sans-serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
-        if (cell.level) { let star = ''; for (let k = 0; k < cell.level; k++) star += '★'; ctx.fillText(star, x + 3, y + cs - 6); }
+        ctx.fillStyle = GROUP_COLOR[cell.group] || '#999'; ctx.fillRect(x, y, cs, 8);   // 顶部色组条
+        ctx.fillStyle = '#6b4a2a'; ctx.font = Math.round(cs * 0.17) + 'px sans-serif'; ctx.textAlign = 'right'; ctx.textBaseline = 'top';
+        ctx.fillText('$' + cell.price, x + cs - 3, y + 9);                              // 价格(右上角小字=等级)
+        if (cell.level) { ctx.fillStyle = '#b58a5a'; ctx.textAlign = 'left'; let star = ''; for (let k = 0; k < cell.level; k++) star += '★'; ctx.fillText(star, x + 3, y + 10); }
+        if (cell.owner) this.drawShape(ctx, x + cs / 2, y + cs - 13, cs * 0.13, seatShape(cell.owner), seatColor(cell.owner), '#fff');  // 归属形状(心/星)+玩家色
       }
       const cmap = { start: '#3aa75c', card: '#e8b94d', tax: '#e85a86', jail: '#7a5c3a', bonus: '#3a86ff', property: '#5a4030' };
       ctx.fillStyle = cmap[cell.type] || '#5a4030';
       ctx.font = Math.round(cs * 0.2) + 'px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
-      this.wrapText(ctx, cell.name || '', x + cs / 2, y + (cell.type === 'property' ? 13 : 5), cs - 4, cs * 0.22);
+      this.wrapText(ctx, cell.name || '', x + cs / 2, y + (cell.type === 'property' ? cs * 0.4 : 5), cs - 4, cs * 0.22);
     }
 
     if (this.data.started) {
-      const myC = this.data.mySeat === 'red' ? '#e85a86' : '#3a86ff';
-      const peC = this.data.mySeat === 'red' ? '#3a86ff' : '#e85a86';
+      const role = room.getRole(), peerRole = role === 'boy' ? 'girl' : 'boy';
       const myKind = this.data.mySeat === 'red' ? 'heart' : 'star';
       const peKind = this.data.mySeat === 'red' ? 'star' : 'heart';
+      const myColor = seatColor(role), peColor = seatColor(peerRole);
       const moving = this._moving;
-      if (moving && moving.role === room.getRole()) { this.drawToken(ctx, moving.f, myC, myKind, moving.hop); this.drawToken(ctx, this.data.peerPos, peC, peKind, 0); }
-      else if (moving && moving.role !== room.getRole()) { this.drawToken(ctx, this.data.myPos, myC, myKind, 0); this.drawToken(ctx, moving.f, peC, peKind, moving.hop); }
-      else { this.drawToken(ctx, this.data.myPos, myC, myKind, 0); this.drawToken(ctx, this.data.peerPos, peC, peKind, 0); }
+      if (moving && moving.role === role) { this.drawToken(ctx, moving.f, myKind, myColor, moving.hop); this.drawToken(ctx, this.data.peerPos, peKind, peColor, 0); }
+      else if (moving && moving.role !== role) { this.drawToken(ctx, this.data.myPos, myKind, myColor, 0); this.drawToken(ctx, moving.f, peKind, peColor, moving.hop); }
+      else { this.drawToken(ctx, this.data.myPos, myKind, myColor, 0); this.drawToken(ctx, this.data.peerPos, peKind, peColor, 0); }
     }
   },
   wrapText(ctx, text, x, y, maxW, lh) {
