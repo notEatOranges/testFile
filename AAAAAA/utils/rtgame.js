@@ -25,4 +25,27 @@ function teardown(page) {
   if (page._rtUnsub) { page._rtUnsub(); page._rtUnsub = null; }
 }
 
-module.exports = { RED, BLUE, seatOf, peerSeatOf, seatRole, keyPath, bind, setState, updateState, teardown };
+/* —— 通用“重新开局”握手（state.req 字段）：未开局/已结束直接重开；进行中需对方同意 —— */
+function requestRestart(key, curState, myRole, isOver, buildFresh) {
+  if (!curState || isOver) return setState(key, buildFresh());
+  return new Promise(resolve => {
+    wx.showModal({
+      title: '重新开局', content: '将向对方发起请求，需对方同意才会重开当前对局', confirmText: '发起请求',
+      success: r => { if (r.confirm) setState(key, Object.assign({}, curState, { req: { by: myRole } })); resolve(); }
+    });
+  });
+}
+function acceptRestart(key, buildFresh) { return setState(key, buildFresh()); }
+function rejectRestart(key, curState) { return setState(key, Object.assign({}, curState, { req: null })); }
+function cancelRestart(key, curState) { return setState(key, Object.assign({}, curState, { req: null })); }
+/** 返回 'mine' | 'peer' | null，供页面 applyState 决定 UI / 弹对方同意框 */
+function restartReqSide(req, myRole) {
+  if (!req || !req.by) return null;
+  return req.by === myRole ? 'mine' : 'peer';
+}
+
+module.exports = {
+  RED, BLUE, seatOf, peerSeatOf, seatRole, keyPath,
+  bind, setState, updateState, teardown,
+  requestRestart, acceptRestart, rejectRestart, cancelRestart, restartReqSide
+};

@@ -27,6 +27,7 @@
         "drawguess/drawguess",
         "gomoku/gomoku",
         "memory/memory",
+        "othello/othello",
         "leaderboard/leaderboard"
       ]
     }
