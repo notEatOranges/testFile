@@ -9,8 +9,25 @@ const rt = require('@utils/rtgame.js');
 const { toast } = require('@utils/util.js');
 
 const START_CASH = 1500;
-const GW = 6, GH = 10;                 // 矩形外圈：宽 6 × 高 10
-const BOARD = 2 * (GW + GH) - 4;       // 外圈格数 = 28（竖长方形，格子更大更清晰）
+const GW = 8, GH = 10;                 // 矩形外圈：宽 8 × 高 10
+const NOTCH = { left: 3, right: 4, depth: 3 };  // 顶部凹槽(向内折)增加格子，呈 凹 形
+function walkSeg(a, b, out) {
+  const [c1, r1] = a, [c2, r2] = b;
+  if (c1 === c2) { const s = r2 > r1 ? 1 : -1; for (let r = r1; ; r += s) { out.push([c1, r]); if (r === r2) break; } }
+  else { const s = c2 > c1 ? 1 : -1; for (let c = c1; ; c += s) { out.push([c, r1]); if (c === c2) break; } }
+}
+function buildPath() {
+  const nL = NOTCH.left, nR = NOTCH.right, nd = NOTCH.depth;
+  const wp = [[0, GH - 1], [GW - 1, GH - 1], [GW - 1, 0], [nR, 0], [nR, nd], [nL, nd], [nL, 0], [0, 0]];
+  const raw = [];
+  for (let i = 0; i < wp.length; i++) walkSeg(wp[i], wp[(i + 1) % wp.length], raw);
+  const path = [];
+  for (const p of raw) { const last = path[path.length - 1]; if (!last || last[0] !== p[0] || last[1] !== p[1]) path.push(p); }
+  if (path.length > 1 && path[0][0] === path[path.length - 1][0] && path[0][1] === path[path.length - 1][1]) path.pop();
+  return path;
+}
+const PATH = buildPath();
+const BOARD = PATH.length;             // 凹形外圈格数
 // 双卡组：机会(偏移动/机缘) + 公共基金(偏金钱事件)。cash 自己加减；cashPeer 对方给/收；to 回起点；back 后退；skip 停一回合
 const DECK = [
   { t: '银行分红 +50', cash: 50 }, { t: '生日红包 对方送你 +100', cashPeer: 100 }, { t: '遗产继承 +100', cash: 100 },
@@ -37,12 +54,7 @@ function buildCells() {
   }
   return cells;
 }
-function cellCR(i) {
-  if (i <= GW - 1) return [i, GH - 1];                    // 底边
-  if (i <= GW + GH - 2) return [GW - 1, GW + GH - 2 - i]; // 右边上行
-  if (i <= 2 * GW + GH - 3) return [2 * GW + GH - 3 - i, 0]; // 顶边左行
-  return [0, i - (2 * GW + GH - 3)];                      // 左边下行
-}
+function cellCR(i) { return PATH[((i % BOARD) + BOARD) % BOARD]; }
 function rentOf(cell) { return cell.rent * (1 + (cell.level || 0)); }
 function upgradeCost(cell) { return Math.round(cell.price * 0.5); }
 function seatShape(role) { return rt.seatOf(role) === rt.RED ? 'heart' : 'star'; }
@@ -422,10 +434,10 @@ Page({
       const cell = cells[i] || {};
       ctx.strokeStyle = '#cdb088'; ctx.lineWidth = 1; ctx.strokeRect(x, y, cw, ch);
       if (cell.type === 'property') {
-        if (cell.owner) { ctx.strokeStyle = seatColor(cell.owner); ctx.lineWidth = 4; ctx.strokeRect(x + 2, y + 2, cw - 4, ch - 4); }  // 归属=粗边框(玩家色)
         ctx.fillStyle = GROUP_COLOR[cell.group] || '#666'; ctx.font = 'bold ' + Math.round(cs * 0.2) + 'px sans-serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
         ctx.fillText('$' + cell.price, x + 5, y + 4);                                   // 价格左上角，颜色=等级
-        if (cell.level) { ctx.fillStyle = '#b58a5a'; ctx.font = Math.round(cs * 0.2) + 'px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom'; let st = ''; for (let k = 0; k < cell.level; k++) st += '★'; ctx.fillText(st, x + cw / 2, y + ch - 2); }  // 等级星在底部
+        if (cell.level) { ctx.fillStyle = '#b58a5a'; ctx.font = Math.round(cs * 0.2) + 'px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom'; let st = ''; for (let k = 0; k < cell.level; k++) st += '★'; ctx.fillText(st, x + cw / 2, y + ch - 13); }  // 等级星在底部色条上方
+        if (cell.owner) { ctx.fillStyle = seatColor(cell.owner); ctx.fillRect(x, y + ch - 9, cw, 9); }  // 归属=底部色条(玩家色)
       }
       const cmap = { start: '#3aa75c', card: '#e8b94d', tax: '#e85a86', jail: '#7a5c3a', bonus: '#3a86ff', freepark: '#06d6a0', property: '#5a4030' };
       ctx.fillStyle = cmap[cell.type] || '#5a4030';
