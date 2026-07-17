@@ -21,6 +21,11 @@ function bind(page, key, cb) {
 }
 function setState(key, state) { return Store.set(keyPath(key), Object.assign({ ts: Store.now() }, state)); }
 function updateState(key, partial) { return Store.update(keyPath(key), partial); }
+// 从 DB 现读整份状态 → updater 派生 → 整体写回。用于「读后改」的非回合推进写（如银行存贷/卖地）：
+// 避免从本地 this._state（陈旧快照）带出 turn/pos 等字段、把错回合写回服务器（丢摇骰 bug 根因）。
+function transactionState(key, updater) {
+  return Store.transaction(keyPath(key), cur => Object.assign({ ts: Store.now() }, updater(cur || null)));
+}
 function teardown(page) {
   if (page._rtUnsub) { page._rtUnsub(); page._rtUnsub = null; }
 }
@@ -62,7 +67,7 @@ function myResult(winner, mySeat) {
 
 module.exports = {
   RED, BLUE, seatOf, peerSeatOf, seatRole, keyPath,
-  bind, setState, updateState, teardown,
+  bind, setState, updateState, transactionState, teardown,
   requestRestart, acceptRestart, rejectRestart, cancelRestart, restartReqSide,
   resign, recordPvp, myResult
 };

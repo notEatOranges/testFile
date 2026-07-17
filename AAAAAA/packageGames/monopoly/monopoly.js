@@ -162,14 +162,17 @@ Page({
       wx.showModal({ title: '买地请求', content: (names[sellReq.by] || '对方') + ' 要把「' + (cell ? cell.name : '地块') + '」以 ' + sellReq.price + ' 卖给你，买吗？', confirmText: '买下', cancelText: '不要',
         success: r => {
           if (r.confirm) {
-            const st = me._state; const cs = st.cells.map(c => Object.assign({}, c)); const cash = Object.assign({}, st.cash);
-            if ((cash[role] || 0) >= sellReq.price) {
-              cash[role] -= sellReq.price; cash[sellReq.by] += sellReq.price;
+            rt.transactionState('monopoly', s => {
+              if (!s || !s.cells) return s;
+              const cs = s.cells.map(c => Object.assign({}, c));
+              const cash = Object.assign({}, s.cash);
+              if ((cash[role] || 0) < sellReq.price) { toast('现金不足'); return Object.assign({}, s, { sellReq: null }); }
+              cash[role] -= sellReq.price; cash[sellReq.by] = (cash[sellReq.by] || 0) + sellReq.price;
               cs[sellReq.idx] = Object.assign({}, cs[sellReq.idx], { owner: role });
-              const lg = (st.log || []).slice(); lg.push({ who: role, text: '买下{{' + sellReq.by + '}}的「' + cs[sellReq.idx].name + '」-' + sellReq.price });
-              rt.setState('monopoly', Object.assign({}, st, { cells: cs, cash, log: lg.slice(-30), sellReq: null }));
-            } else { toast('现金不足'); rt.setState('monopoly', Object.assign({}, st, { sellReq: null })); }
-          } else { rt.setState('monopoly', Object.assign({}, me._state, { sellReq: null })); }
+              const lg = (s.log || []).slice(); lg.push({ who: role, text: '买下{{' + sellReq.by + '}}的「' + cs[sellReq.idx].name + '」-' + sellReq.price });
+              return Object.assign({}, s, { cells: cs, cash, log: lg.slice(-30), sellReq: null });
+            });
+          } else { rt.transactionState('monopoly', s => Object.assign({}, s, { sellReq: null })); }
         } });
     } else if (!sellReq) { this._sellPrompted = false; }
     patch.sellReqPending = !!(sellReq && sellReq.by === role);
@@ -461,45 +464,63 @@ Page({
   closeBank() { this.setData({ bankOpen: false }); setTimeout(() => this.setupCanvas(), 50); },
   bankAct(e) {
     const act = e.currentTarget.dataset.act, amt = parseInt(e.currentTarget.dataset.amt || '0', 10);
-    const role = room.getRole(), s = this._state; if (!s) return;
-    const cash = Object.assign({}, s.cash), savings = Object.assign({}, s.savings || { boy: 0, girl: 0 }), loan = Object.assign({}, s.loan || { boy: 0, girl: 0 });
-    const lg = (s.log || []).slice();
-    if (act === 'deposit' && (cash[role] || 0) >= amt) { cash[role] -= amt; savings[role] = (savings[role] || 0) + amt; lg.push({ who: role, text: '存入银行 ' + amt }); }
-    else if (act === 'withdraw') { const v = Math.min(amt, savings[role] || 0); if (v > 0) { savings[role] -= v; cash[role] += v; lg.push({ who: role, text: '取出存款 ' + v }); } }
-    else if (act === 'borrow') { cash[role] += 200; loan[role] = (loan[role] || 0) + 220; lg.push({ who: role, text: '向银行贷款 200（欠 220）' }); }
-    else if (act === 'repay') { const due = loan[role] || 0; const pay = Math.min(due, cash[role] || 0); if (pay > 0) { cash[role] -= pay; loan[role] = due - pay; lg.push({ who: role, text: '还款 ' + pay }); } else return toast('没有欠款或现金不足'); }
-    else return toast('操作失败');
-    rt.setState('monopoly', Object.assign({}, s, { cash, savings, loan, log: lg.slice(-30) }));
+    const role = room.getRole();
+    // 走 transactionState：从 DB 现读整份状态再派生，避免从陈旧 this._state 带出 turn/pos 把错回合写回（丢摇骰 bug 根因）
+    rt.transactionState('monopoly', s => {
+      if (!s || !s.cash) return s;
+      const cash = Object.assign({}, s.cash), savings = Object.assign({}, s.savings || { boy: 0, girl: 0 }), loan = Object.assign({}, s.loan || { boy: 0, girl: 0 });
+      const lg = (s.log || []).slice();
+      if (act === 'deposit') {
+        if ((cash[role] || 0) < amt) { toast('现金不足'); return s; }
+        cash[role] -= amt; savings[role] = (savings[role] || 0) + amt; lg.push({ who: role, text: '存入银行 ' + amt });
+      } else if (act === 'withdraw') {
+        const v = Math.min(amt, savings[role] || 0); if (v <= 0) { toast('没有存款'); return s; }
+        savings[role] -= v; cash[role] += v; lg.push({ who: role, text: '取出存款 ' + v });
+      } else if (act === 'borrow') {
+        cash[role] += 200; loan[role] = (loan[role] || 0) + 220; lg.push({ who: role, text: '向银行贷款 200（欠 220）' });
+      } else if (act === 'repay') {
+        const due = loan[role] || 0, pay = Math.min(due, cash[role] || 0);
+        if (pay <= 0) { toast('没有欠款或现金不足'); return s; }
+        cash[role] -= pay; loan[role] = due - pay; lg.push({ who: role, text: '还款 ' + pay });
+      } else { toast('操作失败'); return s; }
+      return Object.assign({}, s, { cash, savings, loan, log: lg.slice(-30) });
+    });
   },
   sellToBank(e) {
-    const idx = parseInt(e.currentTarget.dataset.idx, 10), role = room.getRole(), s = this._state;
-    const cell = s.cells[idx];
+    const idx = parseInt(e.currentTarget.dataset.idx, 10), role = room.getRole();
+    const cell = (this._state && this._state.cells[idx]) || {};
     const get = Math.round((cell.price + (cell.level || 0) * upgradeCost(cell)) * 0.6);
     wx.showModal({ title: '卖给银行', content: '确定把「' + cell.name + '」卖给银行，获得 ' + get + '？', confirmText: '卖出', cancelText: '取消',
       success: r => {
         if (!r.confirm) return;
-        const cs = s.cells.map(c => Object.assign({}, c));
-        cs[idx] = Object.assign({}, cell, { owner: null, level: 0 });
-        const cash = Object.assign({}, s.cash); cash[role] += get;
-        const lg = (s.log || []).slice(); lg.push({ who: role, text: '把「' + cell.name + '」卖给银行 +' + get });
-        rt.setState('monopoly', Object.assign({}, s, { cells: cs, cash, log: lg.slice(-30) }));
+        rt.transactionState('monopoly', s => {
+          if (!s || !s.cells) return s;
+          const c = s.cells[idx];
+          if (!c || c.owner !== role) { toast('地块已变化'); return s; }   // 防御：非己地不卖
+          const cs = s.cells.map(x => Object.assign({}, x));
+          cs[idx] = Object.assign({}, c, { owner: null, level: 0 });
+          const cash = Object.assign({}, s.cash); cash[role] = (cash[role] || 0) + get;
+          const lg = (s.log || []).slice(); lg.push({ who: role, text: '把「' + c.name + '」卖给银行 +' + get });
+          return Object.assign({}, s, { cells: cs, cash, log: lg.slice(-30) });
+        });
         toast('卖给银行 +' + get);
       }
     });
   },
   sellToPeer(e) {
-    const idx = parseInt(e.currentTarget.dataset.idx, 10), role = room.getRole(), s = this._state;
-    const cell = s.cells[idx], price = Math.round(cell.price * 0.8);
+    const idx = parseInt(e.currentTarget.dataset.idx, 10), role = room.getRole();
+    const cell = (this._state && this._state.cells[idx]) || {};
+    const price = Math.round((cell.price || 0) * 0.8);
     wx.showModal({ title: '卖给对方', content: '确定把「' + cell.name + '」以 ' + price + ' 卖给对方？', confirmText: '发起', cancelText: '取消',
       success: r => {
         if (!r.confirm) return;
-        rt.setState('monopoly', Object.assign({}, s, { sellReq: { by: role, idx, price } }));
+        rt.transactionState('monopoly', s => Object.assign({}, s, { sellReq: { by: role, idx, price } }));
         this.setData({ bankOpen: false });
         toast('已发起卖地请求(价 ' + price + ')，等对方');
       }
     });
   },
-  cancelSell() { rt.setState('monopoly', Object.assign({}, this._state, { sellReq: null })); toast('已取消卖地'); },
+  cancelSell() { rt.transactionState('monopoly', s => Object.assign({}, s, { sellReq: null })); toast('已取消卖地'); },
   openRules() { this.setData({ rulesOpen: true }); },
   closeRules() { this.setData({ rulesOpen: false }); setTimeout(() => this.setupCanvas(), 60); },
 
