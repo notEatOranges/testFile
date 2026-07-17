@@ -80,7 +80,7 @@ Page({
   data: {
     theme: 'sakura', role: 'boy', peer: 'girl', myName: '我', myAvatar: '', peerName: 'ta', peerAvatar: '',
     started: false, turnSeat: 'red', mySeat: 'red', myTurn: false,
-    dice: [1, 1], log: [], myCash: START_CASH, peerCash: START_CASH, myPos: 0, peerPos: 0,
+    dice: 1, log: [], myCash: START_CASH, peerCash: START_CASH, myPos: 0, peerPos: 0,
     winner: null, winnerText: '', rolling: false, requestPending: false, rulesOpen: false,
     card: null, fx: null,   // fx: {kind:'good'|'bad', text} 事件特效
     bankOpen: false, mySavings: 0, peerSavings: 0, myLoan: 0, peerLoan: 0, myProps: [], sellReqPending: false
@@ -102,7 +102,7 @@ Page({
   onUnload() { rt.teardown(this); ident.teardown(this); if (this._diceTimer) clearInterval(this._diceTimer); if (this._raf && this.cv) this.cv.cancelAnimationFrame(this._raf); if (this._cardRaf && this.cv) this.cv.cancelAnimationFrame(this._cardRaf); },
 
   fresh() {
-    return { cells: buildCells(), pos: { boy: 0, girl: 0 }, cash: { boy: START_CASH, girl: START_CASH }, savings: { boy: 0, girl: 0 }, loan: { boy: 0, girl: 0 }, skip: { boy: 0, girl: 0 }, turn: Math.random() < 0.5 ? rt.RED : rt.BLUE, dice: [1, 1], log: [], winner: null, req: null, sellReq: null };
+    return { cells: buildCells(), pos: { boy: 0, girl: 0 }, cash: { boy: START_CASH, girl: START_CASH }, savings: { boy: 0, girl: 0 }, loan: { boy: 0, girl: 0 }, skip: { boy: 0, girl: 0 }, turn: Math.random() < 0.5 ? rt.RED : rt.BLUE, dice: 1, log: [], winner: null, req: null, sellReq: null };
   },
   startMatch() { this._recorded = false; rt.setState('monopoly', this.fresh()); },
   requestRestart() { rt.requestRestart('monopoly', this._state, room.getRole(), !!this.data.winner, () => this.fresh()); },
@@ -181,7 +181,7 @@ Page({
     cells.forEach((c, idx) => { if (c && c.type === 'property' && c.owner === role) myProps.push({ idx, name: c.name, price: c.price, level: c.level || 0, sellBank: Math.round((c.price + (c.level || 0) * upgradeCost(c)) * 0.6), sellPeer: Math.round(c.price * 0.8) }); });
     Object.assign(patch, {
       started: true, turnSeat, myTurn: !winner && turnSeat === this.data.mySeat,
-      dice: s.dice || [1, 1],
+      dice: s.dice || 1,
       log: (s.log || []).slice(-30).reverse().map(it => fmtLog(it, role, this.data.peerName)),
       myCash: (s.cash && s.cash[role]) || 0, peerCash: (s.cash && s.cash[peer]) || 0,
       mySavings: (s.savings && s.savings[role]) || 0, peerSavings: (s.savings && s.savings[peer]) || 0,
@@ -214,9 +214,9 @@ Page({
     const s = this._state;
     this.setData({ rolling: true });
     try {
-    const [a, b] = await this.rollDiceAnim();        // 双骰子(棋盘中央 3D 翻滚 + 相加动画)
-    const steps = a + b;
-    this.setData({ dice: [a, b] });
+    const d = await this.rollDiceAnim();             // 单 8 面骰(棋盘中央翻滚 + 落定)
+    const steps = d;
+    this.setData({ dice: d });
 
     const from = s.pos[role];
     const crossed = (from + steps) >= BOARD;
@@ -233,7 +233,7 @@ Page({
     log.push({ who: role, text: '掷出 ' + steps + (crossed ? '，经过起点 +200' : '') });
 
     // 先写一次：棋子已移动 + 日志立即可见（携带 savings/loan）
-    this._state = Object.assign({}, s, { pos: Object.assign({}, s.pos, { [role]: to }), cash, savings, loan, dice: [a, b], log });
+    this._state = Object.assign({}, s, { pos: Object.assign({}, s.pos, { [role]: to }), cash, savings, loan, dice: d, log });
     rt.setState('monopoly', this._state);
 
     // 棋子滑行动画（沿环形），完成后结算
@@ -268,16 +268,16 @@ Page({
 
   rollDiceAnim() {
     return new Promise(res => {
-      const fa = 1 + Math.floor(Math.random() * 6), fb = 1 + Math.floor(Math.random() * 6);
-      if (!this.cv) { res([fa, fb]); return; }
-      const t0 = Date.now(); const tumble = 720, sumAnim = 700;
+      const f = 1 + Math.floor(Math.random() * 8);   // 单 8 面骰：1~8
+      if (!this.cv) { res(f); return; }
+      const t0 = Date.now(); const tumble = 720, settle = 600;
       const step = () => {
         const el = Date.now() - t0;
         if (el < tumble) {
-          this._diceAnim = { phase: 'tumble', a: 1 + Math.floor(Math.random() * 6), b: 1 + Math.floor(Math.random() * 6), angle: Math.sin(el / tumble * Math.PI * 5) * 0.6 * (1 - el / tumble) };
-        } else if (el < tumble + sumAnim) {
-          this._diceAnim = { phase: 'sum', a: fa, b: fb, sumP: (el - tumble) / sumAnim };
-        } else { this._diceAnim = null; this.draw(); res([fa, fb]); return; }
+          this._diceAnim = { phase: 'tumble', v: 1 + Math.floor(Math.random() * 8), angle: Math.sin(el / tumble * Math.PI * 5) * 0.6 * (1 - el / tumble) };
+        } else if (el < tumble + settle) {
+          this._diceAnim = { phase: 'settle', v: f, p: (el - tumble) / settle };
+        } else { this._diceAnim = null; this.draw(); res(f); return; }
         this.draw();
         this._raf = this.cv.requestAnimationFrame(step);
       };
@@ -297,22 +297,20 @@ Page({
   drawDiceCenter(ctx) {
     const cs = this.cs, cx = this.W / 2, cy = this.H / 2 + cs * 0.4;
     const anim = this._diceAnim;
-    const d = this.data.dice || [1, 1];
-    const v1 = anim ? anim.a : d[0], v2 = anim ? anim.b : d[1];
+    const d = this.data.dice || 1;
+    const v = anim ? anim.v : d;
     const ang = anim && anim.phase === 'tumble' ? anim.angle : 0;
-    const s = cs * 1.0, gap = s * 1.25;
-    this.drawDie(ctx, cx - gap, cy, s, v1, ang);   // 左骰
-    this.drawDie(ctx, cx + gap, cy, s, v2, ang);   // 右骰
-    // 摇完后相加动画：a + b = sum 弹出
-    if (!anim || anim.phase === 'sum') {
-      const p = anim ? (anim.sumP || 1) : 1;
-      const sum = v1 + v2;
+    const s = cs * 1.5;   // 单 8 面骰，放大居中
+    this.drawDie(ctx, cx, cy, s, v, ang);
+    // 落定后弹出「前进 N 格」
+    if (!anim || anim.phase === 'settle') {
+      const p = anim ? (anim.p || 1) : 1;
       ctx.save();
       ctx.globalAlpha = Math.min(1, p * 1.5);
       const sc = 0.5 + 0.5 * Math.min(1, p);
-      ctx.translate(cx, cy + s * 1.55); ctx.scale(sc, sc);
+      ctx.translate(cx, cy + s * 1.1); ctx.scale(sc, sc);
       ctx.fillStyle = '#e85a86'; ctx.font = 'bold ' + Math.round(cs * 0.46) + 'px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillText(v1 + ' + ' + v2 + ' = ' + sum, 0, 0);
+      ctx.fillText('前进 ' + v + ' 格', 0, 0);
       ctx.restore();
     }
   },
