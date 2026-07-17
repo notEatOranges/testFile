@@ -33,9 +33,9 @@ const DECK = [
   { t: '银行分红 +50', cash: 50 }, { t: '生日红包 对方送你 +100', cashPeer: 100 }, { t: '遗产继承 +100', cash: 100 },
   { t: '股票大涨 +150', cash: 150 }, { t: '退税 +40', cash: 40 }, { t: '中奖 +200', cash: 200 }, { t: '捡到钱包 +80', cash: 80 },
   { t: '前进到起点 +200', to: 0 }, { t: '对方请客 你 +60', cashPeer: 60 }, { t: '利息到账 +30', cash: 30 },
+  { t: '经验骰子 摇骰前进(同正常掷骰)', fwdRoll: true }, { t: '幸运骰子 自选前进 1~8 步', luckyDice: true }, { t: '惩罚骰子 摇骰后退(落对方铺交租)', backRoll: true },
   { t: '修缮费 -120', cash: -120 }, { t: '医药费 -150', cash: -150 }, { t: '违章 -90', cash: -90 }, { t: '丢手机 -120', cash: -120 },
-  { t: '进修学费 -150', cash: -150 }, { t: '爱心捐款 -60', cash: -60 }, { t: '请客吃饭 -80', cash: -80 }, { t: '进监狱 停一回合', skip: true },
-  { t: '后退 3 格', back: 3 }
+  { t: '进修学费 -150', cash: -150 }, { t: '爱心捐款 -60', cash: -60 }, { t: '请客吃饭 -80', cash: -80 }, { t: '进监狱 移到监狱并停一回合', toJail: true, skip: true }
 ];
 const GROUP_COLOR = ['#9b7fd4', '#3a86ff', '#06d6a0', '#ffb703', '#e85a86', '#fb8500'];
 
@@ -280,15 +280,16 @@ Page({
     finally { if (this._rollWatchdog) { clearTimeout(this._rollWatchdog); this._rollWatchdog = null; } }
   },
 
-  animateMove(role, from, to) {
+  animateMove(role, from, to, backward) {
     return new Promise(res => {
       if (!this.cv) { res(); return; }
-      const target = to < from ? to + BOARD : to;
+      // backward=true：f 递减（tokenXY/cellCR 支持负数与环绕，棋子沿环逆行）；否则正向（跨起点则 +BOARD）
+      const span = backward ? -(((from - to + BOARD) % BOARD) || 0) : (((to < from ? to + BOARD : to)) - from);
       const t0 = Date.now(); const dur = 760;
       const step = () => {
         const p = Math.min(1, (Date.now() - t0) / dur);
         const hop = Math.abs(Math.sin(p * Math.PI * 2)) * this.cs * 0.4;   // 放慢的跳动
-        this._moving = { role, f: from + (target - from) * p, hop };
+        this._moving = { role, f: from + span * p, hop };
         this.draw();
         if (p < 1) this._raf = this.cv.requestAnimationFrame(step);
         else { this._moving = null; this.draw(); res(); }
@@ -348,7 +349,7 @@ Page({
   drawCard() {
     return new Promise(res => {
       const c = DECK[Math.floor(Math.random() * DECK.length)];
-      const kind = (c.cash != null && c.cash < 0) || c.skip || c.back ? 'bad' : 'good';
+      const kind = (c.cash != null && c.cash < 0) || c.skip || c.back || c.backRoll ? 'bad' : 'good';
       if (!this.cv) { res(c); return; }
       // Phase 1: 棋盘中央洗牌动画(700ms)
       this._cardAnim = { phase: 'shuffle', t0: Date.now() };
@@ -428,13 +429,15 @@ Page({
     rt.setState('monopoly', this._state);
   },
 
-  async resolve(role, idx, cash, log, turn) {
+  async resolve(role, idx, cash, log, turn, opts) {
+    opts = opts || {};
     const cells = this._cells.map(c => Object.assign({}, c));
     const cell = cells[idx];
     const peer = role === 'boy' ? 'girl' : 'boy';
     let skip = Object.assign({}, this._state.skip || { boy: 0, girl: 0 });
     let pos = Object.assign({}, this._state.pos);
     let loan = Object.assign({}, this._state.loan || { boy: 0, girl: 0 });
+    let savings = Object.assign({}, this._state.savings || { boy: 0, girl: 0 });
     let winner = null;
     let toIdx = idx;
 
@@ -444,16 +447,50 @@ Page({
     else if (cell.type === 'jail') { skip[role] = (skip[role] || 0) + 1; log.push({ who: role, text: '进了监狱，下回合停留' }); this.showFx('bad', '进监狱，停一回合'); }
     else if (cell.type === 'freepark') { cash[role] = (cash[role] || 0) + 50; log.push({ who: role, text: '免费停车 +50' }); this.showFx('good', '免费停车 +50'); }
     else if (cell.type === 'card') {
-      const card = await this.drawCard();
-      log.push({ who: role, text: (cell.kind === 'fate' ? '抽中公共基金：' : '抽中机会：') + card.t });
-      if (card.cash) cash[role] = (cash[role] || 0) + card.cash;
-      if (card.cashPeer) { cash[role] = (cash[role] || 0) + card.cashPeer; cash[peer] = (cash[peer] || 0) - card.cashPeer; }
-      if (card.to === 0) { cash[role] += 200; toIdx = 0; log.push({ who: role, text: '回到起点 +200' }); }
-      if (card.back) { toIdx = (idx - card.back + BOARD) % BOARD; log.push({ who: role, text: '后退 ' + card.back + ' 格' }); }
-      if (card.skip) skip[role] = (skip[role] || 0) + 1;
-      this.syncLog(cells, cash, log, pos, skip);
+      if (opts.backward) { log.push({ who: role, text: '后退路过「' + cell.name + '」（不触发抽牌）' }); }   // 后退落地不抽牌，避免移动卡循环
+      else {
+        const card = await this.drawCard();
+        log.push({ who: role, text: (cell.kind === 'fate' ? '抽中公共基金：' : '抽中机会：') + card.t });
+        if (card.cash) cash[role] = (cash[role] || 0) + card.cash;
+        if (card.cashPeer) { cash[role] = (cash[role] || 0) + card.cashPeer; cash[peer] = (cash[peer] || 0) - card.cashPeer; }
+        if (card.to === 0) { cash[role] += 200; toIdx = 0; log.push({ who: role, text: '回到起点 +200' }); }
+        if (card.toJail) { const ji = cells.findIndex(c => c && c.type === 'jail'); if (ji >= 0) { toIdx = ji; log.push({ who: role, text: '被关进监狱' }); this.showFx('bad', '关进监狱'); } }
+        if (card.skip) skip[role] = (skip[role] || 0) + 1;
+        // 移动类卡牌：摇/选步数 → 动画移动 → 在新落点递归结算（前进同正常掷骰；后退为惩罚：不买不升级、对方铺交租、监狱坐牢）
+        if (card.fwdRoll || card.luckyDice || card.backRoll) {
+          const backward = !!card.backRoll;
+          let steps;
+          if (card.luckyDice) {
+            steps = await new Promise(res => wx.showModal({ title: '幸运骰子', editable: true, placeholderText: '输入前进 1~8 步', confirmText: '前进', success: r => { if (r.confirm) { const n = parseInt(r.content, 10); res((n >= 1 && n <= 8) ? n : 1); } else res(1); }, fail: () => res(1) }));
+            log.push({ who: role, text: '幸运骰子：选择前进 ' + steps + ' 步' });
+          } else {
+            steps = 1 + Math.floor(Math.random() * 8);
+            log.push({ who: role, text: (backward ? '惩罚骰子' : '经验骰子') + '：摇出 ' + steps + '，' + (backward ? '后退' : '前进') + ' ' + steps + ' 步' });
+          }
+          const fromIdx = idx, to = backward ? ((idx - steps) % BOARD + BOARD) % BOARD : (idx + steps) % BOARD;
+          if (!backward && fromIdx + steps >= BOARD) {       // 前进跨起点：同正常掷骰（+200/存款息/贷款扣息）
+            cash[role] = (cash[role] || 0) + 200;
+            const sav = savings[role] || 0; if (sav) { const it = Math.round(sav * 0.05); savings[role] = sav + it; log.push({ who: role, text: '存款利息 +' + it }); }
+            const ln = loan[role] || 0;
+            if (ln) { const li = Math.round(ln * 0.1); if ((cash[role] || 0) >= li) { cash[role] -= li; log.push({ who: role, text: '贷款利息 -' + li }); } else { loan[role] = ln + (li - (cash[role] || 0)); cash[role] = 0; log.push({ who: role, text: '贷款利息滚入欠款' }); } }
+            log.push({ who: role, text: '经过起点 +200' });
+          }
+          pos = Object.assign({}, pos, { [role]: to });
+          this.syncLog(cells, cash, log, pos, skip, { savings, loan });
+          await this.animateMove(role, fromIdx, to, backward);
+          if (backward) this.showFx('bad', '后退 ' + steps);
+          return await this.resolve(role, to, cash, log, turn, backward ? { backward: true } : {});
+        }
+        this.syncLog(cells, cash, log, pos, skip, { savings, loan });
+      }
     } else if (cell.type === 'property') {
-      if (!cell.owner) {
+      if (opts.backward) {
+        // 后退惩罚落地：对方铺交过路费；空地/自家都不能购买或升级
+        if (cell.owner && cell.owner !== role) {
+          const r = rentOf(cell, cells); cash[role] -= r; cash[peer] += r;
+          log.push({ who: role, text: '后退到{{' + cell.owner + '}}的「' + cell.name + '」付过路费 ' + r }); this.showFx('bad', '后退付过路费 ' + r);
+        } else { log.push({ who: role, text: '后退到「' + cell.name + '」(' + (cell.owner === role ? '自家' : '空地') + '，不能购买/升级)' }); }
+      } else if (!cell.owner) {
         const shortAmt = cell.price - (cash[role] || 0);
         const afford = shortAmt <= 0;
         const canLoan = availableLoan(cells, role, loan[role] || 0) >= shortAmt;   // 贷款买房也受额度封顶
@@ -488,7 +525,6 @@ Page({
     }
 
     // 现金为负 → 破产救助（存款→卖地→贷款→破产），不再直接判输
-    let savings = Object.assign({}, this._state.savings || { boy: 0, girl: 0 });
     if (cash[role] < 0) {
       const bankrupt = await this.coverShortfall(role, cells, cash, savings, loan, log);
       if (bankrupt) winner = role === 'boy' ? rt.BLUE : rt.RED;
