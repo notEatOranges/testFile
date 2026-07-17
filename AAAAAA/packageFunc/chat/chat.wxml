@@ -2,7 +2,8 @@
 
   <!-- 聊天背景（couple 共享）：预设渐变 或 自定义图 -->
   <view wx:if="{{bgStyle}}" class="chat-bg" style="background:{{bgStyle}}"></view>
-  <image wx:elif="{{bgSrc}}" class="chat-bg" src="{{bgSrc}}" mode="scaleToFill" />
+  <image wx:elif="{{bgSrc}}" class="chat-bg" src="{{bgSrc}}" mode="aspectFill" />
+  <view wx:if="{{bgSrc}}" class="chat-bg-scrim"></view>
 
   <view class="poke-tip {{pokeTip ? 'show' : ''}}">
     <t-icon name="heart" size="40rpx" />

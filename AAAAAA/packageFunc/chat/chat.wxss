@@ -189,7 +189,8 @@
 .sticker-empty { text-align: center; padding: 60rpx 24rpx; font-size: 26rpx; line-height: 1.6; }
 
 /* ============ 聊天背景 ============ */
-.chat-bg { position: absolute; left: 0; top: 0; right: 0; bottom: 0; z-index: 0; }
+.chat-bg { position: absolute; left: 0; top: 0; width: 100%; height: 100%; z-index: 0; }   /* 显式 100%：image 在绝对定位下不会自动撑满 */
+.chat-bg-scrim { position: absolute; left: 0; top: 0; width: 100%; height: 100%; z-index: 0; background: rgba(255,255,255,0.42); }   /* 自定义图背景上叠半透明白，让灰色提示文字可读 */
 
 /* ============ 图片上传进度蒙层 ============ */
 .img-wrap { position: relative; display: inline-block; }
