@@ -114,7 +114,7 @@ Page({
     this._bound = true;
     rt.bind(this, 'monopoly', s => { this._state = s; this.applyState(); });
   },
-  onUnload() { rt.teardown(this); ident.teardown(this); if (this._diceTimer) clearInterval(this._diceTimer); if (this._raf && this.cv) this.cv.cancelAnimationFrame(this._raf); if (this._cardRaf && this.cv) this.cv.cancelAnimationFrame(this._cardRaf); },
+  onUnload() { rt.teardown(this); ident.teardown(this); if (this._diceTimer) clearInterval(this._diceTimer); if (this._rollWatchdog) clearTimeout(this._rollWatchdog); if (this._raf && this.cv) this.cv.cancelAnimationFrame(this._raf); if (this._cardRaf && this.cv) this.cv.cancelAnimationFrame(this._cardRaf); },
 
   fresh() {
     return { cells: buildCells(), pos: { boy: 0, girl: 0 }, cash: { boy: START_CASH, girl: START_CASH }, savings: { boy: 0, girl: 0 }, loan: { boy: 0, girl: 0 }, skip: { boy: 0, girl: 0 }, turn: Math.random() < 0.5 ? rt.RED : rt.BLUE, dice: 1, log: [], winner: null, req: null, sellReq: null };
@@ -161,7 +161,7 @@ Page({
     this._cells = s.cells;
     const winner = s.winner || null;
     const turnSeat = s.turn || rt.RED;
-    if (this._prevTurn !== turnSeat) { this._prevTurn = turnSeat; this._lastRolledTurn = null; }   // 回合易主 → 重置「本回合已摇」标记，让新回合方可掷骰
+    const myTurnFlag = !winner && turnSeat === this.data.mySeat;
     let winnerText = '';
     if (winner === 'draw') winnerText = '平局';
     else if (winner) winnerText = (names[rt.seatRole(winner)] || '对方') + ' 获胜';
@@ -204,7 +204,7 @@ Page({
     });
     const myLoanVal = (s.loan && s.loan[role]) || 0, myCap = loanCapOf(cells, role);
     Object.assign(patch, {
-      started: true, turnSeat, myTurn: !winner && turnSeat === this.data.mySeat,
+      started: true, turnSeat, myTurn: myTurnFlag, rolling: myTurnFlag ? this.data.rolling : false,
       dice: s.dice || 1,
       log: (s.log || []).slice(-30).reverse().map(it => fmtLog(it, role, this.data.peerName)),
       myCash: (s.cash && s.cash[role]) || 0, peerCash: (s.cash && s.cash[peer]) || 0,
@@ -232,11 +232,13 @@ Page({
 
   async roll() {
     if (!this.data.myTurn || this.data.winner || this.data.rolling) return;
-    if (this._lastRolledTurn === this.data.mySeat) return;   // 本回合已摇过：堵住 rolling 标志先于回合切换被清的竞态窗口(重复摇)
-    this._lastRolledTurn = this.data.mySeat;
     const role = room.getRole();
     const s = this._state;
     this.setData({ rolling: true });
+    // rolling 现在交由 applyState 在「回合离开我/胜负已定」时清掉（期间保持 true，堵住重复摇）。
+    // 安全网：若回合未推进（异常/watch 漏推）导致 rolling 卡死，12s 后强制释放，避免「点摇骰无反应需重进」。
+    if (this._rollWatchdog) clearTimeout(this._rollWatchdog);
+    this._rollWatchdog = setTimeout(() => { if (this.data.rolling) { console.warn('[monopoly] roll watchdog: force-release'); this.setData({ rolling: false }); } }, 12000);
     try {
     const d = await this.rollDiceAnim();             // 单 8 面骰(棋盘中央翻滚 + 落定)
     const steps = d;
@@ -275,7 +277,7 @@ Page({
       const st = this._state || s;
       if (st && !st.winner) rt.setState('monopoly', Object.assign({}, st, { turn: rt.seatOf(peer) }));
     }
-    finally { this.setData({ rolling: false }); }
+    finally { if (this._rollWatchdog) { clearTimeout(this._rollWatchdog); this._rollWatchdog = null; } }
   },
 
   animateMove(role, from, to) {
