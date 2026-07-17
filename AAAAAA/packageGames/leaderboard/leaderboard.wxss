@@ -1,10 +1,10 @@
 page { background-color: var(--bg-1); }
 .lb-page { padding-bottom: calc(40rpx + env(safe-area-inset-bottom)); }
 
-/* 游戏切换 tab */
-.lb-tabs { display: flex; gap: 14rpx; }
+/* 游戏切换 tab(横向滑动，按内容铺开，超出滑动) */
+.lb-tabs { display: flex; gap: 14rpx; white-space: nowrap; width: 100%; }
 .lb-tab {
-  flex: 1; text-align: center; padding: 18rpx 0; border-radius: 30rpx;
+  flex: none; text-align: center; padding: 18rpx 36rpx; border-radius: 30rpx;
   background: var(--card); color: var(--text-soft); font-size: 28rpx; box-shadow: 0 4rpx 16rpx var(--card-shadow);
   transition: transform .12s ease, background .14s ease;
 }

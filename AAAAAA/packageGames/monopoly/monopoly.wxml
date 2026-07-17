@@ -20,10 +20,11 @@
     <text wx:if="{{sellReqPending}}" class="mp-pending"> 等对方买地 <text class="mp-link" bindtap="cancelSell">取消</text></text>
   </view>
 
-  <!-- 迷你行为记录(最新3条，不滚动) -->
-  <view class="mp-log-mini">
-    <view wx:for="{{logRecent}}" wx:key="index" class="ml-item {{index === 0 ? 'new' : ''}}">· {{item}}</view>
-  </view>
+  <!-- 全部对局记录(主页面内滚动) -->
+  <scroll-view scroll-y class="mp-log-box" enhanced show-scrollbar="{{false}}">
+    <view wx:for="{{log}}" wx:key="index" class="ml-item {{index === 0 ? 'new' : ''}}">· {{item}}</view>
+    <view wx:if="{{!log.length}}" class="muted small log-empty">还没有记录，掷骰开始吧</view>
+  </scroll-view>
 
   <!-- 固定底部 tab 栏，安全边距，禁止滚动 -->
   <view class="mp-tabbar">

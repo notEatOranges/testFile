@@ -1,9 +1,9 @@
 <view class="theme-{{theme}} love-page lb-page">
 
-  <!-- 游戏切换 -->
-  <view class="lb-tabs">
-    <view wx:for="{{games}}" wx:key="key" class="lb-tab {{tab === item.key ? 'sel' : ''}}" data-k="{{item.key}}" bindtap="switchTab">{{item.label}}</view>
-  </view>
+  <!-- 游戏切换(横向滑动，铺开不挤) -->
+  <scroll-view scroll-x class="lb-tabs" enable-flex enhanced show-scrollbar="{{false}}" scroll-into-view="t-{{tab}}">
+    <view id="t-{{item.key}}" wx:for="{{games}}" wx:key="key" class="lb-tab {{tab === item.key ? 'sel' : ''}}" data-k="{{item.key}}" bindtap="switchTab">{{item.label}}</view>
+  </scroll-view>
 
   <!-- 积分类：双方最高分对比 + 历史排名 -->
   <block wx:if="{{kind === 'score'}}">

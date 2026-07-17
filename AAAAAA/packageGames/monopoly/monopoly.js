@@ -66,6 +66,16 @@ function shade(hex, amt) {
 }
 function rr(ctx, x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
 
+// 日志条目结构化：{ who: 触发者role, text: '描述' }，text 内可用 {{boy}}/{{girl}} 占位指代某个玩家。
+// 渲染时按「当前观看者」视角转换：自己 →「你」，对方 → 对方昵称。双方共享同一份中立 log，各自看到自己的视角。
+function fmtLog(item, role, peerName) {
+  if (item == null) return '';
+  if (typeof item === 'string') return item;   // 兼容历史纯文本日志
+  const name = r => r === role ? '你' : (peerName || 'ta');
+  const t = String(item.text || '').replace(/\{\{(boy|girl)\}\}/g, (m, r) => name(r));
+  return item.who ? name(item.who) + t : t;
+}
+
 Page({
   data: {
     theme: 'sakura', role: 'boy', peer: 'girl', myName: '我', myAvatar: '', peerName: 'ta', peerAvatar: '',
@@ -136,6 +146,7 @@ Page({
     this._cells = s.cells;
     const winner = s.winner || null;
     const turnSeat = s.turn || rt.RED;
+    if (this._prevTurn !== turnSeat) { this._prevTurn = turnSeat; this._lastRolledTurn = null; }   // 回合易主 → 重置「本回合已摇」标记，让新回合方可掷骰
     let winnerText = '';
     if (winner === 'draw') winnerText = '平局';
     else if (winner) winnerText = (names[rt.seatRole(winner)] || '对方') + ' 获胜';
@@ -155,7 +166,7 @@ Page({
             if ((cash[role] || 0) >= sellReq.price) {
               cash[role] -= sellReq.price; cash[sellReq.by] += sellReq.price;
               cs[sellReq.idx] = Object.assign({}, cs[sellReq.idx], { owner: role });
-              const lg = (st.log || []).slice(); lg.push((names[role] || '你') + ' 买下对方「' + cs[sellReq.idx].name + '」-' + sellReq.price);
+              const lg = (st.log || []).slice(); lg.push({ who: role, text: '买下{{' + sellReq.by + '}}的「' + cs[sellReq.idx].name + '」-' + sellReq.price });
               rt.setState('monopoly', Object.assign({}, st, { cells: cs, cash, log: lg.slice(-30), sellReq: null }));
             } else { toast('现金不足'); rt.setState('monopoly', Object.assign({}, st, { sellReq: null })); }
           } else { rt.setState('monopoly', Object.assign({}, me._state, { sellReq: null })); }
@@ -168,8 +179,7 @@ Page({
     Object.assign(patch, {
       started: true, turnSeat, myTurn: !winner && turnSeat === this.data.mySeat,
       dice: s.dice || [1, 1],
-      log: (s.log || []).slice(-30).reverse(),
-      logRecent: (s.log || []).slice(-3).reverse(),
+      log: (s.log || []).slice(-30).reverse().map(it => fmtLog(it, role, this.data.peerName)),
       myCash: (s.cash && s.cash[role]) || 0, peerCash: (s.cash && s.cash[peer]) || 0,
       mySavings: (s.savings && s.savings[role]) || 0, peerSavings: (s.savings && s.savings[peer]) || 0,
       myLoan: (s.loan && s.loan[role]) || 0, peerLoan: (s.loan && s.loan[peer]) || 0,
@@ -195,6 +205,8 @@ Page({
 
   async roll() {
     if (!this.data.myTurn || this.data.winner || this.data.rolling) return;
+    if (this._lastRolledTurn === this.data.mySeat) return;   // 本回合已摇过：堵住 rolling 标志先于回合切换被清的竞态窗口(重复摇)
+    this._lastRolledTurn = this.data.mySeat;
     const role = room.getRole();
     const s = this._state;
     this.setData({ rolling: true });
@@ -212,10 +224,10 @@ Page({
     const log = (s.log || []).slice();
     if (crossed) {
       cash[role] = (cash[role] || 0) + 200;
-      const sav = savings[role] || 0; if (sav) { const it = Math.round(sav * 0.05); savings[role] = sav + it; log.push('存款利息 +' + it); }
-      const ln = loan[role] || 0; if (ln) { const li = Math.round(ln * 0.1); loan[role] = ln + li; log.push('贷款利息 +' + li); }
+      const sav = savings[role] || 0; if (sav) { const it = Math.round(sav * 0.05); savings[role] = sav + it; log.push({ who: role, text: '存款利息 +' + it }); }
+      const ln = loan[role] || 0; if (ln) { const li = Math.round(ln * 0.1); loan[role] = ln + li; log.push({ who: role, text: '贷款利息 +' + li }); }
     }
-    log.push(this.data.myName + ' 掷出 ' + steps + (crossed ? '，过起点 +200' : ''));
+    log.push({ who: role, text: '掷出 ' + steps + (crossed ? '，经过起点 +200' : '') });
 
     // 先写一次：棋子已移动 + 日志立即可见（携带 savings/loan）
     this._state = Object.assign({}, s, { pos: Object.assign({}, s.pos, { [role]: to }), cash, savings, loan, dice: [a, b], log });
@@ -224,7 +236,13 @@ Page({
     // 棋子滑行动画（沿环形），完成后结算
     await this.animateMove(role, from, to);
     await this.resolve(role, to, cash, log, s.turn);
-    } catch (err) { console.error('[monopoly] roll err', err); toast('出错了，请重试'); }
+    } catch (err) {
+      console.error('[monopoly] roll err', err); toast('出错了，请重试');
+      // 兜底：结算中途出错也要把回合交给对方，避免卡在某人手上或重复摇
+      const peer = role === 'boy' ? 'girl' : 'boy';
+      const st = this._state || s;
+      if (st && !st.winner) rt.setState('monopoly', Object.assign({}, st, { turn: rt.seatOf(peer) }));
+    }
     finally { this.setData({ rolling: false }); }
   },
 
@@ -381,7 +399,6 @@ Page({
   async resolve(role, idx, cash, log, turn) {
     const cells = this._cells.map(c => Object.assign({}, c));
     const cell = cells[idx];
-    const names = { boy: this.data.myName, girl: this.data.peerName };
     const peer = role === 'boy' ? 'girl' : 'boy';
     let skip = Object.assign({}, this._state.skip || { boy: 0, girl: 0 });
     let pos = Object.assign({}, this._state.pos);
@@ -389,18 +406,18 @@ Page({
     let winner = null;
     let toIdx = idx;
 
-    if (cell.type === 'start') { cash[role] += 100; log.push('到达起点 +100'); }
-    else if (cell.type === 'tax') { cash[role] -= cell.amt; log.push(cell.name + ' -' + cell.amt); this.showFx('bad', '缴税 -' + cell.amt); }
-    else if (cell.type === 'bonus') { cash[role] += cell.amt; log.push(cell.name + ' +' + cell.amt); this.showFx('good', cell.name + ' +' + cell.amt); }
-    else if (cell.type === 'jail') { skip[role] = (skip[role] || 0) + 1; log.push('进了监狱，下回合停留'); this.showFx('bad', '进监狱，停一回合'); }
-    else if (cell.type === 'freepark') { cash[role] = (cash[role] || 0) + 50; log.push('免费停车 +50'); this.showFx('good', '免费停车 +50'); }
+    if (cell.type === 'start') { cash[role] += 100; log.push({ who: role, text: '到达起点 +100' }); }
+    else if (cell.type === 'tax') { cash[role] -= cell.amt; log.push({ who: role, text: '缴税 -' + cell.amt }); this.showFx('bad', '缴税 -' + cell.amt); }
+    else if (cell.type === 'bonus') { cash[role] += cell.amt; log.push({ who: role, text: '获得奖金 +' + cell.amt }); this.showFx('good', cell.name + ' +' + cell.amt); }
+    else if (cell.type === 'jail') { skip[role] = (skip[role] || 0) + 1; log.push({ who: role, text: '进了监狱，下回合停留' }); this.showFx('bad', '进监狱，停一回合'); }
+    else if (cell.type === 'freepark') { cash[role] = (cash[role] || 0) + 50; log.push({ who: role, text: '免费停车 +50' }); this.showFx('good', '免费停车 +50'); }
     else if (cell.type === 'card') {
       const card = await this.drawCard();
-      log.push((cell.kind === 'fate' ? '公共基金：' : '机会：') + card.t);
+      log.push({ who: role, text: (cell.kind === 'fate' ? '抽中公共基金：' : '抽中机会：') + card.t });
       if (card.cash) cash[role] = (cash[role] || 0) + card.cash;
       if (card.cashPeer) { cash[role] = (cash[role] || 0) + card.cashPeer; cash[peer] = (cash[peer] || 0) - card.cashPeer; }
-      if (card.to === 0) { cash[role] += 200; toIdx = 0; log.push('回到起点 +200'); }
-      if (card.back) { toIdx = (idx - card.back + BOARD) % BOARD; log.push('后退 ' + card.back + ' 格'); }
+      if (card.to === 0) { cash[role] += 200; toIdx = 0; log.push({ who: role, text: '回到起点 +200' }); }
+      if (card.back) { toIdx = (idx - card.back + BOARD) % BOARD; log.push({ who: role, text: '后退 ' + card.back + ' 格' }); }
       if (card.skip) skip[role] = (skip[role] || 0) + 1;
       this.syncLog(cells, cash, log, pos, skip);
     } else if (cell.type === 'property') {
@@ -410,8 +427,8 @@ Page({
           if (afford) wx.showModal({ title: cell.name, content: '花 ' + cell.price + ' 买下？（过路费 ' + rentOf(cell) + '）', confirmText: '买下', cancelText: '不买', success: r => res(r.confirm ? 'buy' : false) });
           else { const short = cell.price - (cash[role] || 0), fee = Math.round(short * 0.1); wx.showModal({ title: cell.name, content: '现金不足，贷款 ' + (short + fee) + ' 买下？（过路费 ' + rentOf(cell) + '）', confirmText: '贷款买', cancelText: '不买', success: r => res(r.confirm ? 'loan' : false) }); }
         });
-        if (choice === 'buy') { cash[role] -= cell.price; cells[idx] = Object.assign({}, cell, { owner: role }); log.push('买下「' + cell.name + '」-' + cell.price); this.showFx('good', '入手「' + cell.name + '」'); }
-        else if (choice === 'loan') { const short = cell.price - (cash[role] || 0), fee = Math.round(short * 0.1); loan[role] = (loan[role] || 0) + short + fee; cash[role] = (cash[role] || 0) + short - cell.price; cells[idx] = Object.assign({}, cell, { owner: role }); log.push('贷款买下「' + cell.name + '」(欠款 +' + (short + fee) + ')'); this.showFx('good', '贷款入手「' + cell.name + '」'); }
+        if (choice === 'buy') { cash[role] -= cell.price; cells[idx] = Object.assign({}, cell, { owner: role }); log.push({ who: role, text: '购买「' + cell.name + '」-' + cell.price }); this.showFx('good', '入手「' + cell.name + '」'); }
+        else if (choice === 'loan') { const short = cell.price - (cash[role] || 0), fee = Math.round(short * 0.1); loan[role] = (loan[role] || 0) + short + fee; cash[role] = (cash[role] || 0) + short - cell.price; cells[idx] = Object.assign({}, cell, { owner: role }); log.push({ who: role, text: '贷款购买「' + cell.name + '」(欠款 +' + (short + fee) + ')' }); this.showFx('good', '贷款入手「' + cell.name + '」'); }
       } else if (cell.owner === role) {
         // 自己的地：可升级（最高 3 级）
         if ((cell.level || 0) < 3) {
@@ -420,19 +437,19 @@ Page({
             if (cash[role] < cost) { res(false); return; }
             wx.showModal({ title: '升级「' + cell.name + '」', content: '升到 ' + ((cell.level || 0) + 2) + ' 级？花 ' + cost + '（过路费变 ' + (rentOf(cell) + cell.rent) + '）', confirmText: '升级', cancelText: '不了', success: r => res(!!r.confirm) });
           });
-          if (up) { cash[role] -= upgradeCost(cell); cells[idx] = Object.assign({}, cell, { level: (cell.level || 0) + 1 }); log.push('升级「' + cell.name + '」到 ' + (cells[idx].level + 1) + ' 级'); this.showFx('good', '升级！过路费上涨'); }
-        } else { log.push('回到满级「' + cell.name + '」'); }
+          if (up) { cash[role] -= upgradeCost(cell); cells[idx] = Object.assign({}, cell, { level: (cell.level || 0) + 1 }); log.push({ who: role, text: '升级「' + cell.name + '」到 ' + (cells[idx].level + 1) + ' 级' }); this.showFx('good', '升级！过路费上涨'); }
+        } else { log.push({ who: role, text: '「' + cell.name + '」已满级' }); }
       } else {
         const r = rentOf(cell); cash[role] -= r; cash[peer] += r;
-        log.push('路过' + (names[cell.owner] || 'ta') + '的「' + cell.name + '」付 ' + r);
+        log.push({ who: role, text: '路过{{' + cell.owner + '}}的「' + cell.name + '」付过路费 ' + r });
         this.showFx('bad', '付过路费 ' + r);
       }
     }
 
-    if (cash[role] < 0) { winner = role === 'boy' ? rt.BLUE : rt.RED; log.push((names[role] || 'ta') + ' 破产了！'); }
+    if (cash[role] < 0) { winner = role === 'boy' ? rt.BLUE : rt.RED; log.push({ who: role, text: '破产了！' }); }
     if (toIdx !== idx) pos = Object.assign({}, pos, { [role]: toIdx });
     let nextRole = peer;
-    if (!winner && (skip[peer] || 0) > 0) { skip[peer]--; nextRole = role; log.push((names[peer] || 'ta') + ' 停一回合'); }
+    if (!winner && (skip[peer] || 0) > 0) { skip[peer]--; nextRole = role; log.push({ who: peer, text: '停一回合（跳过本次）' }); }
     rt.setState('monopoly', Object.assign({}, this._state, { cells: cells.map(c => Object.assign({}, c)), pos, cash, skip, loan, turn: winner ? turn : rt.seatOf(nextRole), dice: this.data.dice, log: log.slice(-30), winner, req: null }));
   },
 
@@ -447,10 +464,10 @@ Page({
     const role = room.getRole(), s = this._state; if (!s) return;
     const cash = Object.assign({}, s.cash), savings = Object.assign({}, s.savings || { boy: 0, girl: 0 }), loan = Object.assign({}, s.loan || { boy: 0, girl: 0 });
     const lg = (s.log || []).slice();
-    if (act === 'deposit' && (cash[role] || 0) >= amt) { cash[role] -= amt; savings[role] = (savings[role] || 0) + amt; lg.push('存入银行 ' + amt); }
-    else if (act === 'withdraw') { const v = Math.min(amt, savings[role] || 0); if (v > 0) { savings[role] -= v; cash[role] += v; lg.push('取出存款 ' + v); } }
-    else if (act === 'borrow') { cash[role] += 200; loan[role] = (loan[role] || 0) + 220; lg.push('贷款 200（欠 220）'); }
-    else if (act === 'repay') { const due = loan[role] || 0; const pay = Math.min(due, cash[role] || 0); if (pay > 0) { cash[role] -= pay; loan[role] = due - pay; lg.push('还款 ' + pay); } else return toast('没有欠款或现金不足'); }
+    if (act === 'deposit' && (cash[role] || 0) >= amt) { cash[role] -= amt; savings[role] = (savings[role] || 0) + amt; lg.push({ who: role, text: '存入银行 ' + amt }); }
+    else if (act === 'withdraw') { const v = Math.min(amt, savings[role] || 0); if (v > 0) { savings[role] -= v; cash[role] += v; lg.push({ who: role, text: '取出存款 ' + v }); } }
+    else if (act === 'borrow') { cash[role] += 200; loan[role] = (loan[role] || 0) + 220; lg.push({ who: role, text: '向银行贷款 200（欠 220）' }); }
+    else if (act === 'repay') { const due = loan[role] || 0; const pay = Math.min(due, cash[role] || 0); if (pay > 0) { cash[role] -= pay; loan[role] = due - pay; lg.push({ who: role, text: '还款 ' + pay }); } else return toast('没有欠款或现金不足'); }
     else return toast('操作失败');
     rt.setState('monopoly', Object.assign({}, s, { cash, savings, loan, log: lg.slice(-30) }));
   },
@@ -464,7 +481,7 @@ Page({
         const cs = s.cells.map(c => Object.assign({}, c));
         cs[idx] = Object.assign({}, cell, { owner: null, level: 0 });
         const cash = Object.assign({}, s.cash); cash[role] += get;
-        const lg = (s.log || []).slice(); lg.push('把「' + cell.name + '」卖给银行 +' + get);
+        const lg = (s.log || []).slice(); lg.push({ who: role, text: '把「' + cell.name + '」卖给银行 +' + get });
         rt.setState('monopoly', Object.assign({}, s, { cells: cs, cash, log: lg.slice(-30) }));
         toast('卖给银行 +' + get);
       }
