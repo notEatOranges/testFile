@@ -53,6 +53,10 @@
       <view class="bk-btn" data-act="borrow" bindtap="bankAct">贷款 +200（可贷{{myAvailLoan}}）</view>
       <view class="bk-btn" data-act="repay" bindtap="bankAct">还款</view>
     </view>
+    <view class="bk-label" wx:if="{{mySets.length}}">成套色组（集齐同色：过路费 +50%，可整组升级打 9 折）</view>
+    <view class="bk-btns" wx:if="{{mySets.length}}">
+      <view class="bk-btn" wx:for="{{mySets}}" wx:key="group" data-group="{{item.group}}" bindtap="upgradeGroup">升级整组({{item.count}}块) -{{item.cost}}</view>
+    </view>
     <view class="bk-label">我的地皮（卖银行 60% / 卖对方 80%）</view>
     <scroll-view scroll-y class="bk-props">
       <view wx:for="{{myProps}}" wx:key="idx" class="bk-prop">

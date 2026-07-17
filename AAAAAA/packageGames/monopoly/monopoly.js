@@ -55,7 +55,11 @@ function buildCells() {
   return cells;
 }
 function cellCR(i) { return PATH[((i % BOARD) + BOARD) % BOARD]; }
-function rentOf(cell) { return cell.rent * (1 + (cell.level || 0)); }
+function rentOf(cell, cells) {
+  let r = cell.rent * (1 + (cell.level || 0));
+  if (cell.owner && cells && ownsFullSet(cells, cell.group, cell.owner)) r = Math.round(r * 1.5);   // 同色组成套：过路费 +50%
+  return r;
+}
 function upgradeCost(cell) { return Math.round(cell.price * 0.5); }
 // 卖银行回收价：(地皮价值 + 已投入升级费) × 60%。sellToBank / myProps / 贷款额度 共用，避免重复公式。
 function bankRecover(cell) { return Math.round((cell.price + (cell.level || 0) * upgradeCost(cell)) * 0.6); }
@@ -65,6 +69,9 @@ function loanCapOf(cells, role) {
   return 300 + Math.floor(sum * 0.5);
 }
 function availableLoan(cells, role, loan) { return Math.max(0, loanCapOf(cells, role) - (loan || 0)); }
+// 同色组（连铺）：groupCells 取某色组全部地皮；ownsFullSet 判断是否被一人集齐（成套）。
+function groupCells(cells, g) { return cells.filter(c => c && c.type === 'property' && c.group === g); }
+function ownsFullSet(cells, g, owner) { const gs = groupCells(cells, g); return gs.length > 0 && gs.every(c => c.owner === owner); }
 function seatShape(role) { return rt.seatOf(role) === rt.RED ? 'heart' : 'star'; }
 function seatColor(role) { return rt.seatOf(role) === rt.RED ? '#ff5a5f' : '#00b8d4'; }   // 珊瑚红/青，避开地皮 6 色
 function shade(hex, amt) {
@@ -91,7 +98,7 @@ Page({
     dice: 1, log: [], myCash: START_CASH, peerCash: START_CASH, myPos: 0, peerPos: 0,
     winner: null, winnerText: '', rolling: false, requestPending: false, rulesOpen: false,
     card: null, fx: null,   // fx: {kind:'good'|'bad', text} 事件特效
-    bankOpen: false, mySavings: 0, peerSavings: 0, myLoan: 0, myLoanCap: 0, myAvailLoan: 0, peerLoan: 0, myProps: [], sellReqPending: false
+    bankOpen: false, mySavings: 0, peerSavings: 0, myLoan: 0, myLoanCap: 0, myAvailLoan: 0, peerLoan: 0, myProps: [], mySets: [], sellReqPending: false
   },
 
   onLoad() {
@@ -187,6 +194,14 @@ Page({
 
     const myProps = [];
     cells.forEach((c, idx) => { if (c && c.type === 'property' && c.owner === role) myProps.push({ idx, name: c.name, price: c.price, level: c.level || 0, sellBank: bankRecover(c), sellPeer: Math.round(c.price * 0.8) }); });
+    // 同色组成套：集齐且全员 <3 级 → 可整组升级(打 9 折)；rentOf 对成套组自动 +50% 过路费
+    const mySets = [];
+    [0, 1, 2, 3, 4, 5].forEach(g => {
+      const gs = groupCells(cells, g);
+      if (gs.length && gs.every(c => c.owner === role) && gs.every(c => (c.level || 0) < 3)) {
+        mySets.push({ group: g, count: gs.length, cost: Math.round(gs.reduce((sum, c) => sum + upgradeCost(c), 0) * 0.9), names: gs.map(c => c.name).join('/') });
+      }
+    });
     const myLoanVal = (s.loan && s.loan[role]) || 0, myCap = loanCapOf(cells, role);
     Object.assign(patch, {
       started: true, turnSeat, myTurn: !winner && turnSeat === this.data.mySeat,
@@ -196,7 +211,7 @@ Page({
       mySavings: (s.savings && s.savings[role]) || 0, peerSavings: (s.savings && s.savings[peer]) || 0,
       myLoan: myLoanVal, myLoanCap: myCap, myAvailLoan: Math.max(0, myCap - myLoanVal), peerLoan: (s.loan && s.loan[peer]) || 0,
       myPos: (s.pos && s.pos[role]) || 0, peerPos: (s.pos && s.pos[peer]) || 0,
-      myProps, winner, winnerText
+      myProps, mySets, winner, winnerText
     });
     this.setData(patch);
     this.draw();
@@ -441,8 +456,8 @@ Page({
         const afford = shortAmt <= 0;
         const canLoan = availableLoan(cells, role, loan[role] || 0) >= shortAmt;   // 贷款买房也受额度封顶
         const choice = await new Promise(res => {
-          if (afford) wx.showModal({ title: cell.name, content: '花 ' + cell.price + ' 买下？（过路费 ' + rentOf(cell) + '）', confirmText: '买下', cancelText: '不买', success: r => res(r.confirm ? 'buy' : false) });
-          else if (canLoan) wx.showModal({ title: cell.name, content: '现金不足，贷款 ' + shortAmt + ' 买下？（过路费 ' + rentOf(cell) + '，过起点扣息）', confirmText: '贷款买', cancelText: '不买', success: r => res(r.confirm ? 'loan' : false) });
+          if (afford) wx.showModal({ title: cell.name, content: '花 ' + cell.price + ' 买下？（过路费 ' + rentOf(cell, cells) + '）', confirmText: '买下', cancelText: '不买', success: r => res(r.confirm ? 'buy' : false) });
+          else if (canLoan) wx.showModal({ title: cell.name, content: '现金不足，贷款 ' + shortAmt + ' 买下？（过路费 ' + rentOf(cell, cells) + '，过起点扣息）', confirmText: '贷款买', cancelText: '不买', success: r => res(r.confirm ? 'loan' : false) });
           else res(false);
         });
         if (choice === 'buy') { cash[role] -= cell.price; cells[idx] = Object.assign({}, cell, { owner: role }); log.push({ who: role, text: '购买「' + cell.name + '」-' + cell.price }); this.showFx('good', '入手「' + cell.name + '」'); }
@@ -456,15 +471,15 @@ Page({
           if (!canCash && !canLoan) { log.push({ who: role, text: '现金与额度都不足，无法升级「' + cell.name + '」' }); }
           else {
             const up = await new Promise(res => {
-              if (canCash) wx.showModal({ title: '升级「' + cell.name + '」', content: '升到 ' + ((cell.level || 0) + 2) + ' 级？花 ' + cost + '（过路费变 ' + (rentOf(cell) + cell.rent) + '）', confirmText: '升级', cancelText: '不了', success: r => res(r.confirm ? 'cash' : false) });
-              else wx.showModal({ title: '贷款升级「' + cell.name + '」', content: '现金不足，贷款 ' + cost + ' 升到 ' + ((cell.level || 0) + 2) + ' 级？(过路费变 ' + (rentOf(cell) + cell.rent) + '，过起点扣息)', confirmText: '贷款升级', cancelText: '不了', success: r => res(r.confirm ? 'loan' : false) });
+              if (canCash) wx.showModal({ title: '升级「' + cell.name + '」', content: '升到 ' + ((cell.level || 0) + 2) + ' 级？花 ' + cost + '（过路费变 ' + (rentOf(cell, cells) + cell.rent) + '）', confirmText: '升级', cancelText: '不了', success: r => res(r.confirm ? 'cash' : false) });
+              else wx.showModal({ title: '贷款升级「' + cell.name + '」', content: '现金不足，贷款 ' + cost + ' 升到 ' + ((cell.level || 0) + 2) + ' 级？(过路费变 ' + (rentOf(cell, cells) + cell.rent) + '，过起点扣息)', confirmText: '贷款升级', cancelText: '不了', success: r => res(r.confirm ? 'loan' : false) });
             });
             if (up === 'cash') { cash[role] -= cost; cells[idx] = Object.assign({}, cell, { level: (cell.level || 0) + 1 }); log.push({ who: role, text: '升级「' + cell.name + '」到 ' + (cells[idx].level + 1) + ' 级' }); this.showFx('good', '升级！过路费上涨'); }
             else if (up === 'loan') { loan[role] = (loan[role] || 0) + cost; cells[idx] = Object.assign({}, cell, { level: (cell.level || 0) + 1 }); log.push({ who: role, text: '贷款升级「' + cell.name + '」到 ' + (cells[idx].level + 1) + ' 级 (欠款+' + cost + ')' }); this.showFx('good', '贷款升级！过路费上涨'); }
           }
         } else { log.push({ who: role, text: '「' + cell.name + '」已满级' }); }
       } else {
-        const r = rentOf(cell); cash[role] -= r; cash[peer] += r;
+        const r = rentOf(cell, cells); cash[role] -= r; cash[peer] += r;
         log.push({ who: role, text: '路过{{' + cell.owner + '}}的「' + cell.name + '」付过路费 ' + r });
         this.showFx('bad', '付过路费 ' + r);
       }
@@ -586,6 +601,23 @@ Page({
     });
   },
   cancelSell() { rt.transactionState('monopoly', s => Object.assign({}, s, { sellReq: null })); toast('已取消卖地'); },
+  // 同色组成套升级：整组每块 level+1，总费用打 9 折；走 transaction 现读现写
+  upgradeGroup(e) {
+    const g = parseInt(e.currentTarget.dataset.group, 10), role = room.getRole();
+    rt.transactionState('monopoly', s => {
+      if (!s || !s.cells) return s;
+      const gs = s.cells.filter(c => c && c.type === 'property' && c.group === g);
+      if (!gs.length || !gs.every(c => c.owner === role) || !gs.every(c => (c.level || 0) < 3)) { toast('整组不可升级'); return s; }
+      const cost = Math.round(gs.reduce((sum, c) => sum + upgradeCost(c), 0) * 0.9);
+      const cash = Object.assign({}, s.cash);
+      if ((cash[role] || 0) < cost) { toast('现金不足，无法整组升级'); return s; }
+      cash[role] -= cost;
+      const cs = s.cells.map(c => (c && c.type === 'property' && c.group === g) ? Object.assign({}, c, { level: (c.level || 0) + 1 }) : c);
+      const lg = (s.log || []).slice(); lg.push({ who: role, text: '整组升级[' + gs.map(c => c.name).join('/') + '] -' + cost + '（过路费 +50%）' });
+      this.showFx('good', '整组升级！过路费大涨');
+      return Object.assign({}, s, { cells: cs, cash, log: lg.slice(-30) });
+    });
+  },
   openRules() { this.setData({ rulesOpen: true }); },
   closeRules() { this.setData({ rulesOpen: false }); setTimeout(() => this.setupCanvas(), 60); },
 
@@ -641,6 +673,7 @@ Page({
         ctx.fillText('$' + cell.price, x + 5, y + 4);                                   // 价格左上角，颜色=等级
         if (cell.level) { ctx.fillStyle = '#b58a5a'; ctx.font = Math.round(cs * 0.2) + 'px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom'; let st = ''; for (let k = 0; k < cell.level; k++) st += '★'; ctx.fillText(st, x + cw / 2, y + ch - 13); }  // 等级星在底部色条上方
         if (cell.owner) { ctx.fillStyle = seatColor(cell.owner); ctx.fillRect(x, y + ch - 9, cw, 9); }  // 归属=底部色条(玩家色)
+        if (cell.owner && ownsFullSet(cells, cell.group, cell.owner)) { ctx.fillStyle = '#ffd23f'; ctx.beginPath(); ctx.arc(x + cw - 8, y + 8, 4, 0, 7); ctx.fill(); }  // 成套标记：金色圆点(右上角)
       }
       const cmap = { start: '#3aa75c', card: '#e8b94d', tax: '#e85a86', jail: '#7a5c3a', bonus: '#3a86ff', freepark: '#06d6a0', property: '#5a4030' };
       ctx.fillStyle = cmap[cell.type] || '#5a4030';
