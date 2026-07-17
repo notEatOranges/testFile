@@ -57,6 +57,14 @@ function buildCells() {
 function cellCR(i) { return PATH[((i % BOARD) + BOARD) % BOARD]; }
 function rentOf(cell) { return cell.rent * (1 + (cell.level || 0)); }
 function upgradeCost(cell) { return Math.round(cell.price * 0.5); }
+// 卖银行回收价：(地皮价值 + 已投入升级费) × 60%。sellToBank / myProps / 贷款额度 共用，避免重复公式。
+function bankRecover(cell) { return Math.round((cell.price + (cell.level || 0) * upgradeCost(cell)) * 0.6); }
+// 抵押贷款额度 = 起步信用 300 + 自家地皮回收价总和 × 50%。地皮越多额度越高，无地皮仅剩小额信用，杜绝无限贷。
+function loanCapOf(cells, role) {
+  let sum = 0; cells.forEach(c => { if (c && c.type === 'property' && c.owner === role) sum += bankRecover(c); });
+  return 300 + Math.floor(sum * 0.5);
+}
+function availableLoan(cells, role, loan) { return Math.max(0, loanCapOf(cells, role) - (loan || 0)); }
 function seatShape(role) { return rt.seatOf(role) === rt.RED ? 'heart' : 'star'; }
 function seatColor(role) { return rt.seatOf(role) === rt.RED ? '#ff5a5f' : '#00b8d4'; }   // 珊瑚红/青，避开地皮 6 色
 function shade(hex, amt) {
@@ -83,7 +91,7 @@ Page({
     dice: 1, log: [], myCash: START_CASH, peerCash: START_CASH, myPos: 0, peerPos: 0,
     winner: null, winnerText: '', rolling: false, requestPending: false, rulesOpen: false,
     card: null, fx: null,   // fx: {kind:'good'|'bad', text} 事件特效
-    bankOpen: false, mySavings: 0, peerSavings: 0, myLoan: 0, peerLoan: 0, myProps: [], sellReqPending: false
+    bankOpen: false, mySavings: 0, peerSavings: 0, myLoan: 0, myLoanCap: 0, myAvailLoan: 0, peerLoan: 0, myProps: [], sellReqPending: false
   },
 
   onLoad() {
@@ -178,14 +186,15 @@ Page({
     patch.sellReqPending = !!(sellReq && sellReq.by === role);
 
     const myProps = [];
-    cells.forEach((c, idx) => { if (c && c.type === 'property' && c.owner === role) myProps.push({ idx, name: c.name, price: c.price, level: c.level || 0, sellBank: Math.round((c.price + (c.level || 0) * upgradeCost(c)) * 0.6), sellPeer: Math.round(c.price * 0.8) }); });
+    cells.forEach((c, idx) => { if (c && c.type === 'property' && c.owner === role) myProps.push({ idx, name: c.name, price: c.price, level: c.level || 0, sellBank: bankRecover(c), sellPeer: Math.round(c.price * 0.8) }); });
+    const myLoanVal = (s.loan && s.loan[role]) || 0, myCap = loanCapOf(cells, role);
     Object.assign(patch, {
       started: true, turnSeat, myTurn: !winner && turnSeat === this.data.mySeat,
       dice: s.dice || 1,
       log: (s.log || []).slice(-30).reverse().map(it => fmtLog(it, role, this.data.peerName)),
       myCash: (s.cash && s.cash[role]) || 0, peerCash: (s.cash && s.cash[peer]) || 0,
       mySavings: (s.savings && s.savings[role]) || 0, peerSavings: (s.savings && s.savings[peer]) || 0,
-      myLoan: (s.loan && s.loan[role]) || 0, peerLoan: (s.loan && s.loan[peer]) || 0,
+      myLoan: myLoanVal, myLoanCap: myCap, myAvailLoan: Math.max(0, myCap - myLoanVal), peerLoan: (s.loan && s.loan[peer]) || 0,
       myPos: (s.pos && s.pos[role]) || 0, peerPos: (s.pos && s.pos[peer]) || 0,
       myProps, winner, winnerText
     });
@@ -228,7 +237,12 @@ Page({
     if (crossed) {
       cash[role] = (cash[role] || 0) + 200;
       const sav = savings[role] || 0; if (sav) { const it = Math.round(sav * 0.05); savings[role] = sav + it; log.push({ who: role, text: '存款利息 +' + it }); }
-      const ln = loan[role] || 0; if (ln) { const li = Math.round(ln * 0.1); loan[role] = ln + li; log.push({ who: role, text: '贷款利息 +' + li }); }
+      const ln = loan[role] || 0;
+      if (ln) {                                                                       // 过起点必扣息：欠款 ×10%
+        const li = Math.round(ln * 0.1);
+        if ((cash[role] || 0) >= li) { cash[role] -= li; log.push({ who: role, text: '贷款利息 -' + li }); }
+        else { const unpaid = li - (cash[role] || 0); cash[role] = 0; loan[role] = ln + unpaid; log.push({ who: role, text: '贷款利息 +' + unpaid + '（现金不足，滚入欠款）' }); }   // 还不起→利息资本化，债务雪球
+      }
     }
     log.push({ who: role, text: '掷出 ' + steps + (crossed ? '，经过起点 +200' : '') });
 
@@ -475,7 +489,9 @@ Page({
         const v = Math.min(amt, savings[role] || 0); if (v <= 0) { toast('没有存款'); return s; }
         savings[role] -= v; cash[role] += v; lg.push({ who: role, text: '取出存款 ' + v });
       } else if (act === 'borrow') {
-        cash[role] += 200; loan[role] = (loan[role] || 0) + 220; lg.push({ who: role, text: '向银行贷款 200（欠 220）' });
+        const want = 200, take = Math.min(want, availableLoan(s.cells, role, loan[role] || 0));
+        if (take <= 0) { toast('贷款额度不足'); return s; }
+        cash[role] += take; loan[role] = (loan[role] || 0) + take; lg.push({ who: role, text: '向银行贷款 ' + take + (take < want ? '（已达额度上限）' : '') });
       } else if (act === 'repay') {
         const due = loan[role] || 0, pay = Math.min(due, cash[role] || 0);
         if (pay <= 0) { toast('没有欠款或现金不足'); return s; }

@@ -41,16 +41,16 @@
   <view class="sf-mask {{bankOpen ? 'show' : ''}}" bindtap="closeBank"></view>
   <view class="bank-sheet {{bankOpen ? 'show' : ''}}" catchtap="noop">
     <view class="sf-title">银行 / 资产</view>
-    <view class="bk-sum">现金 {{myCash}} 存款 {{mySavings}} 贷款 {{myLoan}}</view>
+    <view class="bk-sum">现金 {{myCash}} 存款 {{mySavings}} 贷款 {{myLoan}}／额度 {{myLoanCap}}</view>
     <view class="bk-label">存款(过起点 +5% 利息)</view>
     <view class="bk-btns">
       <view class="bk-btn" data-act="deposit" data-amt="100" bindtap="bankAct">存 100</view>
       <view class="bk-btn" data-act="deposit" data-amt="500" bindtap="bankAct">存 500</view>
       <view class="bk-btn" data-act="withdraw" data-amt="100000" bindtap="bankAct">全部取出</view>
     </view>
-    <view class="bk-label">贷款(借 200 实欠 220)</view>
+    <view class="bk-label">抵押贷款(额度=300+地皮回收价×50%，过起点必扣10%息)</view>
     <view class="bk-btns">
-      <view class="bk-btn" data-act="borrow" bindtap="bankAct">贷款 +200</view>
+      <view class="bk-btn" data-act="borrow" bindtap="bankAct">贷款 +200（可贷{{myAvailLoan}}）</view>
       <view class="bk-btn" data-act="repay" bindtap="bankAct">还款</view>
     </view>
     <view class="bk-label">我的地皮（卖银行 60% / 卖对方 80%）</view>
