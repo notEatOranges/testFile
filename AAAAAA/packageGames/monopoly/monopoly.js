@@ -24,7 +24,7 @@ const DECK = {
   chance: [   // 机会:移动为主
     { t: '前进到起点 +200', to: 0 },
     { t: '经验骰子 摇骰前进(同正常掷骰)', fwdRoll: true },
-    { t: '幸运骰子 自选前进 1~8 步', luckyDice: true },
+    { t: '幸运骰子 自选前进 1~6 步', luckyDice: true },
     { t: '惩罚骰子 摇骰后退(落对方铺交租)', backRoll: true },
     { t: '进监狱 移到监狱并停一回合', toJail: true, skip: true },
     { t: '退税 +40', cash: 40 },
@@ -313,7 +313,7 @@ Page({
     if (this._rollWatchdog) clearTimeout(this._rollWatchdog);
     this._rollWatchdog = setTimeout(() => { if (this.data.rolling) { console.warn('[monopoly] roll watchdog: force-release'); this.setData({ rolling: false }); } }, 12000);
     try {
-    const d = await this.rollDiceAnim();             // 单 8 面骰
+    const d = await this.rollDiceAnim();             // 单 6 面骰
     const steps = d;
     this.setData({ dice: d });
 
@@ -370,13 +370,13 @@ Page({
   // 骰子翻滚：tumble(数字乱跳+摆动衰减) → settle(落定显点数+前进提示) → idle。
   rollDiceAnim() {
     return new Promise(res => {
-      const f = 1 + Math.floor(Math.random() * 8);   // 单 8 面骰：1~8
+      const f = 1 + Math.floor(Math.random() * 6);   // 单 6 面骰：1~6
       const t0 = Date.now(); const tumble = 720, settle = 600;
       const step = () => {
         const el = Date.now() - t0;
         if (el < tumble) {
           const ang = Math.sin(el / tumble * Math.PI * 5) * 350 * (1 - el / tumble);
-          this.setData({ diceAnim: { phase: 'tumble', v: 1 + Math.floor(Math.random() * 8), angle: ang, showHint: false } });
+          this.setData({ diceAnim: { phase: 'tumble', v: 1 + Math.floor(Math.random() * 6), angle: ang, showHint: false } });
           this._diceAnimTimer = setTimeout(step, 60);
         } else if (el < tumble + settle) {
           this.setData({ diceAnim: { phase: 'settle', v: f, angle: 0, showHint: true } });
@@ -482,10 +482,10 @@ Page({
           const backward = !!card.backRoll;
           let steps;
           if (card.luckyDice) {
-            steps = await new Promise(res => wx.showModal({ title: '幸运骰子', editable: true, placeholderText: '输入前进 1~8 步', confirmText: '前进', success: r => { if (r.confirm) { const n = parseInt(r.content, 10); res((n >= 1 && n <= 8) ? n : 1); } else res(1); }, fail: () => res(1) }));
+            steps = await new Promise(res => wx.showModal({ title: '幸运骰子', editable: true, placeholderText: '输入前进 1~6 步', confirmText: '前进', success: r => { if (r.confirm) { const n = parseInt(r.content, 10); res((n >= 1 && n <= 6) ? n : 1); } else res(1); }, fail: () => res(1) }));
             log.push({ who: role, text: '幸运骰子：选择前进 ' + steps + ' 步' });
           } else {
-            steps = 1 + Math.floor(Math.random() * 8);
+            steps = 1 + Math.floor(Math.random() * 6);
             log.push({ who: role, text: (backward ? '惩罚骰子' : '经验骰子') + '：摇出 ' + steps + '，' + (backward ? '后退' : '前进') + ' ' + steps + ' 步' });
           }
           const fromIdx = idx, to = backward ? ((idx - steps) % BOARD + BOARD) % BOARD : (idx + steps) % BOARD;
