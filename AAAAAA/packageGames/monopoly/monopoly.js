@@ -163,7 +163,7 @@ Page({
   },
 
   fresh(mode) {
-    return { mode: mode || 'casual', cells: buildCells(), pos: { boy: 0, girl: 0 }, cash: { boy: START_CASH, girl: START_CASH }, savings: { boy: 0, girl: 0 }, skip: { boy: 0, girl: 0 }, turn: Math.random() < 0.5 ? rt.RED : rt.BLUE, dice: 1, log: [], winner: null, req: null, sellReq: null, seq: 0 };
+    return { mode: mode || 'casual', cells: buildCells(), pos: { boy: 0, girl: 0 }, cash: { boy: START_CASH, girl: START_CASH }, savings: { boy: 0, girl: 0 }, skip: { boy: 0, girl: 0 }, turn: Math.random() < 0.5 ? rt.RED : rt.BLUE, dice: 1, log: [], winner: null, req: null, sellReq: null };
   },
   startMatch(e) { this._recorded = false; rt.setState('monopoly', this.fresh(e && e.currentTarget && e.currentTarget.dataset.mode)); },
   requestRestart() { rt.requestRestart('monopoly', this._state, room.getRole(), !!this.data.winner, () => this.fresh(this._state && this._state.mode)); },
@@ -190,6 +190,10 @@ Page({
 
     if (!s || !s.cells) { this.setData(Object.assign({ started: false }, patch)); return; }
     this._cells = s.cells;
+    // 新局检测：winner 从有变 null(认输/重开后开新局)→ 清本地 flag,避免上局残留(_recorded/_servedKey 等)影响新局
+    if (!s.winner && this._state && this._state.winner) {
+      this._recorded = false; this._servedKey = null; this._sellPrompted = false; this._restartPrompted = false;
+    }
     // 自动服刑:轮到我 + skip[me]>0 → 跳过交对方(经典:进监狱/住院,下次自己回合自动停,不掷骰)。
     // 解决「两人都进监狱卡死」:各自在自己回合自动服刑,resolve 末尾不再检查对方停。
     if (!s.winner && s.turn === rt.seatOf(role) && (s.skip || {})[role] > 0) {
