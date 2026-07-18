@@ -2,10 +2,17 @@
 
   <view class="mp-board-wrap">
     <canvas wx:if="{{!rulesOpen && !bankOpen}}" type="2d" id="board" class="mp-board"></canvas>
+    <view wx:if="{{started}}" class="mp-mode-tag {{mode === 'classic' ? 'classic' : 'casual'}}">
+      <t-icon name="{{mode === 'classic' ? 'star' : 'heart'}}" size="22rpx" />
+      <text>{{mode === 'classic' ? '经典' : '休闲'}}</text>
+    </view>
     <view wx:if="{{!started}}" class="mp-empty">
       <view class="mp-title">大富翁</view>
-      <view class="mp-start" bindtap="startMatch">开始对局</view>
-      <view class="muted small">买地收租 · 机会卡 · 让对方破产即胜</view>
+      <view class="mp-mode-pick">
+        <view class="mp-start" data-mode="classic" bindtap="startMatch">经典模式</view>
+        <view class="mp-start casual" data-mode="casual" bindtap="startMatch">休闲模式</view>
+      </view>
+      <view class="muted small">经典=纯 Monopoly｜休闲=存款利息+整组折扣</view>
     </view>
   </view>
 
@@ -40,28 +47,30 @@
   <!-- 银行/资产面板 -->
   <view class="sf-mask {{bankOpen ? 'show' : ''}}" bindtap="closeBank"></view>
   <view class="bank-sheet {{bankOpen ? 'show' : ''}}" catchtap="noop">
-    <view class="sf-title">银行 / 资产</view>
-    <view class="bk-sum">现金 {{myCash}} 存款 {{mySavings}} 贷款 {{myLoan}}／额度 {{myLoanCap}}</view>
-    <view class="bk-label">存款(过起点 +5% 利息)</view>
-    <view class="bk-btns">
-      <view class="bk-btn" data-act="deposit" data-amt="100" bindtap="bankAct">存 100</view>
-      <view class="bk-btn" data-act="deposit" data-amt="500" bindtap="bankAct">存 500</view>
-      <view class="bk-btn" data-act="withdraw" data-amt="100000" bindtap="bankAct">全部取出</view>
-    </view>
-    <view class="bk-label">抵押贷款(额度=300+地皮回收价×50%，过起点必扣10%息)</view>
-    <view class="bk-btns">
-      <view class="bk-btn" data-act="borrow" bindtap="bankAct">贷款 +200（可贷{{myAvailLoan}}）</view>
-      <view class="bk-btn" data-act="repay" bindtap="bankAct">还款</view>
-    </view>
-    <view class="bk-label" wx:if="{{mySets.length}}">成套色组（集齐同色：过路费 +50%，可整组升级打 9 折）</view>
+    <view class="sf-title">银行 / 资产 <text class="mp-mode-mini {{mode === 'classic' ? 'classic' : 'casual'}}">{{mode === 'classic' ? '经典' : '休闲'}}</text></view>
+    <view class="bk-sum">现金 {{myCash}}<text wx:if="{{mode !== 'classic'}}"> 存款 {{mySavings}}</text></view>
+    <block wx:if="{{mode !== 'classic'}}">
+      <view class="bk-label">存款(过起点 +5% 利息)</view>
+      <view class="bk-btns">
+        <view class="bk-btn" data-act="deposit" data-amt="100" bindtap="bankAct">存 100</view>
+        <view class="bk-btn" data-act="deposit" data-amt="500" bindtap="bankAct">存 500</view>
+        <view class="bk-btn" data-act="withdraw" data-amt="100000" bindtap="bankAct">全部取出</view>
+      </view>
+    </block>
+    <view class="bk-label" wx:if="{{mySets.length}}">成套色组（集齐同色过路费翻倍，可整组升级{{mode !== 'classic' ? ' 打9折' : ''}}）</view>
     <view class="bk-btns" wx:if="{{mySets.length}}">
       <view class="bk-btn" wx:for="{{mySets}}" wx:key="group" data-group="{{item.group}}" bindtap="upgradeGroup">升级整组({{item.count}}块) -{{item.cost}}</view>
     </view>
-    <view class="bk-label">我的地皮（卖银行 60% / 卖对方 80%）</view>
+    <view class="bk-label">我的地皮（抵押拿半价·抵押中不收租 / 卖银行 60% / 卖对方 80%）</view>
     <scroll-view scroll-y class="bk-props">
-      <view wx:for="{{myProps}}" wx:key="idx" class="bk-prop">
-        <view class="bp-name">{{item.name}} <text class="muted small">Lv{{item.level + 1}}</text></view>
+      <view wx:for="{{myProps}}" wx:key="idx" class="bk-prop {{item.mortgaged ? 'is-mort' : ''}}">
+        <view class="bp-name">
+          {{item.name}} <text class="muted small">Lv{{item.level + 1}}</text>
+          <text wx:if="{{item.mortgaged}}" class="bp-mort-tag"><t-icon name="lock-on" size="22rpx" /> 已抵押</text>
+        </view>
         <view class="bp-acts">
+          <view wx:if="{{!item.mortgaged}}" class="bk-btn sm" data-idx="{{item.idx}}" bindtap="mortgageProp">抵押 +{{item.mortgageValue}}</view>
+          <view wx:else class="bk-btn sm" data-idx="{{item.idx}}" bindtap="redeemProp">赎回 -{{item.redeemValue}}</view>
           <view class="bk-btn sm" data-idx="{{item.idx}}" bindtap="sellToBank">卖银行 +{{item.sellBank}}</view>
           <view class="bk-btn sm" data-idx="{{item.idx}}" bindtap="sellToPeer">卖对方 {{item.sellPeer}}</view>
         </view>

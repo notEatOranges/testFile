@@ -1,6 +1,6 @@
 /* 禁止滚动：100vh 固定，按钮固定底部 */
 .mp-page { height: 100vh; overflow: hidden; display: flex; flex-direction: column; align-items: center; padding: 16rpx 0 calc(184rpx + env(safe-area-inset-bottom)); box-sizing: border-box; }
-.mp-board-wrap { display: flex; align-items: center; justify-content: center; width: 100%; }
+.mp-board-wrap { position: relative; display: flex; align-items: center; justify-content: center; width: 100%; }
 .mp-board { width: min(94vw, calc((100vh - 644rpx) * 0.8)); height: min(calc(94vw * 1.25), calc(100vh - 644rpx)); border-radius: 16rpx; box-shadow: 0 8rpx 30rpx var(--card-shadow); }
 
 .mp-empty { position: absolute; inset: 0; border-radius: 16rpx; background: rgba(243,233,210,.95); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14rpx; }
@@ -45,5 +45,17 @@
 .bk-prop { display: flex; align-items: center; justify-content: space-between; gap: 12rpx; padding: 12rpx 0; border-bottom: 1rpx solid var(--border); }
 .bp-name { font-size: 26rpx; color: var(--text); }
 .bp-acts { display: flex; gap: 10rpx; }
+
+/* 模式选择按钮 + 模式徽标 + 抵押状态 */
+.mp-mode-pick { display: flex; gap: 18rpx; }
+.mp-start.casual { background: #00b8d4; }
+.mp-mode-tag { position: absolute; top: 14rpx; left: 28rpx; z-index: 5; display: flex; align-items: center; gap: 6rpx; padding: 4rpx 16rpx; border-radius: 20rpx; font-size: 22rpx; color: #fff; box-shadow: 0 2rpx 8rpx rgba(0,0,0,.15); }
+.mp-mode-tag.classic { background: #ff5a5f; }
+.mp-mode-tag.casual { background: #00b8d4; }
+.mp-mode-mini { margin-left: 12rpx; padding: 2rpx 14rpx; border-radius: 14rpx; font-size: 22rpx; color: #fff; font-weight: 600; }
+.mp-mode-mini.classic { background: #ff5a5f; }
+.mp-mode-mini.casual { background: #00b8d4; }
+.bk-prop.is-mort { opacity: .62; }
+.bp-mort-tag { margin-left: 10rpx; color: #b58a5a; font-size: 22rpx; display: inline-flex; align-items: center; gap: 2rpx; }
 
 /* 抽牌 canvas 动画相关样式已移至 JS(canvas 绘制) */

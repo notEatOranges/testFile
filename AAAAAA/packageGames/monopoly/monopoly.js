@@ -65,6 +65,9 @@ function rentOf(cell, cells) {
 function upgradeCost(cell) { return Math.round(cell.price * 0.5); }
 // 卖银行回收价：(地皮价值 + 已投入升级费) × 60%。sellToBank / myProps 共用，避免重复公式。
 function bankRecover(cell) { return Math.round((cell.price + (cell.level || 0) * upgradeCost(cell)) * 0.6); }
+// 经典抵押：抵押拿地价一半现金(抵押中的地不收租)，赎回付抵押值 +10%(一次性，无循环利息)。
+function mortgageValueOf(cell) { return Math.round(cell.price * 0.5); }
+function redeemValueOf(cell) { return Math.round(cell.price * 0.55); }
 // 同色组（连铺）：groupCells 取某色组全部地皮；ownsFullSet 判断是否被一人集齐（成套）。
 function groupCells(cells, g) { return cells.filter(c => c && c.type === 'property' && c.group === g); }
 function ownsFullSet(cells, g, owner) { const gs = groupCells(cells, g); return gs.length > 0 && gs.every(c => c.owner === owner); }
@@ -189,7 +192,7 @@ Page({
     patch.sellReqPending = !!(sellReq && sellReq.by === role);
 
     const myProps = [];
-    cells.forEach((c, idx) => { if (c && c.type === 'property' && c.owner === role) myProps.push({ idx, name: c.name, price: c.price, level: c.level || 0, sellBank: bankRecover(c), sellPeer: Math.round(c.price * 0.8) }); });
+    cells.forEach((c, idx) => { if (c && c.type === 'property' && c.owner === role) myProps.push({ idx, name: c.name, price: c.price, level: c.level || 0, mortgaged: !!c.mortgaged, mortgageValue: mortgageValueOf(c), redeemValue: redeemValueOf(c), sellBank: bankRecover(c), sellPeer: Math.round(c.price * 0.8) }); });
     // 同色组成套：集齐且全员 <3 级 → 可整组升级(打 9 折)；rentOf 对成套组自动 +50% 过路费
     const mySets = [];
     [0, 1, 2, 3, 4, 5].forEach(g => {
@@ -512,7 +515,7 @@ Page({
     rt.setState('monopoly', Object.assign({}, this._state, { cells: cells.map(c => Object.assign({}, c)), pos, cash, savings, skip, turn: winner ? turn : rt.seatOf(nextRole), dice: this.data.dice, log: log.slice(-30), winner, req: null }));
   },
 
-  // 破产救助：现金为负时按「存款→卖地给银行」自救；仍不足才真破产。
+  // 破产救助：现金为负时自动自救，全程不弹窗。顺序：取存款 → 自动抵押自有地(拿半价) → 卖地给银行；仍不足才真破产。
   // 就地修改传入的 cash/savings/cells/log，返回是否破产。
   async coverShortfall(role, cells, cash, savings, log) {
     while (cash[role] < 0 && (savings[role] || 0) > 0) {                       // 1) 存款补
@@ -521,26 +524,28 @@ Page({
       log.push({ who: role, text: '取出存款 ' + need + ' 补亏空' });
       this.syncLog(cells, cash, log, this._state.pos, this._state.skip, { savings });
     }
-    while (cash[role] < 0) {                                                    // 2) 卖地补（困境中只卖银行）
-      const mine = [];
-      cells.forEach((c, i) => { if (c && c.type === 'property' && c.owner === role) mine.push(i); });
-      if (!mine.length) break;
-      const pick = await new Promise(res => {
-        wx.showActionSheet({
-          alertText: '现金为负 ' + cash[role] + '，选一块地卖给银行自救',
-          itemList: mine.slice(0, 6).map(i => cells[i].name + ' +' + bankRecover(cells[i])),
-          success: r => res(mine[r.tapIndex]),
-          fail: () => res(null)
-        });
-      });
-      if (pick == null) break;
-      const c = cells[pick], get = bankRecover(c);
-      cells[pick] = Object.assign({}, c, { owner: null, level: 0, mortgaged: false });
-      cash[role] += get; log.push({ who: role, text: '变卖「' + c.name + '」+' + get });
+    while (cash[role] < 0) {                                                    // 2) 自动抵押自有未抵押地(拿半价，地仍归己只是暂不收租)
+      const cand = [];
+      cells.forEach((c, i) => { if (c && c.type === 'property' && c.owner === role && !c.mortgaged) cand.push(i); });
+      if (!cand.length) break;
+      cand.sort((a, b) => mortgageValueOf(cells[b]) - mortgageValueOf(cells[a]));   // 优先抵押值高的
+      const i = cand[0], c = cells[i], get = mortgageValueOf(c);
+      cells[i] = Object.assign({}, c, { mortgaged: true });
+      cash[role] += get; log.push({ who: role, text: '自动抵押「' + c.name + '」+' + get + '(暂不收租)' });
+      this.syncLog(cells, cash, log, this._state.pos, this._state.skip, { savings });
+    }
+    while (cash[role] < 0) {                                                    // 3) 抵押光了还不够 → 卖地给银行
+      const cand = [];
+      cells.forEach((c, i) => { if (c && c.type === 'property' && c.owner === role) cand.push(i); });
+      if (!cand.length) break;
+      cand.sort((a, b) => bankRecover(cells[b]) - bankRecover(cells[a]));
+      const i = cand[0], c = cells[i], get = bankRecover(c);
+      cells[i] = Object.assign({}, c, { owner: null, level: 0, mortgaged: false });
+      cash[role] += get; log.push({ who: role, text: '变卖「' + c.name + '」给银行 +' + get });
       this.showFx('bad', '变卖「' + c.name + '」+' + get);
       this.syncLog(cells, cash, log, this._state.pos, this._state.skip, { savings });
     }
-    if (cash[role] < 0) { this.showFx('bad', '资产耗尽，破产！'); return true; }   // 3) 仍为负 → 破产
+    if (cash[role] < 0) { this.showFx('bad', '资产耗尽，破产！'); return true; }   // 4) 仍为负 → 破产
     return false;
   },
 
@@ -603,6 +608,39 @@ Page({
     });
   },
   cancelSell() { rt.transactionState('monopoly', s => Object.assign({}, s, { sellReq: null })); toast('已取消卖地'); },
+  // 经典抵押：把自有地抵押给银行换半价现金，抵押中的地不收过路费。走 transactionState 现读现写 + 防御。
+  mortgageProp(e) {
+    const idx = parseInt(e.currentTarget.dataset.idx, 10), role = room.getRole();
+    rt.transactionState('monopoly', s => {
+      if (!s || !s.cells) return s;
+      const c = s.cells[idx];
+      if (!c || c.owner !== role) { toast('地块已变化'); return s; }
+      if (c.mortgaged) { toast('已抵押'); return s; }
+      const get = mortgageValueOf(c);
+      const cs = s.cells.map(x => Object.assign({}, x));
+      cs[idx] = Object.assign({}, c, { mortgaged: true });
+      const cash = Object.assign({}, s.cash); cash[role] = (cash[role] || 0) + get;
+      const lg = (s.log || []).slice(); lg.push({ who: role, text: '抵押「' + c.name + '」+' + get + '(抵押中不收租)' });
+      return Object.assign({}, s, { cells: cs, cash, log: lg.slice(-30) });
+    });
+  },
+  // 赎回：付抵押值+10% 解除抵押，恢复收租。
+  redeemProp(e) {
+    const idx = parseInt(e.currentTarget.dataset.idx, 10), role = room.getRole();
+    rt.transactionState('monopoly', s => {
+      if (!s || !s.cells) return s;
+      const c = s.cells[idx];
+      if (!c || c.owner !== role) { toast('地块已变化'); return s; }
+      if (!c.mortgaged) { toast('未抵押'); return s; }
+      const due = redeemValueOf(c);
+      if ((s.cash[role] || 0) < due) { toast('现金不足赎回'); return s; }
+      const cs = s.cells.map(x => Object.assign({}, x));
+      cs[idx] = Object.assign({}, c, { mortgaged: false });
+      const cash = Object.assign({}, s.cash); cash[role] = (cash[role] || 0) - due;
+      const lg = (s.log || []).slice(); lg.push({ who: role, text: '赎回「' + c.name + '」-' + due });
+      return Object.assign({}, s, { cells: cs, cash, log: lg.slice(-30) });
+    });
+  },
   // 同色组成套升级：整组每块 level+1，总费用打 9 折；走 transaction 现读现写
   upgradeGroup(e) {
     const g = parseInt(e.currentTarget.dataset.group, 10), role = room.getRole();
