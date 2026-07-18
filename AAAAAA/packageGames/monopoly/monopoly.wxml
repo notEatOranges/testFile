@@ -1,7 +1,7 @@
 <view class="theme-{{theme}} love-page mp-page">
 
   <view class="mp-board-wrap">
-    <canvas wx:if="{{!rulesOpen && !bankOpen}}" type="2d" id="board" class="mp-board"></canvas>
+    <canvas wx:if="{{started && !rulesOpen && !bankOpen}}" type="2d" id="board" class="mp-board"></canvas>
     <view wx:if="{{started}}" class="mp-mode-tag {{mode === 'classic' ? 'classic' : 'casual'}}">
       <t-icon name="{{mode === 'classic' ? 'star' : 'heart'}}" size="22rpx" />
       <text>{{mode === 'classic' ? '经典' : '休闲'}}</text>
