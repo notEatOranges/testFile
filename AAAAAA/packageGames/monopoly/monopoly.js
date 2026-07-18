@@ -434,7 +434,12 @@ Page({
     let toIdx = idx;
 
     if (cell.type === 'start') { cash[role] += 100; log.push({ who: role, text: '到达起点 +100' }); }
-    else if (cell.type === 'tax') { cash[role] -= cell.amt; log.push({ who: role, text: '缴税 -' + cell.amt }); this.showFx('bad', '缴税 -' + cell.amt); }
+    else if (cell.type === 'tax') {
+      const props = cells.filter(c => c.type === 'property' && c.owner === role);
+      const totalRent = props.reduce((s, c) => s + rentOf(c, cells), 0);
+      const tax = Math.max(20, Math.min(Math.round(totalRent * 0.1), 200));   // 地皮过路费总和 10%,20~200
+      cash[role] -= tax; log.push({ who: role, text: '缴税(地皮过路费10%) -' + tax }); this.showFx('bad', '缴税 -' + tax);
+    }
     else if (cell.type === 'bonus') { cash[role] += cell.amt; log.push({ who: role, text: '获得奖金 +' + cell.amt }); this.showFx('good', cell.name + ' +' + cell.amt); }
     else if (cell.type === 'jail') { skip[role] = (skip[role] || 0) + 1; log.push({ who: role, text: '进了监狱，下回合停留' }); this.showFx('bad', '进监狱，停一回合'); }
     else if (cell.type === 'freepark') { cash[role] = (cash[role] || 0) + 50; log.push({ who: role, text: '免费停车 +50' }); this.showFx('good', '免费停车 +50'); }
