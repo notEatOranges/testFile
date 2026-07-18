@@ -474,16 +474,39 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8rpx;
+  gap: 14rpx;
+}
+.mp-player {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rpx;
+  padding: 8rpx 24rpx;
+  border-radius: 16rpx;
+  background: var(--card);
+  border: 2rpx solid transparent;
+  min-width: 140rpx;
+  box-shadow: 0 2rpx 8rpx var(--card-shadow);
+}
+.mp-player.on {
+  border-color: var(--primary);
+  background: var(--chip);
+}
+.mp-player-name {
   font-size: 22rpx;
   color: var(--text-soft);
+  font-weight: 600;
 }
-.mp-center-cash .on {
+.mp-player.on .mp-player-name {
   color: var(--primary-deep);
+}
+.mp-player-cash {
+  font-size: 28rpx;
   font-weight: 800;
-  font-size: 26rpx;
+  color: var(--primary-deep);
 }
 .mp-vs {
+  font-size: 20rpx;
   color: var(--text-soft);
   opacity: 0.5;
 }

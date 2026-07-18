@@ -45,9 +45,15 @@
       <!-- 中心 6×6:金额(上)+ 骰子(中)+ 工具按钮(下,分多行) -->
       <view class="mp-center">
         <view class="mp-center-cash">
-          <text class="{{started && myTurn ? 'on' : ''}}">{{myName}} {{myCash}}</text>
-          <text class="mp-vs">·</text>
-          <text class="{{started && !myTurn ? 'on' : ''}}">{{peerName}} {{peerCash}}</text>
+          <view class="mp-player {{started && myTurn ? 'on' : ''}}">
+            <text class="mp-player-name">{{myName}}</text>
+            <text class="mp-player-cash">{{myCash}}</text>
+          </view>
+          <text class="mp-vs">VS</text>
+          <view class="mp-player {{started && !myTurn ? 'on' : ''}}">
+            <text class="mp-player-name">{{peerName}}</text>
+            <text class="mp-player-cash">{{peerCash}}</text>
+          </view>
         </view>
         <view class="mp-center-mid">
           <view wx:if="{{diceAnim}}" class="mp-dice" style="transform: rotate({{diceAnim.angle || 0}}deg);">{{diceAnim.v}}</view>
