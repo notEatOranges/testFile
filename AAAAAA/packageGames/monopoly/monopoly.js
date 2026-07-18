@@ -293,10 +293,9 @@ Page({
       const st = this._state || s;
       if (st && !st.winner) this.commit({ turn: rt.seatOf(peer) });
     }
-    finally { if (this._rollWatchdog) { clearTimeout(this._rollWatchdog); this._rollWatchdog = null; } }
-    // 关键：rolling 不在 finally 清！交给 applyState 在「watch 推来 turn=对方」时清。
-    // 从摇完到回合被确认交出去之前，本地 rolling 恒为 true，彻底堵住重复摇/连摇
-    // (不受 watch 异步覆盖 turn 的影响——纯本地锁)。12s watchdog 兜底释放防卡死。
+    finally { if (this._rollWatchdog) { clearTimeout(this._rollWatchdog); this._rollWatchdog = null; } this.setData({ rolling: false }); }
+    // rolling 在 finally 清：seq 拒旧 + store ts 拒旧已防住 watch 旧态覆盖 turn,不再需要 rolling 锁到回合离开；
+    // 否则「对方进监狱、我奖励连摇」时 turn 仍=我,applyState(myTurnFlag true)不清 rolling → 按钮卡 loading。
   },
 
   // 棋子沿外圈滑行：setTimeout(33ms) 逐帧 setData 棋子 x/y(百分比)/hop(rpx)；moving 标志防 applyState 覆盖；结束 res()。
