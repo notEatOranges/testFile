@@ -64,9 +64,9 @@
             <view class="mp-tool" bindtap="openRules"><t-icon name="info-circle" size="36rpx" /><text>玩法</text></view>
             <view class="mp-tool" bindtap="switchIconTheme" wx:if="{{started}}"><t-icon name="palette" size="36rpx" /><text>图标</text></view>
           </view>
-          <view class="mp-tool-row">
-            <t-button theme="default" size="small" bind:tap="resign" wx:if="{{started && !winner}}">投降</t-button>
-            <t-button theme="default" size="small" bind:tap="requestRestart">{{winner ? '再来' : '重来'}}</t-button>
+          <view class="mp-tool-row" wx:if="{{!winner}}">
+            <t-button theme="default" size="small" bind:tap="resign" wx:if="{{started}}">投降</t-button>
+            <t-button theme="default" size="small" bind:tap="requestRestart">重来</t-button>
           </view>
         </view>
         <view wx:if="{{requestPending}}" class="mp-center-req">已请求重开 <text class="mp-link" bindtap="cancelReq">取消</text></view>
@@ -117,6 +117,7 @@
   <view class="mp-roll-bar">
     <view class="mp-roll-bank" bindtap="openBank" wx:if="{{started}}"><t-icon name="shop" size="36rpx" /><text>银行</text></view>
     <t-button class="mp-roll-dice" wx:if="{{!winner}}" theme="primary" bind:tap="roll" loading="{{rolling}}" disabled="{{!myTurn}}">{{myTurn ? '掷骰子' : (started ? '等对方掷骰' : '开始后掷骰')}}</t-button>
+    <t-button class="mp-roll-dice" wx:if="{{winner}}" theme="primary" bind:tap="requestRestart">再来一局</t-button>
   </view>
 
   <!-- 银行/资产面板 -->
