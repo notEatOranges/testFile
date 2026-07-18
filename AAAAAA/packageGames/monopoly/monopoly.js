@@ -1,7 +1,7 @@
 // monopoly —— 大富翁（功能8，双人联机，竖屏）
-// 28 格环形棋盘。掷骰(翻转动画)→棋子滑行动画→结算→事件好/坏特效。
-// 地块 6 色组(等级递增) + 可升级(提高过路费) + 机会/突发事件/缴税/监狱/奖金/车站。
-// 状态 games/monopoly/state = { cells, pos:{boy,girl}, cash:{boy,girl}, skip:{boy,girl}, turn, dice, log, winner, req, ts }
+// 8×8 方形棋盘 28 格(DOM 渲染，非 canvas)。掷骰→棋子滑行→结算→事件特效。
+// 地块 6 色组 + 可升级 + 机会/公共基金/缴税/监狱/奖金/免费停车；经典抵押/经典·休闲双模式(9.8)。
+// 状态 games/monopoly/state = { mode, cells, pos, cash, savings, skip, turn, dice, log, winner, req, sellReq }
 const user = require('@utils/user.js');
 const room = require('@utils/room.js');
 const ident = require('@utils/ident.js');
@@ -9,25 +9,15 @@ const rt = require('@utils/rtgame.js');
 const { toast } = require('@utils/util.js');
 
 const START_CASH = 1500;
-const GW = 8, GH = 10;                 // 矩形外圈：宽 8 × 高 10
-const NOTCH = { left: 3, right: 4, depth: 3 };  // 顶部凹槽(向内折)增加格子，呈 凹 形
-function walkSeg(a, b, out) {
-  const [c1, r1] = a, [c2, r2] = b;
-  if (c1 === c2) { const s = r2 > r1 ? 1 : -1; for (let r = r1; ; r += s) { out.push([c1, r]); if (r === r2) break; } }
-  else { const s = c2 > c1 ? 1 : -1; for (let c = c1; ; c += s) { out.push([c, r1]); if (c === c2) break; } }
+const BOARD = 28;                       // 8×8 方形外圈：2*8+2*6=28，与原凹形一致，buildCells/pos 语义零变化
+// cellCR：8×8 方形外圈格子的 [col,row]（0-based）。起点在左下，顺时针环绕（与原 PATH 顺序对齐）。
+function cellCR(i) {
+  i = ((i % BOARD) + BOARD) % BOARD;    // 支持负数/环绕（棋子插值复用）
+  if (i < 8) return [i, 7];             // 底边 左→右（格0=起点=左下）
+  if (i < 15) return [7, 14 - i];       // 右边 下→上
+  if (i < 22) return [21 - i, 0];       // 顶边 右→左
+  return [0, i - 21];                   // 左边 上→下
 }
-function buildPath() {
-  const nL = NOTCH.left, nR = NOTCH.right, nd = NOTCH.depth;
-  const wp = [[0, GH - 1], [GW - 1, GH - 1], [GW - 1, 0], [nR, 0], [nR, nd], [nL, nd], [nL, 0], [0, 0]];
-  const raw = [];
-  for (let i = 0; i < wp.length; i++) walkSeg(wp[i], wp[(i + 1) % wp.length], raw);
-  const path = [];
-  for (const p of raw) { const last = path[path.length - 1]; if (!last || last[0] !== p[0] || last[1] !== p[1]) path.push(p); }
-  if (path.length > 1 && path[0][0] === path[path.length - 1][0] && path[0][1] === path[path.length - 1][1]) path.pop();
-  return path;
-}
-const PATH = buildPath();
-const BOARD = PATH.length;             // 凹形外圈格数
 // 双卡组：机会(偏移动/机缘) + 公共基金(偏金钱事件)。cash 自己加减；cashPeer 对方给/收；to 回起点；back 后退；skip 停一回合
 const DECK = [
   { t: '银行分红 +50', cash: 50 }, { t: '生日红包 对方送你 +100', cashPeer: 100 }, { t: '遗产继承 +100', cash: 100 },
@@ -54,7 +44,6 @@ function buildCells() {
   }
   return cells;
 }
-function cellCR(i) { return PATH[((i % BOARD) + BOARD) % BOARD]; }
 function rentOf(cell, cells) {
   if (cell.mortgaged) return 0;                                  // 经典：抵押中的地不收过路费
   const LEVEL_MULT = [1, 2, 3, 5];                               // 非线性：越高级涨幅越陡(对标 Monopoly 建房阶梯)
@@ -73,12 +62,6 @@ function groupCells(cells, g) { return cells.filter(c => c && c.type === 'proper
 function ownsFullSet(cells, g, owner) { const gs = groupCells(cells, g); return gs.length > 0 && gs.every(c => c.owner === owner); }
 function seatShape(role) { return rt.seatOf(role) === rt.RED ? 'heart' : 'star'; }
 function seatColor(role) { return rt.seatOf(role) === rt.RED ? '#ff5a5f' : '#00b8d4'; }   // 珊瑚红/青，避开地皮 6 色
-function shade(hex, amt) {
-  const n = parseInt(hex.slice(1), 16);
-  let r = Math.max(0, Math.min(255, (n >> 16) + amt)), g = Math.max(0, Math.min(255, ((n >> 8) & 0xff) + amt)), b = Math.max(0, Math.min(255, (n & 0xff) + amt));
-  return '#' + ((r << 16) | (g << 8) | b).toString(16).padStart(6, '0');
-}
-function rr(ctx, x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
 
 // 日志条目结构化：{ who: 触发者role, text: '描述' }，text 内可用 {{boy}}/{{girl}} 占位指代某个玩家。
 // 渲染时按「当前观看者」视角转换：自己 →「你」，对方 → 对方昵称。双方共享同一份中立 log，各自看到自己的视角。
@@ -96,24 +79,34 @@ Page({
     started: false, turnSeat: 'red', mySeat: 'red', myTurn: false,
     dice: 1, log: [], myCash: START_CASH, peerCash: START_CASH, myPos: 0, peerPos: 0,
     winner: null, winnerText: '', rolling: false, requestPending: false, rulesOpen: false,
-    card: null, fx: null,   // fx: {kind:'good'|'bad', text} 事件特效
-    bankOpen: false, mySavings: 0, peerSavings: 0, myLoan: 0, myLoanCap: 0, myAvailLoan: 0, peerLoan: 0, myProps: [], mySets: [], sellReqPending: false
+    mode: 'casual', iconTheme: 'tdesign',   // iconTheme: tdesign(默认) | emoji | image，本地存储，9.9g 加切换
+    grid: [], tokenMe: null, tokenPeer: null,   // DOM 棋盘 28 格 + 两个棋子(绝对定位)
+    diceAnim: null, cardAnim: null, fx: null,    // 骰子/抽牌/特效 DOM 动画数据
+    bankOpen: false, mySavings: 0, peerSavings: 0, myProps: [], mySets: [], sellReqPending: false
   },
 
   onLoad() {
-    this.setData({ theme: getApp().globalData.theme || 'sakura' });
+    this.setData({ theme: getApp().globalData.theme || 'sakura', iconTheme: wx.getStorageSync('mono_iconTheme') || 'tdesign' });
     if (!user.isPaired()) return wx.redirectTo({ url: '/pages/main/main' });
     user.applyToRoom(); room.join();
     this.setData({ mySeat: rt.seatOf(room.getRole()) });
     ident.bind(this, { onChange: () => this.applyState() });
   },
-  onReady() { this.setupCanvas(); },
+  onReady() { this.measureBoard(); },
   onShow() {
     if (this._bound) return;
     this._bound = true;
     rt.bind(this, 'monopoly', s => { this._state = s; this.applyState(); });
   },
-  onUnload() { rt.teardown(this); ident.teardown(this); if (this._diceTimer) clearInterval(this._diceTimer); if (this._rollWatchdog) clearTimeout(this._rollWatchdog); if (this._raf && this.cv) this.cv.cancelAnimationFrame(this._raf); if (this._cardRaf && this.cv) this.cv.cancelAnimationFrame(this._cardRaf); },
+  onUnload() {
+    rt.teardown(this); ident.teardown(this);
+    if (this._diceTimer) clearTimeout(this._diceTimer);
+    if (this._rollWatchdog) clearTimeout(this._rollWatchdog);
+    if (this._raf) clearTimeout(this._raf);
+    if (this._cardTimer) clearTimeout(this._cardTimer);
+    if (this._fxTimer) clearTimeout(this._fxTimer);
+    if (this._diceAnimTimer) clearTimeout(this._diceAnimTimer);
+  },
 
   fresh(mode) {
     return { mode: mode || 'casual', cells: buildCells(), pos: { boy: 0, girl: 0 }, cash: { boy: START_CASH, girl: START_CASH }, savings: { boy: 0, girl: 0 }, skip: { boy: 0, girl: 0 }, turn: Math.random() < 0.5 ? rt.RED : rt.BLUE, dice: 1, log: [], winner: null, req: null, sellReq: null };
@@ -127,20 +120,15 @@ Page({
       success: r => { if (r.confirm) rt.resign('monopoly', this._state, room.getRole()); } });
   },
 
-  setupCanvas() {
-    const dpr = wx.getSystemInfoSync().pixelRatio;
-    wx.createSelectorQuery().in(this).select('#board').fields({ node: true, size: true }).exec(res => {
-      const f = res[0];
-      if (!f || !f.node) { setTimeout(() => this.setupCanvas(), 80); return; }
-      const cv = f.node, w = f.width, h = f.height;
-      cv.width = w * dpr; cv.height = h * dpr;
-      const ctx = cv.getContext('2d'); ctx.scale(dpr, dpr);
-      this.ctx = ctx; this.cv = cv; this.W = w; this.H = h;
-      this.cellW = w / GW; this.cellH = h / GH;
-      this.cs = Math.min(this.cellW, this.cellH);   // 字号/棋子按短边
-      this.ox = 0; this.oy = 0;
+  // 测量棋盘 DOM 尺寸(替代旧 setupCanvas)：只读 .mp-board 宽，算 cellW = w/8。无 ctx/dpr。
+  measureBoard() {
+    wx.createSelectorQuery().in(this).select('.mp-board').boundingClientRect(res => {
+      const f = res && res[0];
+      if (!f || !f.width) { setTimeout(() => this.measureBoard(), 80); return; }   // .mp-board 受 wx:if 控制，未渲染则重试
+      this.boardW = f.width;
+      this.cellW = f.width / 8;
       this.applyState();
-    });
+    }).exec();
   },
 
   applyState() {
@@ -153,10 +141,10 @@ Page({
       this._restartPrompted = true;
       const me = this;
       wx.showModal({ title: '重新开局请求', content: (names[s.req.by] || '对方') + ' 请求重新开局，同意？', confirmText: '同意', cancelText: '拒绝',
-        success: r => { if (r.confirm) rt.acceptRestart('monopoly', () => me.fresh()); else rt.rejectRestart('monopoly', me._state); } });
+        success: r => { if (r.confirm) rt.acceptRestart('monopoly', () => me.fresh(me._state && me._state.mode)); else rt.rejectRestart('monopoly', me._state); } });
     } else if (reqSide !== 'peer') this._restartPrompted = false;
 
-    if (!s || !s.cells) { this.setData(Object.assign({ started: false }, patch)); this.draw(); return; }
+    if (!s || !s.cells) { this.setData(Object.assign({ started: false }, patch)); return; }
     this._cells = s.cells;
     const winner = s.winner || null;
     const turnSeat = s.turn || rt.RED;
@@ -193,7 +181,7 @@ Page({
 
     const myProps = [];
     cells.forEach((c, idx) => { if (c && c.type === 'property' && c.owner === role) myProps.push({ idx, name: c.name, price: c.price, level: c.level || 0, mortgaged: !!c.mortgaged, mortgageValue: mortgageValueOf(c), redeemValue: redeemValueOf(c), sellBank: bankRecover(c), sellPeer: Math.round(c.price * 0.8) }); });
-    // 同色组成套：集齐且全员 <3 级 → 可整组升级(打 9 折)；rentOf 对成套组自动 +50% 过路费
+    // 同色组成套：集齐且全员 <3 级 → 可整组升级(休闲 9 折)；rentOf 对成套组自动翻倍
     const mySets = [];
     [0, 1, 2, 3, 4, 5].forEach(g => {
       const gs = groupCells(cells, g);
@@ -201,10 +189,33 @@ Page({
         mySets.push({ group: g, count: gs.length, cost: Math.round(gs.reduce((sum, c) => sum + upgradeCost(c), 0) * (s.mode === 'classic' ? 1 : 0.9)), names: gs.map(c => c.name).join('/') });
       }
     });
+
+    // DOM 棋盘：28 格 → 每格带 col/row(1-based)/cls/groupColor/ownerColor/isFullSet/levelArr，供 wxml grid 渲染
+    const grid = cells.map((c, i) => {
+      const [col, row] = cellCR(i);
+      return Object.assign({}, c, {
+        idx: i, col: col + 1, row: row + 1,
+        cls: 'type-' + (c.type || 'property'),
+        groupColor: c.type === 'property' ? (GROUP_COLOR[c.group] || '#666') : '',
+        ownerColor: c.owner ? seatColor(c.owner) : '',
+        isFullSet: c.type === 'property' && !!c.owner && ownsFullSet(cells, c.group, c.owner),
+        levelArr: c.type === 'property' ? new Array(c.level || 0).fill(1) : []
+      });
+    });
+    // 棋子像素坐标(按 pos + cellW)；动画进行中(moving)不被对端 state 覆盖
+    const peerRole = role === 'boy' ? 'girl' : 'boy';
+    if (this.cellW && s.pos) {
+      const [mx, my] = this.tokenXY(s.pos[role]);
+      const [px, py] = this.tokenXY(s.pos[peerRole]);
+      if (!this.data.tokenMe || !this.data.tokenMe.moving) patch.tokenMe = { x: mx, y: my, hop: 0, kind: seatShape(role), color: seatColor(role), moving: false };
+      if (!this.data.tokenPeer || !this.data.tokenPeer.moving) patch.tokenPeer = { x: px, y: py, hop: 0, kind: seatShape(peerRole), color: seatColor(peerRole), moving: false };
+    }
+
     Object.assign(patch, {
       started: true, turnSeat, myTurn: myTurnFlag, rolling: myTurnFlag ? this.data.rolling : false,
       mode: s.mode || 'casual',
       dice: s.dice || 1,
+      grid,
       log: (s.log || []).slice(-30).reverse().map(it => fmtLog(it, role, this.data.peerName)),
       myCash: (s.cash && s.cash[role]) || 0, peerCash: (s.cash && s.cash[peer]) || 0,
       mySavings: (s.savings && s.savings[role]) || 0, peerSavings: (s.savings && s.savings[peer]) || 0,
@@ -212,20 +223,12 @@ Page({
       myProps, mySets, winner, winnerText
     });
     this.setData(patch);
-    this.draw();
   },
 
   showFx(kind, text) {
-    this._fxAnim = { kind, text, t0: Date.now() };
-    if (!this._fxRaf && this.cv) {
-      const step = () => {
-        if (!this._fxAnim) { this._fxRaf = null; return; }
-        if (Date.now() - this._fxAnim.t0 > 1500) { this._fxAnim = null; this._fxRaf = null; this.draw(); return; }
-        this.draw();
-        this._fxRaf = this.cv.requestAnimationFrame(step);
-      };
-      this._fxRaf = this.cv.requestAnimationFrame(step);
-    }
+    this.setData({ fx: { kind, text } });
+    if (this._fxTimer) clearTimeout(this._fxTimer);
+    this._fxTimer = setTimeout(() => this.setData({ fx: null }), 1500);
   },
 
   async roll() {
@@ -238,7 +241,7 @@ Page({
     if (this._rollWatchdog) clearTimeout(this._rollWatchdog);
     this._rollWatchdog = setTimeout(() => { if (this.data.rolling) { console.warn('[monopoly] roll watchdog: force-release'); this.setData({ rolling: false }); } }, 12000);
     try {
-    const d = await this.rollDiceAnim();             // 单 8 面骰(棋盘中央翻滚 + 落定)
+    const d = await this.rollDiceAnim();             // 单 8 面骰
     const steps = d;
     this.setData({ dice: d });
 
@@ -271,147 +274,28 @@ Page({
     finally { if (this._rollWatchdog) { clearTimeout(this._rollWatchdog); this._rollWatchdog = null; } }
   },
 
+  // 棋子滑行：9.9a 最简版(瞬移，由 applyState 按 pos 渲染)；真实滑行动画 9.9c 加(setTimeout + setData)。
   animateMove(role, from, to, backward) {
-    return new Promise(res => {
-      if (!this.cv) { res(); return; }
-      // backward=true：f 递减（tokenXY/cellCR 支持负数与环绕，棋子沿环逆行）；否则正向（跨起点则 +BOARD）
-      const span = backward ? -(((from - to + BOARD) % BOARD) || 0) : (((to < from ? to + BOARD : to)) - from);
-      const t0 = Date.now(); const dur = 760;
-      const step = () => {
-        const p = Math.min(1, (Date.now() - t0) / dur);
-        const hop = Math.abs(Math.sin(p * Math.PI * 2)) * this.cs * 0.4;   // 放慢的跳动
-        this._moving = { role, f: from + span * p, hop };
-        this.draw();
-        if (p < 1) this._raf = this.cv.requestAnimationFrame(step);
-        else { this._moving = null; this.draw(); res(); }
-      };
-      this._raf = this.cv.requestAnimationFrame(step);
-    });
+    return Promise.resolve();
   },
 
+  // 骰子：9.9a 最简版(短暂显示点数+前进提示)；翻滚动画 9.9d 加。
   rollDiceAnim() {
     return new Promise(res => {
       const f = 1 + Math.floor(Math.random() * 8);   // 单 8 面骰：1~8
-      if (!this.cv) { res(f); return; }
-      const t0 = Date.now(); const tumble = 720, settle = 600;
-      const step = () => {
-        const el = Date.now() - t0;
-        if (el < tumble) {
-          this._diceAnim = { phase: 'tumble', v: 1 + Math.floor(Math.random() * 8), angle: Math.sin(el / tumble * Math.PI * 5) * 0.6 * (1 - el / tumble) };
-        } else if (el < tumble + settle) {
-          this._diceAnim = { phase: 'settle', v: f, p: (el - tumble) / settle };
-        } else { this._diceAnim = null; this.draw(); res(f); return; }
-        this.draw();
-        this._raf = this.cv.requestAnimationFrame(step);
-      };
-      this._raf = this.cv.requestAnimationFrame(step);
+      this.setData({ dice: f, diceAnim: { v: f, showHint: true } });
+      this._diceAnimTimer = setTimeout(() => res(f), 500);
     });
   },
-  drawDie(ctx, cx, cy, s, val, ang) {
-    ctx.save(); ctx.translate(cx, cy); ctx.rotate(ang);
-    ctx.fillStyle = 'rgba(0,0,0,.18)'; rr(ctx, -s / 2 + 5, -s / 2 + 8, s, s, s * 0.2); ctx.fill();
-    const grad = ctx.createLinearGradient(0, -s / 2, 0, s / 2); grad.addColorStop(0, '#ffffff'); grad.addColorStop(1, '#ffd6e2');
-    ctx.fillStyle = grad; rr(ctx, -s / 2, -s / 2, s, s, s * 0.2); ctx.fill();
-    ctx.strokeStyle = '#e85a86'; ctx.lineWidth = 3; ctx.stroke();
-    ctx.fillStyle = '#e85a86'; ctx.font = 'bold ' + Math.round(s * 0.55) + 'px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText(String(val), 0, s * 0.04);
-    ctx.restore();
-  },
-  drawDiceCenter(ctx) {
-    const cs = this.cs, cx = this.W / 2, cy = this.H / 2 + cs * 0.4;
-    const anim = this._diceAnim;
-    const d = this.data.dice || 1;
-    const v = anim ? anim.v : d;
-    const ang = anim && anim.phase === 'tumble' ? anim.angle : 0;
-    const s = cs * 1.5;   // 单 8 面骰，放大居中
-    this.drawDie(ctx, cx, cy, s, v, ang);
-    // 落定后弹出「前进 N 格」
-    if (!anim || anim.phase === 'settle') {
-      const p = anim ? (anim.p || 1) : 1;
-      ctx.save();
-      ctx.globalAlpha = Math.min(1, p * 1.5);
-      const sc = 0.5 + 0.5 * Math.min(1, p);
-      ctx.translate(cx, cy + s * 1.1); ctx.scale(sc, sc);
-      ctx.fillStyle = '#e85a86'; ctx.font = 'bold ' + Math.round(cs * 0.46) + 'px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillText('前进 ' + v + ' 格', 0, 0);
-      ctx.restore();
-    }
-  },
+
+  // 抽牌：9.9a 最简版(直接揭晓文字 1.5s)；翻面动画 9.9e 加(rotateY)。
   drawCard() {
     return new Promise(res => {
       const c = DECK[Math.floor(Math.random() * DECK.length)];
       const kind = (c.cash != null && c.cash < 0) || c.skip || c.back || c.backRoll ? 'bad' : 'good';
-      if (!this.cv) { res(c); return; }
-      // Phase 1: 棋盘中央洗牌动画(700ms)
-      this._cardAnim = { phase: 'shuffle', t0: Date.now() };
-      this.startCardRaf();
-      setTimeout(() => {
-        // Phase 2: 翻牌揭晓(1800ms)
-        this._cardAnim = { phase: 'reveal', kind, text: c.t, revealP: 0, t0: Date.now() };
-        setTimeout(() => { this._cardAnim = null; this.draw(); res(c); }, 1800);
-      }, 700);
+      this.setData({ cardAnim: { kind, text: c.t } });
+      this._cardTimer = setTimeout(() => { this.setData({ cardAnim: null }); res(c); }, 1500);
     });
-  },
-  startCardRaf() {
-    if (this._cardRaf) return;
-    const step = () => {
-      if (!this._cardAnim) { this._cardRaf = null; return; }
-      if (this._cardAnim.phase === 'reveal') this._cardAnim.revealP = Math.min(1, (Date.now() - this._cardAnim.t0) / 500);
-      this.draw();
-      this._cardRaf = this.cv.requestAnimationFrame(step);
-    };
-    this._cardRaf = this.cv.requestAnimationFrame(step);
-  },
-  drawCardAnim(ctx) {
-    const a = this._cardAnim; if (!a) return;
-    const cs = this.cs, cx = this.W / 2, cy = this.H / 2;
-    if (a.phase === 'shuffle') {
-      for (let i = 0; i < 3; i++) {
-        const ox = (Math.random() - 0.5) * cs * 0.4, oy = (Math.random() - 0.5) * cs * 0.2, rot = (Math.random() - 0.5) * 0.3;
-        this.drawCardBack(ctx, cx + ox + (i - 1) * cs * 0.5, cy + oy, cs * 1.3, cs * 1.8, rot);
-      }
-      ctx.fillStyle = '#8a6b78'; ctx.font = Math.round(cs * 0.3) + 'px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillText('洗牌中', cx, cy + cs * 1.4);
-    } else {
-      const p = a.revealP, w = cs * 3.2, h = cs * 4.2;
-      const flip = p < 0.5 ? 1 - p * 2 : (p - 0.5) * 2, showFace = p > 0.5;
-      ctx.save(); ctx.translate(cx, cy); ctx.scale(Math.max(0.02, flip), 1);
-      ctx.fillStyle = showFace ? (a.kind === 'good' ? '#2ec24e' : '#e85a86') : '#e85a86';
-      rr(ctx, -w / 2, -h / 2, w, h, 16); ctx.fill();
-      ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.stroke();
-      if (showFace) {
-        ctx.fillStyle = '#fff'; ctx.font = 'bold ' + Math.round(cs * 0.55) + 'px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.fillText(a.kind === 'good' ? '好事' : '坏事', 0, -cs * 0.9);
-        ctx.font = Math.round(cs * 0.32) + 'px sans-serif';
-        this.wrapText(ctx, a.text, 0, cs * 0.4, w * 0.8, cs * 0.38);
-      } else { ctx.fillStyle = 'rgba(255,255,255,.4)'; ctx.font = 'bold ' + Math.round(cs * 0.8) + 'px sans-serif'; ctx.fillText('?', 0, 0); }
-      ctx.restore();
-    }
-  },
-  drawCardBack(ctx, cx, cy, w, h, rot) {
-    ctx.save(); ctx.translate(cx, cy); ctx.rotate(rot);
-    ctx.fillStyle = '#e85a86'; rr(ctx, -w / 2, -h / 2, w, h, 10); ctx.fill();
-    ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
-    ctx.fillStyle = 'rgba(255,255,255,.4)'; ctx.font = 'bold ' + Math.round(w * 0.5) + 'px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText('?', 0, 0);
-    ctx.restore();
-  },
-  drawFxAnim(ctx) {
-    const a = this._fxAnim; if (!a) return;
-    const el = Date.now() - a.t0;
-    const p = Math.min(1, el / 250);
-    const fade = el > 1200 ? Math.max(0, 1 - (el - 1200) / 300) : 1;
-    const cs = this.cs, cx = this.W / 2, cy = this.H / 2;
-    const w = cs * 4.5, h = cs * 1.3;
-    ctx.save();
-    ctx.globalAlpha = fade * Math.min(1, p * 2);
-    ctx.translate(cx, cy);
-    ctx.scale(0.6 + 0.4 * p, 0.6 + 0.4 * p);
-    ctx.fillStyle = a.kind === 'good' ? '#2ec24e' : '#e85a86';
-    rr(ctx, -w / 2, -h / 2, w, h, 14); ctx.fill();
-    ctx.fillStyle = '#fff'; ctx.font = 'bold ' + Math.round(cs * 0.34) + 'px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    this.wrapText(ctx, a.text, 0, 0, w * 0.85, cs * 0.38);
-    ctx.restore();
   },
 
   // 写一次中间态（让事件日志及时同步给双方）
@@ -504,7 +388,7 @@ Page({
       }
     }
 
-    // 现金为负 → 破产救助（存款→卖地→贷款→破产），不再直接判输
+    // 现金为负 → 破产救助（存款→抵押→卖地→破产），不再直接判输
     if (cash[role] < 0) {
       const bankrupt = await this.coverShortfall(role, cells, cash, savings, log);
       if (bankrupt) winner = role === 'boy' ? rt.BLUE : rt.RED;
@@ -549,12 +433,10 @@ Page({
     return false;
   },
 
-  dismissCard() { this._cardAnim = null; this.draw(); },
-
-  // —— 银行/资产：存款/卖地 ——
+  // —— 银行/资产：存款/卖地/抵押 ——
   openBank() { this.setData({ bankOpen: true }); },
   noop() {},
-  closeBank() { this.setData({ bankOpen: false }); setTimeout(() => this.setupCanvas(), 50); },
+  closeBank() { this.setData({ bankOpen: false }); },
   bankAct(e) {
     const act = e.currentTarget.dataset.act, amt = parseInt(e.currentTarget.dataset.amt || '0', 10);
     const role = room.getRole();
@@ -585,7 +467,7 @@ Page({
           const c = s.cells[idx];
           if (!c || c.owner !== role) { toast('地块已变化'); return s; }   // 防御：非己地不卖
           const cs = s.cells.map(x => Object.assign({}, x));
-          cs[idx] = Object.assign({}, c, { owner: null, level: 0 });
+          cs[idx] = Object.assign({}, c, { owner: null, level: 0, mortgaged: false });
           const cash = Object.assign({}, s.cash); cash[role] = (cash[role] || 0) + get;
           const lg = (s.log || []).slice(); lg.push({ who: role, text: '把「' + c.name + '」卖给银行 +' + get });
           return Object.assign({}, s, { cells: cs, cash, log: lg.slice(-30) });
@@ -641,7 +523,7 @@ Page({
       return Object.assign({}, s, { cells: cs, cash, log: lg.slice(-30) });
     });
   },
-  // 同色组成套升级：整组每块 level+1，总费用打 9 折；走 transaction 现读现写
+  // 同色组成套升级：整组每块 level+1，休闲模式打 9 折；走 transaction 现读现写
   upgradeGroup(e) {
     const g = parseInt(e.currentTarget.dataset.group, 10), role = room.getRole();
     rt.transactionState('monopoly', s => {
@@ -659,97 +541,14 @@ Page({
     });
   },
   openRules() { this.setData({ rulesOpen: true }); },
-  closeRules() { this.setData({ rulesOpen: false }); setTimeout(() => this.setupCanvas(), 60); },
+  closeRules() { this.setData({ rulesOpen: false }); },
 
+  // 棋子像素坐标：按连续位置 f(可小数) 在 8×8 外圈插值算中心。tokenMe/tokenPeer 的 left/top 用。
   tokenXY(f) {
+    if (!this.cellW) return [0, 0];
     const i0 = Math.floor(f) % BOARD, i1 = (i0 + 1) % BOARD, fr = f - Math.floor(f);
     const [c0, r0] = cellCR(i0), [c1, r1] = cellCR(i1);
     const c = c0 + (c1 - c0) * fr, r = r0 + (r1 - r0) * fr;
-    return [c * this.cellW + this.cellW / 2, r * this.cellH + this.cellH * 0.6];
-  },
-  drawShape(ctx, cx, cy, s, kind, fill, stroke) {
-    ctx.fillStyle = fill; ctx.strokeStyle = stroke || '#fff'; ctx.lineWidth = s * 0.18;
-    ctx.beginPath();
-    if (kind === 'heart') {
-      ctx.moveTo(cx, cy + s * 0.85);
-      ctx.bezierCurveTo(cx - s * 1.3, cy + s * 0.15, cx - s * 0.6, cy - s * 0.9, cx, cy - s * 0.25);
-      ctx.bezierCurveTo(cx + s * 0.6, cy - s * 0.9, cx + s * 1.3, cy + s * 0.15, cx, cy + s * 0.85);
-    } else {
-      for (let i = 0; i < 10; i++) { const ang = -Math.PI / 2 + i * Math.PI / 5; const rr = i % 2 === 0 ? s : s * 0.45; const px = cx + Math.cos(ang) * rr, py = cy + Math.sin(ang) * rr; if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py); }
-    }
-    ctx.closePath(); ctx.fill(); ctx.stroke();
-  },
-  drawToken(ctx, f, kind, color, hop) {
-    hop = hop || 0;
-    const [x, y0] = this.tokenXY(f);
-    const y = y0 - hop;
-    const s = this.cs * 0.32;   // 放大棋子，更醒目
-    ctx.save();
-    ctx.shadowColor = 'rgba(0,0,0,.3)'; ctx.shadowBlur = 6; ctx.shadowOffsetY = 2;
-    const grad = ctx.createLinearGradient(x, y - s, x, y + s);
-    grad.addColorStop(0, color); grad.addColorStop(1, shade(color, -22));
-    this.drawShape(ctx, x, y, s, kind, grad, '#fff');
-    // 高光
-    ctx.fillStyle = 'rgba(255,255,255,.4)'; ctx.beginPath(); ctx.ellipse(x - s * 0.3, y - s * 0.35, s * 0.3, s * 0.18, -0.5, 0, 7); ctx.fill();
-    ctx.restore();
-  },
-
-  draw() {
-    if (!this.ctx) return;
-    const ctx = this.ctx, W = this.W, H = this.H, cs = this.cs, cw = this.cellW, ch = this.cellH;
-    ctx.clearRect(0, 0, W, H);
-    ctx.fillStyle = '#f3e9d2'; ctx.fillRect(0, 0, W, H);
-    ctx.fillStyle = '#fff8ec'; ctx.fillRect(cw, ch, W - 2 * cw, H - 2 * ch);
-    this.drawDiceCenter(ctx);
-
-    const cells = this._cells || [];
-    for (let i = 0; i < BOARD; i++) {
-      const [c, r] = cellCR(i);
-      const x = c * cw, y = r * ch;
-      const cell = cells[i] || {};
-      ctx.strokeStyle = '#cdb088'; ctx.lineWidth = 1; ctx.strokeRect(x, y, cw, ch);
-      if (cell.type === 'property') {
-        ctx.fillStyle = GROUP_COLOR[cell.group] || '#666'; ctx.font = 'bold ' + Math.round(cs * 0.2) + 'px sans-serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
-        ctx.fillText('$' + cell.price, x + 5, y + 4);                                   // 价格左上角，颜色=等级
-        if (cell.level) { ctx.fillStyle = '#b58a5a'; ctx.font = Math.round(cs * 0.2) + 'px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom'; let st = ''; for (let k = 0; k < cell.level; k++) st += '★'; ctx.fillText(st, x + cw / 2, y + ch - 13); }  // 等级星在底部色条上方
-        if (cell.owner) { ctx.fillStyle = seatColor(cell.owner); ctx.fillRect(x, y + ch - 9, cw, 9); }  // 归属=底部色条(玩家色)
-        if (cell.owner && ownsFullSet(cells, cell.group, cell.owner)) { ctx.fillStyle = '#ffd23f'; ctx.beginPath(); ctx.arc(x + cw - 8, y + 8, 4, 0, 7); ctx.fill(); }  // 成套标记：金色圆点(右上角)
-      }
-      const cmap = { start: '#3aa75c', card: '#e8b94d', tax: '#e85a86', jail: '#7a5c3a', bonus: '#3a86ff', freepark: '#06d6a0', property: '#5a4030' };
-      ctx.fillStyle = cmap[cell.type] || '#5a4030';
-      ctx.font = Math.round(cs * 0.21) + 'px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
-      this.wrapText(ctx, cell.name || '', x + cw / 2, y + (cell.type === 'property' ? ch * 0.38 : 5), cw - 4, cs * 0.22);
-    }
-
-    if (this.data.started) {
-      const role = room.getRole(), peerRole = role === 'boy' ? 'girl' : 'boy';
-      const myKind = this.data.mySeat === 'red' ? 'heart' : 'star';
-      const peKind = this.data.mySeat === 'red' ? 'star' : 'heart';
-      const myColor = seatColor(role), peColor = seatColor(peerRole);
-      const moving = this._moving;
-      if (moving && moving.role === role) { this.drawToken(ctx, moving.f, myKind, myColor, moving.hop); this.drawToken(ctx, this.data.peerPos, peKind, peColor, 0); }
-      else if (moving && moving.role !== role) { this.drawToken(ctx, this.data.myPos, myKind, myColor, 0); this.drawToken(ctx, moving.f, peKind, peColor, moving.hop); }
-      else { this.drawToken(ctx, this.data.myPos, myKind, myColor, 0); this.drawToken(ctx, this.data.peerPos, peKind, peColor, 0); }
-    }
-    this.drawCardAnim(ctx);
-    this.drawFxAnim(ctx);
-    this.drawWinner(ctx);
-  },
-  drawWinner(ctx) {
-    if (!this.data.winner) return;
-    const cs = this.cs, cx = this.W / 2, cy = this.H / 2;
-    ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fillRect(0, 0, this.W, this.H);
-    ctx.fillStyle = '#fff'; ctx.font = 'bold ' + Math.round(cs * 0.75) + 'px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText(this.data.winnerText || '', cx, cy);
-    ctx.font = Math.round(cs * 0.3) + 'px sans-serif'; ctx.fillStyle = 'rgba(255,255,255,.7)';
-    ctx.fillText('点底部「再来」开始新一局', cx, cy + cs * 0.8);
-  },
-  wrapText(ctx, text, x, y, maxW, lh) {
-    let line = '';
-    for (let i = 0; i < text.length; i++) {
-      const test = line + text[i];
-      if (ctx.measureText(test).width > maxW && line) { ctx.fillText(line, x, y); line = text[i]; y += lh; } else line = test;
-    }
-    ctx.fillText(line, x, y);
+    return [c * this.cellW + this.cellW / 2, r * this.cellW + this.cellW * 0.6];
   }
 });

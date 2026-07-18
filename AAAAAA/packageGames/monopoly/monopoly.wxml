@@ -1,10 +1,45 @@
 <view class="theme-{{theme}} love-page mp-page">
 
   <view class="mp-board-wrap">
-    <canvas wx:if="{{started && !rulesOpen && !bankOpen}}" type="2d" id="board" class="mp-board"></canvas>
-    <view wx:if="{{started}}" class="mp-mode-tag {{mode === 'classic' ? 'classic' : 'casual'}}">
-      <t-icon name="{{mode === 'classic' ? 'star' : 'heart'}}" size="22rpx" />
-      <text>{{mode === 'classic' ? '经典' : '休闲'}}</text>
+    <view wx:if="{{started && !rulesOpen && !bankOpen}}" class="mp-board">
+      <!-- 28 格外圈 -->
+      <view wx:for="{{grid}}" wx:key="idx" class="mp-cell {{item.cls}}" style="grid-column:{{item.col}};grid-row:{{item.row}};">
+        <view wx:if="{{item.type === 'property'}}" class="mp-cell-price" style="color:{{item.groupColor}};">${{item.price}}</view>
+        <view class="mp-cell-name">{{item.name}}</view>
+        <view wx:if="{{item.type === 'property' && item.level}}" class="mp-cell-stars">
+          <text class="mp-star" wx:for="{{item.levelArr}}" wx:for-item="s" wx:key="index">★</text>
+        </view>
+        <view wx:if="{{item.isFullSet}}" class="mp-cell-fullset"></view>
+        <view wx:if="{{item.type === 'property' && item.owner}}" class="mp-cell-owner" style="background:{{item.ownerColor}};"></view>
+      </view>
+      <!-- 中心 6×6:骰子 + 回合提示 -->
+      <view class="mp-center">
+        <view wx:if="{{diceAnim}}" class="mp-dice">{{diceAnim.v}}</view>
+        <view wx:if="{{diceAnim && diceAnim.showHint}}" class="mp-dice-hint">前进 {{diceAnim.v}} 格</view>
+        <view class="mp-center-hint">{{myTurn ? '该你掷骰' : (peerName + ' 回合')}}</view>
+      </view>
+      <!-- 棋子(绝对定位) -->
+      <view wx:if="{{tokenMe}}" class="mp-token {{tokenMe.kind}}" style="left:{{tokenMe.x}}px;top:{{tokenMe.y}}px;background:{{tokenMe.color}};"></view>
+      <view wx:if="{{tokenPeer}}" class="mp-token {{tokenPeer.kind}}" style="left:{{tokenPeer.x}}px;top:{{tokenPeer.y}}px;background:{{tokenPeer.color}};"></view>
+      <!-- 抽牌浮层 -->
+      <view wx:if="{{cardAnim}}" class="mp-card-layer">
+        <view class="mp-card-reveal {{cardAnim.kind}}">
+          <view class="mp-card-title">{{cardAnim.kind === 'good' ? '好事' : '坏事'}}</view>
+          <view class="mp-card-text">{{cardAnim.text}}</view>
+        </view>
+      </view>
+      <!-- 事件特效横幅 -->
+      <view wx:if="{{fx}}" class="mp-fx {{fx.kind}}">{{fx.text}}</view>
+      <!-- 模式徽标 -->
+      <view class="mp-mode-tag {{mode === 'classic' ? 'classic' : 'casual'}}">
+        <t-icon name="{{mode === 'classic' ? 'star' : 'heart'}}" size="22rpx" />
+        <text>{{mode === 'classic' ? '经典' : '休闲'}}</text>
+      </view>
+      <!-- 胜利遮罩 -->
+      <view wx:if="{{winner}}" class="mp-over-mask">
+        <view class="mp-over-text">{{winnerText}}</view>
+        <view class="mp-over-sub">点底部「再来」开始新一局</view>
+      </view>
     </view>
     <view wx:if="{{!started}}" class="mp-empty">
       <view class="mp-title">大富翁</view>
