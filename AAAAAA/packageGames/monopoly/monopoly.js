@@ -161,6 +161,17 @@ Page({
 
     if (!s || !s.cells) { this.setData(Object.assign({ started: false }, patch)); return; }
     this._cells = s.cells;
+    // 自动服刑:轮到我 + skip[me]>0 → 跳过交对方(经典:进监狱/住院,下次自己回合自动停,不掷骰)。
+    // 解决「两人都进监狱卡死」:各自在自己回合自动服刑,resolve 末尾不再检查对方停。
+    if (!s.winner && s.turn === rt.seatOf(role) && (s.skip || {})[role] > 0) {
+      const key = s.turn + '-' + (s.seq || 0);
+      if (this._servedKey !== key) {
+        this._servedKey = key;
+        const lg = (s.log || []).slice(); lg.push({ who: role, text: '服刑/住院中,跳过本回合' });
+        this.commit({ skip: Object.assign({}, s.skip, { [role]: s.skip[role] - 1 }), turn: rt.seatOf(peer), log: lg.slice(-30) });
+        return;
+      }
+    }
     const winner = s.winner || null;
     const turnSeat = s.turn || rt.RED;
     const myTurnFlag = !winner && turnSeat === this.data.mySeat;
@@ -475,9 +486,8 @@ Page({
       if (bankrupt) winner = role === 'boy' ? rt.BLUE : rt.RED;
     }
     if (toIdx !== idx) pos = Object.assign({}, pos, { [role]: toIdx });
-    let nextRole = peer;
-    if (!winner && (skip[peer] || 0) > 0) { skip[peer]--; nextRole = role; log.push({ who: peer, text: '停一回合（跳过本次）' }); }
-    this.commit({ cells: cells.map(c => Object.assign({}, c)), pos, cash, savings, skip, turn: winner ? turn : rt.seatOf(nextRole), dice: this.data.dice, log: log.slice(-30), winner, req: null });
+    // 末尾不再检查 skip[peer]：服刑改由 applyState 在「轮到该玩家时」自动跳过(经典规则,且避免两人都进监狱的边角)。
+    this.commit({ cells: cells.map(c => Object.assign({}, c)), pos, cash, savings, skip, turn: winner ? turn : rt.seatOf(peer), dice: this.data.dice, log: log.slice(-30), winner, req: null });
   },
 
   // 破产救助：现金为负时自动自救，全程不弹窗。顺序：取存款 → 自动抵押自有地(拿半价) → 卖地给银行；仍不足才真破产。
