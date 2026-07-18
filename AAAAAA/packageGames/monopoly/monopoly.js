@@ -98,12 +98,13 @@ function pickHospital() {
   const cost = Math.random() < 0.5 ? 20 : 50;        // 大病 5%：扣 20 或 50
   return { tier: '大病', cost, deduct: 1000 + Math.floor(Math.random() * 9001), actualCost: cost, stay: Math.random() < 0.5 ? 2 : 1, code: MEDICARE_CODE, fake: true };
 }
-// 警局 3 档(对称医院)：小奖/中奖 正常；大奖只得 20 或 50(提示奖金 1000~10000 但不真给) + 蹲监狱 1~2 天
+// 警局 4 档奖励(真奖励,不夸大)：小额 70% / 中额 25% / 见义勇为 4%(+200) / 个人三等功 1%(+1000)
 function pickPolice() {
   const r = Math.random();
-  if (r < 0.70) return { tier: '小额', actualReward: 30 + Math.floor(Math.random() * 61), fakeReward: 0, jailDays: 0, code: MEDICARE_CODE };
-  if (r < 0.95) return { tier: '中额', actualReward: 100 + Math.floor(Math.random() * 51), fakeReward: 0, jailDays: 0, code: MEDICARE_CODE };
-  return { tier: '大奖', actualReward: Math.random() < 0.5 ? 20 : 50, fakeReward: 1000 + Math.floor(Math.random() * 9001), jailDays: Math.random() < 0.5 ? 2 : 1, code: MEDICARE_CODE, fake: true };
+  if (r < 0.70) return { tier: '小额奖励', actualReward: 30 + Math.floor(Math.random() * 61) };
+  if (r < 0.95) return { tier: '中额奖励', actualReward: 100 + Math.floor(Math.random() * 51) };
+  if (r < 0.99) return { tier: '见义勇为', actualReward: 200 };
+  return { tier: '个人三等功', actualReward: 1000 };
 }
 // 同色组（连铺）：groupCells 取某色组全部地皮；ownsFullSet 判断是否被一人集齐（成套）。
 function groupCells(cells, g) { return cells.filter(c => c && c.type === 'property' && c.group === g); }
@@ -448,14 +449,8 @@ Page({
     else if (cell.type === 'police') {
       const p = pickPolice();
       cash[role] = (cash[role] || 0) + p.actualReward;
-      if (p.fake) {
-        log.push({ who: role, text: '大奖!奖金 ' + p.fakeReward + '(实际只得 ' + p.actualReward + '),却因打架进监狱 ' + p.jailDays + ' 天' });
-        skip[role] = (skip[role] || 0) + p.jailDays; const ji = cells.findIndex(c => c && c.type === 'jail'); if (ji >= 0) toIdx = ji;
-        this.showFx('bad', '得 ' + p.actualReward + ' 但进监狱 ' + p.jailDays + '天');
-      } else {
-        log.push({ who: role, text: '见义勇为 ' + p.tier + ' +' + p.actualReward });
-        this.showFx('good', '见义勇为 +' + p.actualReward);
-      }
+      log.push({ who: role, text: '警局 ' + p.tier + ' +' + p.actualReward });
+      this.showFx('good', p.tier + ' +' + p.actualReward);
     }
     else if (cell.type === 'card') {
       if (opts.backward) { log.push({ who: role, text: '后退路过「' + cell.name + '」（不触发抽牌）' }); }   // 后退落地不抽牌，避免移动卡循环
