@@ -37,9 +37,16 @@
       <view wx:if="{{tokenPeer}}" class="mp-token {{tokenPeer.kind}}" style="left:{{tokenPeer.x}}px;top:{{tokenPeer.y}}px;transform:translate(-50%,-60%) translateY({{-tokenPeer.hop || 0}}px);background:{{tokenPeer.color}};"></view>
       <!-- 抽牌浮层 -->
       <view wx:if="{{cardAnim}}" class="mp-card-layer">
-        <view class="mp-card-reveal {{cardAnim.kind}}">
-          <view class="mp-card-title">{{cardAnim.kind === 'good' ? '好事' : '坏事'}}</view>
-          <view class="mp-card-text">{{cardAnim.text}}</view>
+        <view wx:if="{{cardAnim.phase === 'shuffle'}}" class="mp-card-shuffle">
+          <view class="mp-card-back">?</view>
+          <view class="mp-card-shuffle-hint">洗牌中</view>
+        </view>
+        <view wx:else class="mp-card-reveal {{cardAnim.kind}}" style="transform: scaleX({{cardAnim.flip || 1}});">
+          <view wx:if="{{cardAnim.face}}" class="mp-card-face">
+            <view class="mp-card-title">{{cardAnim.kind === 'good' ? '好事' : '坏事'}}</view>
+            <view class="mp-card-text">{{cardAnim.text}}</view>
+          </view>
+          <view wx:else class="mp-card-back">?</view>
         </view>
       </view>
       <!-- 事件特效横幅 -->

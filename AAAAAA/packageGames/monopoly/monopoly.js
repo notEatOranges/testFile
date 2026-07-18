@@ -344,8 +344,19 @@ Page({
       const pile = DECK[deckKind] || DECK.chance;   // 机会(chance)/公共基金(fate) 各抽各的
       const c = pile[Math.floor(Math.random() * pile.length)];
       const kind = (c.cash != null && c.cash < 0) || c.skip || c.back || c.backRoll ? 'bad' : 'good';
-      this.setData({ cardAnim: { kind, text: c.t } });
-      this._cardTimer = setTimeout(() => { this.setData({ cardAnim: null }); res(c); }, 1500);
+      this.setData({ cardAnim: { phase: 'shuffle' } });                // Phase 1: 洗牌 700ms
+      setTimeout(() => {
+        this.setData({ cardAnim: { phase: 'reveal', kind, text: c.t, flip: 1, face: false } });   // Phase 2: 翻面
+        const t0 = Date.now(); const flipDur = 500;
+        const flipStep = () => {                                       // scaleX 1→0→1 水平翻面，中点切正/反面
+          const p = Math.min(1, (Date.now() - t0) / flipDur);
+          const flip = p < 0.5 ? 1 - p * 2 : (p - 0.5) * 2;
+          this.setData({ ['cardAnim.flip']: Math.max(0.02, flip), ['cardAnim.face']: p > 0.5 });
+          if (p < 1) this._cardTimer = setTimeout(flipStep, 33);
+        };
+        flipStep();
+        setTimeout(() => { this.setData({ cardAnim: null }); res(c); }, 1800);   // 停留后收牌
+      }, 700);
     });
   },
 

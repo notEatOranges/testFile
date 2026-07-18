@@ -91,6 +91,11 @@
 .mp-card-reveal.bad { background: #e85a86; }
 .mp-card-title { font-size: 38rpx; font-weight: 800; }
 .mp-card-text { font-size: 26rpx; text-align: center; line-height: 1.4; }
+.mp-card-shuffle { display: flex; flex-direction: column; align-items: center; gap: 18rpx; }
+.mp-card-back { width: 160rpx; height: 220rpx; border-radius: 14rpx; background: #e85a86; color: rgba(255,255,255,.5); font-size: 80rpx; font-weight: 800; display: flex; align-items: center; justify-content: center; border: 2rpx solid #fff; animation: mpCardShake .6s ease-in-out infinite; }
+.mp-card-shuffle-hint { font-size: 24rpx; color: #8a6b78; }
+@keyframes mpCardShake { 0%,100% { transform: rotate(-6deg) translateX(-6rpx); } 50% { transform: rotate(6deg) translateX(6rpx); } }
+.mp-card-face { display: flex; flex-direction: column; align-items: center; gap: 14rpx; }
 
 /* 事件特效横幅 */
 .mp-fx { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); padding: 18rpx 40rpx; border-radius: 14rpx; color: #fff; font-weight: 800; font-size: 30rpx; z-index: 9; pointer-events: none; max-width: 80%; text-align: center; box-shadow: 0 6rpx 18rpx rgba(0,0,0,.2); }
