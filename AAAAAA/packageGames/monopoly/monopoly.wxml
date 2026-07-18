@@ -56,12 +56,12 @@
         </view>
         <view class="mp-center-tools">
           <view class="mp-tool-row">
-            <view class="mp-tool" bindtap="openRules"><t-icon name="info-circle" size="30rpx" /><text>玩法</text></view>
-            <view class="mp-tool" bindtap="switchIconTheme" wx:if="{{started}}"><t-icon name="palette" size="30rpx" /><text>图标</text></view>
+            <view class="mp-tool" bindtap="openRules"><t-icon name="info-circle" size="36rpx" /><text>玩法</text></view>
+            <view class="mp-tool" bindtap="switchIconTheme" wx:if="{{started}}"><t-icon name="palette" size="36rpx" /><text>图标</text></view>
           </view>
           <view class="mp-tool-row">
-            <view class="mp-tool" bindtap="resign" wx:if="{{started && !winner}}"><t-icon name="user-clear" size="30rpx" /><text>认输</text></view>
-            <view class="mp-tool" bindtap="requestRestart"><t-icon name="refresh" size="30rpx" /><text>{{winner ? '再来' : '重开'}}</text></view>
+            <view class="mp-tool" bindtap="resign" wx:if="{{started && !winner}}"><t-icon name="user-clear" size="36rpx" /><text>认输</text></view>
+            <view class="mp-tool" bindtap="requestRestart"><t-icon name="refresh" size="36rpx" /><text>{{winner ? '再来' : '重开'}}</text></view>
           </view>
         </view>
         <view wx:if="{{requestPending}}" class="mp-center-req">已请求重开 <text class="mp-link" bindtap="cancelReq">取消</text></view>
