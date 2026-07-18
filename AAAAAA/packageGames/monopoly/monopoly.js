@@ -632,17 +632,25 @@ Page({
   // 经典抵押：把自有地抵押给银行换半价现金，抵押中的地不收过路费。走 transactionState 现读现写 + 防御。
   mortgageProp(e) {
     const idx = parseInt(e.currentTarget.dataset.idx, 10), role = room.getRole();
-    this.mtxn( s => {
-      if (!s || !s.cells) return s;
-      const c = s.cells[idx];
-      if (!c || c.owner !== role) { toast('地块已变化'); return s; }
-      if (c.mortgaged) { toast('已抵押'); return s; }
-      const get = mortgageValueOf(c);
-      const cs = s.cells.map(x => Object.assign({}, x));
-      cs[idx] = Object.assign({}, c, { mortgaged: true });
-      const cash = Object.assign({}, s.cash); cash[role] = (cash[role] || 0) + get;
-      const lg = (s.log || []).slice(); lg.push({ who: role, text: '抵押「' + c.name + '」+' + get + '(抵押中不收租)' });
-      return Object.assign({}, s, { cells: cs, cash, log: lg.slice(-30) });
+    const cell = (this._state && this._state.cells[idx]) || {};
+    const get = mortgageValueOf(cell);
+    wx.showModal({ title: '抵押', content: '把「' + cell.name + '」抵押给银行 +' + get + '？(抵押中不收过路费)', confirmText: '抵押', cancelText: '取消',
+      success: r => {
+        if (!r.confirm) return;
+        this.mtxn( s => {
+          if (!s || !s.cells) return s;
+          const c = s.cells[idx];
+          if (!c || c.owner !== role) { toast('地块已变化'); return s; }
+          if (c.mortgaged) { toast('已抵押'); return s; }
+          const g = mortgageValueOf(c);
+          const cs = s.cells.map(x => Object.assign({}, x));
+          cs[idx] = Object.assign({}, c, { mortgaged: true });
+          const cash = Object.assign({}, s.cash); cash[role] = (cash[role] || 0) + g;
+          const lg = (s.log || []).slice(); lg.push({ who: role, text: '抵押「' + c.name + '」+' + g + '(抵押中不收租)' });
+          return Object.assign({}, s, { cells: cs, cash, log: lg.slice(-30) });
+        });
+        toast('已抵押,抵押中不收过路费');
+      }
     });
   },
   // 赎回：付抵押值+10% 解除抵押，恢复收租。

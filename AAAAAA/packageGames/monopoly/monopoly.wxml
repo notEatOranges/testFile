@@ -5,6 +5,7 @@
       <!-- 28 格外圈 -->
       <view wx:for="{{grid}}" wx:key="idx" class="mp-cell {{item.cls}}" style="grid-column:{{item.col}};grid-row:{{item.row}};">
         <view wx:if="{{item.isFullSet}}" class="mp-cell-fullset"></view>
+        <view wx:if="{{item.mortgaged}}" class="mp-mort-stamp" style="border-color:{{item.ownerColor}};color:{{item.ownerColor}}">抵押</view>
         <block wx:if="{{item.type === 'property'}}">
           <view class="mp-cell-top">
             <text class="mp-cell-price" style="color:{{item.groupColor}};">${{item.price}}</text>
