@@ -13,13 +13,20 @@ page { background-color: var(--bg-1); }
 .tm-sub { color: rgba(255,255,255,.85); font-size: 28rpx; }
 .tm-btn { margin-top: 6rpx; padding: 14rpx 44rpx; border-radius: 36rpx; background: var(--primary); color: #fff; font-size: 28rpx; }
 
-/* 手柄：左方向 + 右动作（旋转在右） */
-.t-pad { display: flex; align-items: stretch; justify-content: space-between; gap: 24rpx; margin-top: 14rpx; }
-.t-dir { display: flex; gap: 12rpx; }
-.t-btn { width: 96rpx; height: 96rpx; border-radius: 20rpx; background: var(--card); color: var(--primary-deep); display: flex; align-items: center; justify-content: center; box-shadow: 0 4rpx 14rpx var(--card-shadow); }
+/* 手柄：十字方向键（左） + 动作（直降·暂停 小组 + 大旋转，右）；整体内缩防贴边误触 */
+.t-pad { display: flex; align-items: center; justify-content: space-between; gap: 24rpx; margin-top: 14rpx; padding: 0 24rpx; }
+.t-dpad { display: grid; grid-template-columns: repeat(3, 92rpx); grid-template-rows: repeat(3, 92rpx); gap: 6rpx; justify-content: center; }
+.t-d-up { grid-column: 2; grid-row: 1; }
+.t-d-left { grid-column: 1; grid-row: 2; }
+.t-d-down { grid-column: 2; grid-row: 3; }
+.t-d-right { grid-column: 3; grid-row: 2; }
+.t-btn { width: 92rpx; height: 92rpx; border-radius: 20rpx; background: var(--card); color: var(--primary-deep); display: flex; align-items: center; justify-content: center; box-shadow: 0 4rpx 14rpx var(--card-shadow); }
 .t-btn:active { transform: scale(.92); background: var(--chip); }
 .t-btn.primary { background: var(--primary); color: #fff; }
-.t-btn.sm { width: 84rpx; height: 84rpx; color: var(--text-soft); }
-.t-lab { font-size: 20rpx; margin-left: 4rpx; }
-.t-act { display: flex; flex-direction: column; align-items: flex-end; gap: 10rpx; }
+.t-btn.sm { width: 80rpx; height: 80rpx; color: var(--text-soft); }
+.t-btn.t-drop { background: linear-gradient(135deg, #ff7a45, #ff4d4f); color: #fff; box-shadow: 0 4rpx 14rpx rgba(255, 77, 79, .35); }
+.t-btn.t-drop:active { background: linear-gradient(135deg, #e85a2e, #d9363e); }
+.t-btn.rot { width: 132rpx; height: 132rpx; border-radius: 28rpx; }
+.t-lab { font-size: 22rpx; margin-left: 6rpx; }
+.t-act { display: flex; align-items: center; gap: 32rpx; }
 .t-actrow { display: flex; gap: 10rpx; }

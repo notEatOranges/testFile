@@ -22,17 +22,21 @@
   </view>
 
   <view class="t-pad">
-    <view class="t-dir">
-      <view class="t-btn" bindtap="left"><t-icon name="chevron-left" size="44rpx" /></view>
-      <view class="t-btn" bindtap="softDrop"><t-icon name="chevron-down" size="44rpx" /></view>
-      <view class="t-btn" bindtap="right"><t-icon name="chevron-right" size="44rpx" /></view>
+    <!-- 左:十字方向键(上=旋转 / 左右=移动 / 下=软降) -->
+    <view class="t-dpad">
+      <view class="t-btn t-d-up" bindtap="rotate"><t-icon name="chevron-up" size="44rpx" /></view>
+      <view class="t-btn t-d-left" bindtap="left"><t-icon name="chevron-left" size="44rpx" /></view>
+      <view class="t-btn t-d-down" bindtap="softDrop"><t-icon name="chevron-down" size="44rpx" /></view>
+      <view class="t-btn t-d-right" bindtap="right"><t-icon name="chevron-right" size="44rpx" /></view>
     </view>
+
+    <!-- 右:直降+暂停(左,小) → 大间距 → 旋转(右,大) -->
     <view class="t-act">
-      <view class="t-btn primary" bindtap="rotate"><t-icon name="refresh" size="44rpx" /><text class="t-lab">旋转</text></view>
       <view class="t-actrow">
-        <view class="t-btn sm" bindtap="hardDrop"><t-icon name="arrow-down" size="36rpx" /></view>
+        <view class="t-btn sm t-drop" bindtap="hardDrop"><t-icon name="arrow-down" size="36rpx" /></view>
         <view class="t-btn sm" bindtap="togglePause"><t-icon name="{{paused ? 'play' : 'pause'}}" size="36rpx" /></view>
       </view>
+      <view class="t-btn primary rot" bindtap="rotate"><t-icon name="refresh" size="56rpx" /><text class="t-lab">旋转</text></view>
     </view>
   </view>
 </view>
