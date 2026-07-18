@@ -1,7 +1,7 @@
 /* 禁止滚动：100vh 固定，按钮固定底部 */
-.mp-page { height: 100vh; overflow: hidden; display: flex; flex-direction: column; align-items: center; padding: 16rpx 0 calc(184rpx + env(safe-area-inset-bottom)); box-sizing: border-box; }
+.mp-page { height: 100vh; overflow: hidden; display: flex; flex-direction: column; align-items: center; padding: 8rpx 0 calc(184rpx + env(safe-area-inset-bottom)); box-sizing: border-box; }
 .mp-board-wrap { position: relative; display: flex; align-items: center; justify-content: center; width: 100%; }
-.mp-board { position: relative; width: min(94vw, calc((100vh - 644rpx) * 0.8)); aspect-ratio: 8 / 10; border-radius: 16rpx; box-shadow: 0 8rpx 30rpx var(--card-shadow); display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(10, 1fr); background: #fff8ec; overflow: hidden; }
+.mp-board { position: relative; width: min(98vw, calc((100vh - 600rpx) * 0.8)); aspect-ratio: 8 / 10; border-radius: 16rpx; box-shadow: 0 8rpx 30rpx var(--card-shadow); display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(10, 1fr); background: #fff8ec; overflow: hidden; }
 
 .mp-empty { position: absolute; inset: 0; border-radius: 16rpx; background: rgba(243,233,210,.95); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14rpx; }
 .mp-title { font-size: 52rpx; font-weight: 800; color: #b58a5a; }
