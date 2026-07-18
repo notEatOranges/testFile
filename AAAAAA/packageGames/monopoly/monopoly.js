@@ -369,9 +369,13 @@ Page({
   },
   // transactionState 包装：updater 派生后自动加 seq(银行/卖地/抵押等「读后改」操作)。
   mtxn(updater) {
-    return this.mtxn( s => {
+    return rt.transactionState('monopoly', s => {
       const next = updater(s);
-      return next ? Object.assign({}, next, { seq: ((s && s.seq) || 0) + 1 }) : next;
+      // seq 取 DB 与本地较大者+1：bankAct 等用 transactionState(读 DB),DB.seq 可能落后于本地
+      // this._state.seq(roll/resolve 的 commit 已本地 +1 但 setState 异步未到 DB),只按 DB.seq+1
+      // 会小于本地 → 被 cb 拒旧 → 存款/抵押/卖地不生效。取 max 保证单调大于本地。
+      const maxSeq = Math.max(((s && s.seq) || 0), (this._state.seq || 0));
+      return next ? Object.assign({}, next, { seq: maxSeq + 1 }) : next;
     });
   },
   // 写一次中间态（让事件日志及时同步给双方）
