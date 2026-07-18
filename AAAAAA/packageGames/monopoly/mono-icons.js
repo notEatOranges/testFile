@@ -11,21 +11,21 @@ module.exports = {
     '书店':     { t: 'book',         e: '📚',   i: '1f4da' },
     '花店':     { t: 'gift',         e: '💐',   i: '1f490' },     // 缺 flower
     '游乐场':   { t: 'ferris-wheel', e: '🎢',   i: '1f3a2' },
-    '海滩':     { t: 'watermelon',   e: '🏖️',  i: '1f3d6-fe0f' }, // 缺 beach
+    '海滩':     { t: 'watermelon',   e: '🏖️',  i: '1f3d6' }, // 缺 beach
     '摩天轮':   { t: 'ferris-wheel', e: '🎡',   i: '1f3a1' },
     '甜品屋':   { t: 'cake',         e: '🍰',   i: '1f382' },
     '民宿':     { t: 'home',         e: '🏠',   i: '1f3e0' },
     '烟火大会': { t: 'star',         e: '🎆',   i: '1f386' },     // 缺 firework
     '星空营地': { t: 'moon',         e: '🌌',   i: '1f30c' },
     '音乐节':   { t: 'music',        e: '🎵',   i: '1f3b5' },
-    '滑雪场':   { t: 'snowflake',    e: '⛷️',  i: '26f7-fe0f' },
-    '温泉':     { t: 'location',     e: '♨️',  i: '2668-fe0f' }, // 缺 hot-spring
+    '滑雪场':   { t: 'snowflake',    e: '⛷️',  i: '26f7' },
+    '温泉':     { t: 'location',     e: '♨️',  i: '2668' }, // 缺 hot-spring
     '灯塔':     { t: 'lighthouse',   e: '🗼',   i: '1f5fc' },
     '古镇':     { t: 'castle-1',     e: '🏯',   i: '1f3ef' }
   },
   // 功能格
   start:    { t: 'flag-1',     e: '🚩', i: '1f6a9' },
-  jail:     { t: 'lock-on',    e: '⛓️', i: '26d3-fe0f' },
+  jail:     { t: 'lock-on',    e: '⛓️', i: '26d3' },
   bonus:    { t: 'gift',       e: '🎁', i: '1f381' },
   freepark: { t: 'location',   e: '🅿️', i: '1f17f' },     // 缺 parking，用定位
   tax:      { t: 'percent',    e: '💸', i: '1f4b8' },

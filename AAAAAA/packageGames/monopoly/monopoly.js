@@ -596,11 +596,9 @@ Page({
   switchIconTheme() {
     wx.showActionSheet({
       alertText: '图标主题',
-      itemList: ['TDesign 图标', 'Emoji 表情', '在线图片(待补资源)'],
+      itemList: ['TDesign 图标', 'Emoji 表情', '图片图标'],
       success: r => {
-        const map = ['tdesign', 'emoji', 'image'];
-        const t = map[r.tapIndex];
-        if (t === 'image') { toast('图片主题资源准备中(9.9h)'); return; }
+        const t = ['tdesign', 'emoji', 'image'][r.tapIndex];
         this.setData({ iconTheme: t });
         wx.setStorageSync('mono_iconTheme', t);
       }
