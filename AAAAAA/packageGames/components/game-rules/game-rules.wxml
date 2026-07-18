@@ -1,10 +1,10 @@
 <view class="sf-mask {{open ? 'show' : ''}}" bindtap="close"></view>
 <view class="sf-sheet gr-sheet {{open ? 'show' : ''}}" catchtap="noop" wx:if="{{rules}}">
-  <scroll-view scroll-y class="gr-body">
   <view class="gr-head">
     <view class="gr-ic"><t-icon name="{{rules.icon}}" size="44rpx" /></view>
     <view class="sf-title gr-title">{{rules.name}} · 玩法</view>
   </view>
+  <scroll-view scroll-y class="gr-body">
   <view class="gr-goal">{{rules.goal}}</view>
 
   <view class="gr-label">怎么玩</view>
@@ -23,6 +23,6 @@
 
   </scroll-view>
   <view class="sf-actions">
-    <view class="sf-ok" bindtap="close">知道啦</view>
+    <view class="sf-ok" bindtap="close"><t-icon name="check" size="28rpx" /><text>知道啦</text></view>
   </view>
 </view>
