@@ -35,11 +35,15 @@ async function callWrite(action, payload) {
   return res.result;
 }
 
-/** 写完后对路径相交的订阅重新拉取并回调，保证「自己写自己立刻可见」（不依赖 watch 回环） */
+/** 写完后对路径相交的订阅重新拉取并回调，保证「自己写自己立刻可见」（不依赖 watch 回环）。
+ *  带 ts 拒旧：异步回调可能晚于后续写入到达，用 cache.ts 拦掉旧值，防止把状态覆盖回去。 */
 function emit(writtenPath) {
   for (const [p, s] of subs) {
     if (writtenPath === p || writtenPath.startsWith(p + '/') || p.startsWith(writtenPath + '/')) {
-      kvGet(p).then(v => s.cbs.forEach(cb => cb(v))).catch(() => {});
+      kvGet(p).then(v => {
+        const cur = cache.get(p);
+        if (v == null || cur == null || cur.ts == null || v.ts == null || v.ts >= cur.ts) { cache.set(p, v); s.cbs.forEach(cb => cb(v)); }
+      }).catch(() => {});
     }
   }
 }
@@ -65,8 +69,9 @@ function buildWatcher(s, path) {
       onChange(snap) {
         s.retryCount = 0;                       // 收到快照=链路健康，重置退避计数
         const v = snap.docs.length ? snap.docs[0].value : null;
-        cache.set(path, v);
-        s.cbs.forEach(fn => fn(v));
+        const cur = cache.get(path);
+        // ts 拒旧：DB 推送的旧快照(小于当前 cache.ts)不覆盖,防止异步乱序把状态覆盖回去
+        if (v == null || cur == null || cur.ts == null || v.ts == null || v.ts >= cur.ts) { cache.set(path, v); s.cbs.forEach(fn => fn(v)); }
       },
       onError(err) {
         console.warn('[store] watch err', path, err);
