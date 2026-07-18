@@ -1,7 +1,7 @@
 /* 禁止滚动：100vh 固定，按钮固定底部 */
-.mp-page { height: 100vh; overflow: hidden; display: flex; flex-direction: column; align-items: center; padding: 8rpx 0 calc(184rpx + env(safe-area-inset-bottom)); box-sizing: border-box; }
+.mp-page { height: 100vh; overflow: hidden; display: flex; flex-direction: column; align-items: center; padding: 8rpx 0 calc(20rpx + env(safe-area-inset-bottom)); box-sizing: border-box; }
 .mp-board-wrap { position: relative; display: flex; align-items: center; justify-content: center; width: 100%; }
-.mp-board { position: relative; width: min(98vw, calc((100vh - 600rpx) * 0.8)); aspect-ratio: 8 / 10; border-radius: 16rpx; box-shadow: 0 8rpx 30rpx var(--card-shadow); display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(10, 1fr); background: #fff8ec; overflow: hidden; }
+.mp-board { position: relative; width: min(98vw, calc((100vh - 600rpx) * 1)); aspect-ratio: 8 / 10; border-radius: 16rpx; box-shadow: 0 8rpx 30rpx var(--card-shadow); display: grid; grid-template-columns: repeat(8, 1fr); grid-template-rows: repeat(10, 1fr); background: #fff8ec; overflow: hidden; }
 
 .mp-empty { position: absolute; inset: 0; border-radius: 16rpx; background: rgba(243,233,210,.95); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14rpx; }
 .mp-title { font-size: 52rpx; font-weight: 800; color: #b58a5a; }
@@ -76,16 +76,21 @@
 .mp-cell-top { display: flex; align-items: center; justify-content: center; gap: 3rpx; width: 100%; }
 .mp-cell-price { font-size: 15rpx; font-weight: 800; line-height: 1; }
 .mp-cell-build { min-height: 22rpx; display: flex; align-items: center; justify-content: center; gap: 1rpx; color: #2e7d32; }
-.mp-cell-name { font-size: 15rpx; color: #5a4030; text-align: center; line-height: 1.1; margin-bottom: 7rpx; }
+.mp-cell-name { font-size: 15rpx; color: #5a4030; text-align: center; line-height: 1.1; margin-top: auto; margin-bottom: 9rpx; }
 .mp-cell-owner { position: absolute; left: 0; right: 0; bottom: 0; height: 7rpx; }
 .mp-cell-fullset { position: absolute; top: 2rpx; right: 2rpx; width: 10rpx; height: 10rpx; border-radius: 50%; background: #ffd23f; z-index: 2; }
 .mp-mort-stamp { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-12deg); border: 2rpx dashed currentColor; border-radius: 50%; width: 52rpx; height: 52rpx; display: flex; align-items: center; justify-content: center; font-size: 16rpx; font-weight: 800; opacity: .55; z-index: 2; pointer-events: none; }
 
 /* 中心 6×6：跨 grid 中间，放骰子+提示 */
-.mp-center { grid-column: 2 / 8; grid-row: 2 / 8; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14rpx; }
+.mp-center { grid-column: 2 / 8; grid-row: 2 / 8; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8rpx; padding: 0 10rpx; box-sizing: border-box; }
 .mp-dice { width: 110rpx; height: 110rpx; border-radius: 22rpx; background: linear-gradient(180deg, #fff, #ffd6e2); border: 3rpx solid #e85a86; display: flex; align-items: center; justify-content: center; font-size: 64rpx; font-weight: 800; color: #e85a86; }
 .mp-dice-hint { font-size: 30rpx; font-weight: 800; color: #e85a86; }
-.mp-center-hint { font-size: 24rpx; color: var(--text-soft); }
+.mp-center-cash { display: flex; align-items: center; justify-content: center; gap: 8rpx; font-size: 22rpx; color: var(--text-soft); }
+.mp-center-cash .on { color: var(--primary-deep); font-weight: 800; font-size: 26rpx; }
+.mp-vs { color: var(--text-soft); opacity: .5; }
+.mp-center-tools { display: flex; align-items: center; justify-content: center; gap: 16rpx; flex-wrap: wrap; }
+.mp-tool { display: flex; flex-direction: column; align-items: center; gap: 2rpx; color: var(--primary-deep); font-size: 18rpx; }
+.mp-center-req { font-size: 20rpx; color: var(--primary-deep); }
 
 /* 棋子：绝对定位，clip-path 画心/星 */
 .mp-token { position: absolute; width: 32rpx; height: 32rpx; transform: translate(-50%, -60%); box-shadow: 0 4rpx 8rpx rgba(0,0,0,.3); border: 3rpx solid #fff; pointer-events: none; z-index: 3; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 800; }

@@ -42,11 +42,26 @@
           <view class="mp-cell-name">{{item.name}}</view>
         </block>
       </view>
-      <!-- 中心 6×6:骰子 + 回合提示 -->
+      <!-- 中心 6×6:金额 + 骰子 + 掷骰 + 工具(全进棋盘,底部留空) -->
       <view class="mp-center">
+        <view class="mp-center-cash">
+          <text class="mp-mode-mini {{mode === 'classic' ? 'classic' : 'casual'}}">{{mode === 'classic' ? '经典' : '休闲'}}</text>
+          <text class="{{started && myTurn ? 'on' : ''}}">{{myName}} {{myCash}}</text>
+          <text class="mp-vs">·</text>
+          <text class="{{started && !myTurn ? 'on' : ''}}">{{peerName}} {{peerCash}}</text>
+        </view>
         <view wx:if="{{diceAnim}}" class="mp-dice" style="transform: rotate({{diceAnim.angle || 0}}deg);">{{diceAnim.v}}</view>
         <view wx:if="{{diceAnim && diceAnim.showHint}}" class="mp-dice-hint">前进 {{diceAnim.v}} 格</view>
-        <view class="mp-center-hint">{{myTurn ? '该你掷骰' : (peerName + ' 回合')}}</view>
+        <t-button wx:if="{{!winner}}" theme="primary" size="small" block bind:tap="roll" loading="{{rolling}}" disabled="{{!myTurn}}">{{myTurn ? '掷骰子' : (started ? '等对方掷骰' : '开始后掷骰')}}</t-button>
+        <view class="mp-center-tools">
+          <view class="mp-tool" bindtap="openBank" wx:if="{{started}}"><t-icon name="shop" size="30rpx" /><text>银行</text></view>
+          <view class="mp-tool" bindtap="resign" wx:if="{{started && !winner}}"><t-icon name="user-clear" size="30rpx" /><text>认输</text></view>
+          <view class="mp-tool" bindtap="requestRestart"><t-icon name="refresh" size="30rpx" /><text>{{winner ? '再来' : '重开'}}</text></view>
+          <view class="mp-tool" bindtap="openRules"><t-icon name="info-circle" size="30rpx" /><text>玩法</text></view>
+          <view class="mp-tool" bindtap="switchIconTheme" wx:if="{{started}}"><t-icon name="palette" size="30rpx" /><text>图标</text></view>
+        </view>
+        <view wx:if="{{requestPending}}" class="mp-center-req">已请求重开 <text class="mp-link" bindtap="cancelReq">取消</text></view>
+        <view wx:if="{{sellReqPending}}" class="mp-center-req">等对方买地 <text class="mp-link" bindtap="cancelSell">取消</text></view>
       </view>
       <!-- 棋子(绝对定位) -->
       <view wx:if="{{tokenMe}}" class="mp-token {{tokenMe.kind}}" style="left:{{tokenMe.x}}%;top:{{tokenMe.y}}%;transform:translate(-50%,-60%) translateY({{-tokenMe.hop || 0}}rpx);background:{{tokenMe.color}};"></view>
@@ -83,35 +98,11 @@
     </view>
   </view>
 
-  <view class="mp-pair">
-    <view class="mp-p me {{started && myTurn ? 'active' : ''}}"><text class="mp-n">{{myName}}</text><text class="mp-cash">{{myCash}}</text></view>
-    <view class="mp-p {{started && !myTurn ? 'active' : ''}}"><text class="mp-n">{{peerName}}</text><text class="mp-cash">{{peerCash}}</text></view>
-  </view>
-
-  <view class="mp-info">
-    <view wx:if="{{started}}" class="mp-mode-tag {{mode === 'classic' ? 'classic' : 'casual'}}"><t-icon name="{{mode === 'classic' ? 'star' : 'heart'}}" size="20rpx" /><text>{{mode === 'classic' ? '经典' : '休闲'}}</text></view>
-    <view wx:if="{{started}}" class="mp-theme-btn" bindtap="switchIconTheme"><t-icon name="palette" size="20rpx" /><text>图标</text></view>
-    <text wx:if="{{started}}" class="mp-turn">{{myTurn ? '该你掷骰' : '等 ' + peerName + ' 掷骰'}}</text>
-    <text wx:if="{{requestPending}}" class="mp-pending"> 已请求重开 <text class="mp-link" bindtap="cancelReq">取消</text></text>
-    <text wx:if="{{sellReqPending}}" class="mp-pending"> 等对方买地 <text class="mp-link" bindtap="cancelSell">取消</text></text>
-  </view>
-
   <!-- 全部对局记录(主页面内滚动) -->
   <scroll-view scroll-y class="mp-log-box" enhanced show-scrollbar="{{false}}">
     <view wx:for="{{log}}" wx:key="index" class="ml-item {{index === 0 ? 'new' : ''}}">· {{item}}</view>
     <view wx:if="{{!log.length}}" class="muted small log-empty">还没有记录，掷骰开始吧</view>
   </scroll-view>
-
-  <!-- 固定底部 tab 栏，安全边距，禁止滚动 -->
-  <view class="mp-tabbar">
-    <t-button wx:if="{{!winner}}" theme="primary" block bind:tap="roll" loading="{{rolling}}" disabled="{{!myTurn}}">{{myTurn ? '掷骰子' : (started ? '等对方掷骰' : '开始后掷骰')}}</t-button>
-    <view class="mp-tabbar-row">
-      <t-button theme="default" size="small" bind:tap="openRules">玩法</t-button>
-      <t-button wx:if="{{started}}" theme="default" size="small" bind:tap="openBank">银行</t-button>
-      <t-button wx:if="{{started && !winner}}" theme="default" size="small" bind:tap="resign">认输</t-button>
-      <t-button theme="default" size="small" bind:tap="requestRestart">{{winner ? '再来' : '重开'}}</t-button>
-    </view>
-  </view>
 
   <!-- 银行/资产面板 -->
   <view class="sf-mask {{bankOpen ? 'show' : ''}}" bindtap="closeBank"></view>
