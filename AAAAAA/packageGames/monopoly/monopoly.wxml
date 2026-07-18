@@ -4,11 +4,11 @@
     <view wx:if="{{started && !rulesOpen && !bankOpen}}" class="mp-board">
       <!-- 28 格外圈 -->
       <view wx:for="{{grid}}" wx:key="idx" class="mp-cell {{item.cls}}" style="grid-column:{{item.col}};grid-row:{{item.row}};">
+        <view wx:if="{{item.icon}}" class="mp-cell-icon"><t-icon name="{{item.icon.t}}" size="34rpx" /></view>
         <view wx:if="{{item.type === 'property'}}" class="mp-cell-price" style="color:{{item.groupColor}};">${{item.price}}</view>
         <view class="mp-cell-name">{{item.name}}</view>
-        <view wx:if="{{item.type === 'property' && item.level}}" class="mp-cell-stars">
-          <text class="mp-star" wx:for="{{item.levelArr}}" wx:for-item="s" wx:key="index">★</text>
-        </view>
+        <view wx:if="{{item.type === 'property' && item.level === 3}}" class="mp-cell-build"><t-icon name="{{item.hotelIcon}}" size="26rpx" /></view>
+        <view wx:elif="{{item.type === 'property' && item.level}}" class="mp-cell-build"><t-icon wx:for="{{item.levelArr}}" wx:for-item="s" wx:key="index" name="{{item.houseIcon}}" size="20rpx" /></view>
         <view wx:if="{{item.isFullSet}}" class="mp-cell-fullset"></view>
         <view wx:if="{{item.type === 'property' && item.owner}}" class="mp-cell-owner" style="background:{{item.ownerColor}};"></view>
       </view>

@@ -6,7 +6,7 @@
 .mp-empty { position: absolute; inset: 0; border-radius: 16rpx; background: rgba(243,233,210,.95); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14rpx; }
 .mp-title { font-size: 52rpx; font-weight: 800; color: #b58a5a; }
 .mp-start { padding: 16rpx 56rpx; border-radius: 36rpx; background: var(--primary); color: #fff; font-size: 30rpx; }
-.mp-over-mask { position: absolute; inset: 0; border-radius: 16rpx; background: rgba(0,0,0,.45); display: flex; align-items: center; justify-content: center; }
+.mp-over-mask { position: absolute; inset: 0; border-radius: 16rpx; background: rgba(0,0,0,.45); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20rpx; }
 .mp-over-text { color: #fff; font-size: 44rpx; font-weight: 800; }
 
 /* 双方金币 */
@@ -68,8 +68,8 @@
 .mp-cell.type-freepark { background: #c5ecd9; }
 .mp-cell-price { font-size: 18rpx; font-weight: 800; line-height: 1; align-self: flex-start; margin-left: 2rpx; }
 .mp-cell-name { font-size: 18rpx; color: #5a4030; text-align: center; line-height: 1.15; margin-top: 2rpx; word-break: break-all; }
-.mp-cell-stars { display: flex; gap: 1rpx; margin-top: 2rpx; }
-.mp-star { font-size: 18rpx; color: #b58a5a; line-height: 1; }
+.mp-cell-icon { line-height: 1; margin: 2rpx 0; color: #6b4a2a; }
+.mp-cell-build { position: absolute; bottom: 11rpx; left: 0; right: 0; display: flex; align-items: center; justify-content: center; gap: 1rpx; color: #2e7d32; }
 .mp-cell-fullset { position: absolute; top: 3rpx; right: 3rpx; width: 12rpx; height: 12rpx; border-radius: 50%; background: #ffd23f; }
 .mp-cell-owner { position: absolute; left: 0; right: 0; bottom: 0; height: 8rpx; }
 

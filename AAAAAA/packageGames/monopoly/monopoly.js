@@ -7,6 +7,7 @@ const room = require('@utils/room.js');
 const ident = require('@utils/ident.js');
 const rt = require('@utils/rtgame.js');
 const { toast } = require('@utils/util.js');
+const ICONS = require('./mono-icons.js');   // 棋盘图标表(店铺/功能格/房子酒店/标记，三主题素材)
 
 const START_CASH = 1500;
 const BOARD = 28;                       // 8×8 方形外圈：2*8+2*6=28，与原凹形一致，buildCells/pos 语义零变化
@@ -193,11 +194,15 @@ Page({
     // DOM 棋盘：28 格 → 每格带 col/row(1-based)/cls/groupColor/ownerColor/isFullSet/levelArr，供 wxml grid 渲染
     const grid = cells.map((c, i) => {
       const [col, row] = cellCR(i);
+      const icon = c.type === 'property' ? ICONS.shop[c.name]
+        : (c.type === 'card' ? (c.kind === 'fate' ? ICONS.fate : ICONS.card) : ICONS[c.type]);
       return Object.assign({}, c, {
         idx: i, col: col + 1, row: row + 1,
         cls: 'type-' + (c.type || 'property'),
         groupColor: c.type === 'property' ? (GROUP_COLOR[c.group] || '#666') : '',
         ownerColor: c.owner ? seatColor(c.owner) : '',
+        icon: icon || null,                       // 店铺/功能格图标(三主题素材，9.9b 用 t)
+        houseIcon: ICONS.house.t, hotelIcon: ICONS.hotel.t,
         isFullSet: c.type === 'property' && !!c.owner && ownsFullSet(cells, c.group, c.owner),
         levelArr: c.type === 'property' ? new Array(c.level || 0).fill(1) : []
       });
