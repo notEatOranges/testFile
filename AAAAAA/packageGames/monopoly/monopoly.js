@@ -279,12 +279,23 @@ Page({
     return Promise.resolve();
   },
 
-  // 骰子：9.9a 最简版(短暂显示点数+前进提示)；翻滚动画 9.9d 加。
+  // 骰子翻滚：tumble(数字乱跳+摆动衰减) → settle(落定显点数+前进提示) → idle。
   rollDiceAnim() {
     return new Promise(res => {
       const f = 1 + Math.floor(Math.random() * 8);   // 单 8 面骰：1~8
-      this.setData({ dice: f, diceAnim: { v: f, showHint: true } });
-      this._diceAnimTimer = setTimeout(() => res(f), 500);
+      const t0 = Date.now(); const tumble = 720, settle = 600;
+      const step = () => {
+        const el = Date.now() - t0;
+        if (el < tumble) {
+          const ang = Math.sin(el / tumble * Math.PI * 5) * 350 * (1 - el / tumble);
+          this.setData({ diceAnim: { phase: 'tumble', v: 1 + Math.floor(Math.random() * 8), angle: ang, showHint: false } });
+          this._diceAnimTimer = setTimeout(step, 60);
+        } else if (el < tumble + settle) {
+          this.setData({ diceAnim: { phase: 'settle', v: f, angle: 0, showHint: true } });
+          this._diceAnimTimer = setTimeout(step, 60);
+        } else { this.setData({ dice: f, diceAnim: { phase: 'idle', v: f, angle: 0, showHint: true } }); res(f); }
+      };
+      step();
     });
   },
 

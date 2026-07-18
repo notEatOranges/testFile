@@ -49,7 +49,7 @@
 /* 模式选择按钮 + 模式徽标 + 抵押状态 */
 .mp-mode-pick { display: flex; gap: 18rpx; }
 .mp-start.casual { background: #00b8d4; }
-.mp-mode-tag { position: absolute; top: 14rpx; left: 28rpx; z-index: 5; display: flex; align-items: center; gap: 6rpx; padding: 4rpx 16rpx; border-radius: 20rpx; font-size: 22rpx; color: #fff; box-shadow: 0 2rpx 8rpx rgba(0,0,0,.15); }
+.mp-mode-tag { display: inline-flex; align-items: center; gap: 6rpx; padding: 2rpx 14rpx; border-radius: 20rpx; font-size: 22rpx; color: #fff; vertical-align: middle; margin-right: 12rpx; }
 .mp-mode-tag.classic { background: #ff5a5f; }
 .mp-mode-tag.casual { background: #00b8d4; }
 .mp-mode-mini { margin-left: 12rpx; padding: 2rpx 14rpx; border-radius: 14rpx; font-size: 22rpx; color: #fff; font-weight: 600; }

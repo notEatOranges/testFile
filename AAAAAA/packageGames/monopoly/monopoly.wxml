@@ -14,7 +14,7 @@
       </view>
       <!-- 中心 6×6:骰子 + 回合提示 -->
       <view class="mp-center">
-        <view wx:if="{{diceAnim}}" class="mp-dice">{{diceAnim.v}}</view>
+        <view wx:if="{{diceAnim}}" class="mp-dice" style="transform: rotate({{diceAnim.angle || 0}}deg);">{{diceAnim.v}}</view>
         <view wx:if="{{diceAnim && diceAnim.showHint}}" class="mp-dice-hint">前进 {{diceAnim.v}} 格</view>
         <view class="mp-center-hint">{{myTurn ? '该你掷骰' : (peerName + ' 回合')}}</view>
       </view>
@@ -30,11 +30,6 @@
       </view>
       <!-- 事件特效横幅 -->
       <view wx:if="{{fx}}" class="mp-fx {{fx.kind}}">{{fx.text}}</view>
-      <!-- 模式徽标 -->
-      <view class="mp-mode-tag {{mode === 'classic' ? 'classic' : 'casual'}}">
-        <t-icon name="{{mode === 'classic' ? 'star' : 'heart'}}" size="22rpx" />
-        <text>{{mode === 'classic' ? '经典' : '休闲'}}</text>
-      </view>
       <!-- 胜利遮罩 -->
       <view wx:if="{{winner}}" class="mp-over-mask">
         <view class="mp-over-text">{{winnerText}}</view>
@@ -57,6 +52,7 @@
   </view>
 
   <view class="mp-info">
+    <view wx:if="{{started}}" class="mp-mode-tag {{mode === 'classic' ? 'classic' : 'casual'}}"><t-icon name="{{mode === 'classic' ? 'star' : 'heart'}}" size="20rpx" /><text>{{mode === 'classic' ? '经典' : '休闲'}}</text></view>
     <text wx:if="{{started}}" class="mp-turn">{{myTurn ? '该你掷骰' : '等 ' + peerName + ' 掷骰'}}</text>
     <text wx:if="{{requestPending}}" class="mp-pending"> 已请求重开 <text class="mp-link" bindtap="cancelReq">取消</text></text>
     <text wx:if="{{sellReqPending}}" class="mp-pending"> 等对方买地 <text class="mp-link" bindtap="cancelSell">取消</text></text>
