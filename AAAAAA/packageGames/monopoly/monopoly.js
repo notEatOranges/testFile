@@ -50,7 +50,7 @@ function buildCells() {
     else if (i === 16) cells.push({ name: '监狱', type: 'jail' });
     else if (i === 27 || i === 38) cells.push({ name: '奖金', type: 'bonus', amt: 180 });
     else if (i === 21 || i === 43) cells.push({ name: '免费停车', type: 'freepark' });
-    else { const g = ni % 6; const price = 80 + g * 60 + ni * 4; cells.push({ name: names[ni % names.length], type: 'property', group: g, price, rent: Math.round(price * 0.3), owner: null, level: 0 }); ni++; }
+    else { const g = ni % 6; const price = 80 + g * 60 + ni * 4; cells.push({ name: names[ni % names.length], type: 'property', group: g, price, rent: Math.round(price * 0.3), owner: null, level: 0, mortgaged: false }); ni++; }
   }
   return cells;
 }
@@ -61,14 +61,8 @@ function rentOf(cell, cells) {
   return r;
 }
 function upgradeCost(cell) { return Math.round(cell.price * 0.5); }
-// 卖银行回收价：(地皮价值 + 已投入升级费) × 60%。sellToBank / myProps / 贷款额度 共用，避免重复公式。
+// 卖银行回收价：(地皮价值 + 已投入升级费) × 60%。sellToBank / myProps 共用，避免重复公式。
 function bankRecover(cell) { return Math.round((cell.price + (cell.level || 0) * upgradeCost(cell)) * 0.6); }
-// 抵押贷款额度 = 起步信用 300 + 自家地皮回收价总和 × 50%。地皮越多额度越高，无地皮仅剩小额信用，杜绝无限贷。
-function loanCapOf(cells, role) {
-  let sum = 0; cells.forEach(c => { if (c && c.type === 'property' && c.owner === role) sum += bankRecover(c); });
-  return 300 + Math.floor(sum * 0.5);
-}
-function availableLoan(cells, role, loan) { return Math.max(0, loanCapOf(cells, role) - (loan || 0)); }
 // 同色组（连铺）：groupCells 取某色组全部地皮；ownsFullSet 判断是否被一人集齐（成套）。
 function groupCells(cells, g) { return cells.filter(c => c && c.type === 'property' && c.group === g); }
 function ownsFullSet(cells, g, owner) { const gs = groupCells(cells, g); return gs.length > 0 && gs.every(c => c.owner === owner); }
@@ -116,11 +110,11 @@ Page({
   },
   onUnload() { rt.teardown(this); ident.teardown(this); if (this._diceTimer) clearInterval(this._diceTimer); if (this._rollWatchdog) clearTimeout(this._rollWatchdog); if (this._raf && this.cv) this.cv.cancelAnimationFrame(this._raf); if (this._cardRaf && this.cv) this.cv.cancelAnimationFrame(this._cardRaf); },
 
-  fresh() {
-    return { cells: buildCells(), pos: { boy: 0, girl: 0 }, cash: { boy: START_CASH, girl: START_CASH }, savings: { boy: 0, girl: 0 }, loan: { boy: 0, girl: 0 }, skip: { boy: 0, girl: 0 }, turn: Math.random() < 0.5 ? rt.RED : rt.BLUE, dice: 1, log: [], winner: null, req: null, sellReq: null };
+  fresh(mode) {
+    return { mode: mode || 'casual', cells: buildCells(), pos: { boy: 0, girl: 0 }, cash: { boy: START_CASH, girl: START_CASH }, savings: { boy: 0, girl: 0 }, skip: { boy: 0, girl: 0 }, turn: Math.random() < 0.5 ? rt.RED : rt.BLUE, dice: 1, log: [], winner: null, req: null, sellReq: null };
   },
-  startMatch() { this._recorded = false; rt.setState('monopoly', this.fresh()); },
-  requestRestart() { rt.requestRestart('monopoly', this._state, room.getRole(), !!this.data.winner, () => this.fresh()); },
+  startMatch(e) { this._recorded = false; rt.setState('monopoly', this.fresh(e && e.currentTarget && e.currentTarget.dataset.mode)); },
+  requestRestart() { rt.requestRestart('monopoly', this._state, room.getRole(), !!this.data.winner, () => this.fresh(this._state && this._state.mode)); },
   cancelReq() { rt.cancelRestart('monopoly', this._state); },
   resign() {
     if (!this.data.started || this.data.winner) return;
@@ -202,14 +196,13 @@ Page({
         mySets.push({ group: g, count: gs.length, cost: Math.round(gs.reduce((sum, c) => sum + upgradeCost(c), 0) * 0.9), names: gs.map(c => c.name).join('/') });
       }
     });
-    const myLoanVal = (s.loan && s.loan[role]) || 0, myCap = loanCapOf(cells, role);
     Object.assign(patch, {
       started: true, turnSeat, myTurn: myTurnFlag, rolling: myTurnFlag ? this.data.rolling : false,
+      mode: s.mode || 'casual',
       dice: s.dice || 1,
       log: (s.log || []).slice(-30).reverse().map(it => fmtLog(it, role, this.data.peerName)),
       myCash: (s.cash && s.cash[role]) || 0, peerCash: (s.cash && s.cash[peer]) || 0,
       mySavings: (s.savings && s.savings[role]) || 0, peerSavings: (s.savings && s.savings[peer]) || 0,
-      myLoan: myLoanVal, myLoanCap: myCap, myAvailLoan: Math.max(0, myCap - myLoanVal), peerLoan: (s.loan && s.loan[peer]) || 0,
       myPos: (s.pos && s.pos[role]) || 0, peerPos: (s.pos && s.pos[peer]) || 0,
       myProps, mySets, winner, winnerText
     });
@@ -249,22 +242,15 @@ Page({
     const to = (from + steps) % BOARD;
     let cash = Object.assign({}, s.cash);
     const savings = Object.assign({}, s.savings || { boy: 0, girl: 0 });
-    const loan = Object.assign({}, s.loan || { boy: 0, girl: 0 });
     const log = (s.log || []).slice();
     if (crossed) {
       cash[role] = (cash[role] || 0) + 200;
-      const sav = savings[role] || 0; if (sav) { const it = Math.round(sav * 0.05); savings[role] = sav + it; log.push({ who: role, text: '存款利息 +' + it }); }
-      const ln = loan[role] || 0;
-      if (ln) {                                                                       // 过起点必扣息：欠款 ×10%
-        const li = Math.round(ln * 0.1);
-        if ((cash[role] || 0) >= li) { cash[role] -= li; log.push({ who: role, text: '贷款利息 -' + li }); }
-        else { const unpaid = li - (cash[role] || 0); cash[role] = 0; loan[role] = ln + unpaid; log.push({ who: role, text: '贷款利息 +' + unpaid + '（现金不足，滚入欠款）' }); }   // 还不起→利息资本化，债务雪球
-      }
+      if (s.mode !== 'classic') { const sav = savings[role] || 0; if (sav) { const it = Math.round(sav * 0.05); savings[role] = sav + it; log.push({ who: role, text: '存款利息 +' + it }); } }   // 仅休闲模式：存款 +5%
     }
     log.push({ who: role, text: '掷出 ' + steps + (crossed ? '，经过起点 +200' : '') });
 
-    // 先写一次：棋子已移动 + 日志立即可见（携带 savings/loan）
-    this._state = Object.assign({}, s, { pos: Object.assign({}, s.pos, { [role]: to }), cash, savings, loan, dice: d, log });
+    // 先写一次：棋子已移动 + 日志立即可见（携带 savings）
+    this._state = Object.assign({}, s, { pos: Object.assign({}, s.pos, { [role]: to }), cash, savings, dice: d, log });
     rt.setState('monopoly', this._state);
 
     // 棋子滑行动画（沿环形），完成后结算
@@ -436,7 +422,6 @@ Page({
     const peer = role === 'boy' ? 'girl' : 'boy';
     let skip = Object.assign({}, this._state.skip || { boy: 0, girl: 0 });
     let pos = Object.assign({}, this._state.pos);
-    let loan = Object.assign({}, this._state.loan || { boy: 0, girl: 0 });
     let savings = Object.assign({}, this._state.savings || { boy: 0, girl: 0 });
     let winner = null;
     let toIdx = idx;
@@ -468,20 +453,18 @@ Page({
             log.push({ who: role, text: (backward ? '惩罚骰子' : '经验骰子') + '：摇出 ' + steps + '，' + (backward ? '后退' : '前进') + ' ' + steps + ' 步' });
           }
           const fromIdx = idx, to = backward ? ((idx - steps) % BOARD + BOARD) % BOARD : (idx + steps) % BOARD;
-          if (!backward && fromIdx + steps >= BOARD) {       // 前进跨起点：同正常掷骰（+200/存款息/贷款扣息）
+          if (!backward && fromIdx + steps >= BOARD) {       // 前进跨起点：同正常掷骰（+200/休闲模式存款息）
             cash[role] = (cash[role] || 0) + 200;
-            const sav = savings[role] || 0; if (sav) { const it = Math.round(sav * 0.05); savings[role] = sav + it; log.push({ who: role, text: '存款利息 +' + it }); }
-            const ln = loan[role] || 0;
-            if (ln) { const li = Math.round(ln * 0.1); if ((cash[role] || 0) >= li) { cash[role] -= li; log.push({ who: role, text: '贷款利息 -' + li }); } else { loan[role] = ln + (li - (cash[role] || 0)); cash[role] = 0; log.push({ who: role, text: '贷款利息滚入欠款' }); } }
+            if ((this._state.mode || 'casual') !== 'classic') { const sav = savings[role] || 0; if (sav) { const it = Math.round(sav * 0.05); savings[role] = sav + it; log.push({ who: role, text: '存款利息 +' + it }); } }
             log.push({ who: role, text: '经过起点 +200' });
           }
           pos = Object.assign({}, pos, { [role]: to });
-          this.syncLog(cells, cash, log, pos, skip, { savings, loan });
+          this.syncLog(cells, cash, log, pos, skip, { savings });
           await this.animateMove(role, fromIdx, to, backward);
           if (backward) this.showFx('bad', '后退 ' + steps);
           return await this.resolve(role, to, cash, log, turn, backward ? { backward: true } : {});
         }
-        this.syncLog(cells, cash, log, pos, skip, { savings, loan });
+        this.syncLog(cells, cash, log, pos, skip, { savings });
       }
     } else if (cell.type === 'property') {
       if (opts.backward) {
@@ -491,30 +474,22 @@ Page({
           log.push({ who: role, text: '后退到{{' + cell.owner + '}}的「' + cell.name + '」付过路费 ' + r }); this.showFx('bad', '后退付过路费 ' + r);
         } else { log.push({ who: role, text: '后退到「' + cell.name + '」(' + (cell.owner === role ? '自家' : '空地') + '，不能购买/升级)' }); }
       } else if (!cell.owner) {
-        const shortAmt = cell.price - (cash[role] || 0);
-        const afford = shortAmt <= 0;
-        const canLoan = availableLoan(cells, role, loan[role] || 0) >= shortAmt;   // 贷款买房也受额度封顶
+        const afford = (cash[role] || 0) >= cell.price;
         const choice = await new Promise(res => {
           if (afford) wx.showModal({ title: cell.name, content: '花 ' + cell.price + ' 买下？（过路费 ' + rentOf(cell, cells) + '）', confirmText: '买下', cancelText: '不买', success: r => res(r.confirm ? 'buy' : false) });
-          else if (canLoan) wx.showModal({ title: cell.name, content: '现金不足，贷款 ' + shortAmt + ' 买下？（过路费 ' + rentOf(cell, cells) + '，过起点扣息）', confirmText: '贷款买', cancelText: '不买', success: r => res(r.confirm ? 'loan' : false) });
-          else res(false);
+          else { toast('现金不足，买不起「' + cell.name + '」(可去银行抵押地皮周转)'); res(false); }
         });
         if (choice === 'buy') { cash[role] -= cell.price; cells[idx] = Object.assign({}, cell, { owner: role }); log.push({ who: role, text: '购买「' + cell.name + '」-' + cell.price }); this.showFx('good', '入手「' + cell.name + '」'); }
-        else if (choice === 'loan') { loan[role] = (loan[role] || 0) + shortAmt; cash[role] = (cash[role] || 0) + shortAmt - cell.price; cells[idx] = Object.assign({}, cell, { owner: role }); log.push({ who: role, text: '贷款购买「' + cell.name + '」(欠款 +' + shortAmt + ')' }); this.showFx('good', '贷款入手「' + cell.name + '」'); }
       } else if (cell.owner === role) {
-        // 自己的地：可升级（最高 3 级）；现金不足但额度够 → 可贷款升级
+        // 自己的地：可升级（最高 3 级）
         if ((cell.level || 0) < 3) {
           const cost = upgradeCost(cell);
-          const canCash = (cash[role] || 0) >= cost;
-          const canLoan = availableLoan(cells, role, loan[role] || 0) >= cost;
-          if (!canCash && !canLoan) { log.push({ who: role, text: '现金与额度都不足，无法升级「' + cell.name + '」' }); }
+          if ((cash[role] || 0) < cost) { log.push({ who: role, text: '现金不足，无法升级「' + cell.name + '」' }); }
           else {
             const up = await new Promise(res => {
-              if (canCash) wx.showModal({ title: '升级「' + cell.name + '」', content: '升到 ' + ((cell.level || 0) + 2) + ' 级？花 ' + cost + '（过路费变 ' + (rentOf(cell, cells) + cell.rent) + '）', confirmText: '升级', cancelText: '不了', success: r => res(r.confirm ? 'cash' : false) });
-              else wx.showModal({ title: '贷款升级「' + cell.name + '」', content: '现金不足，贷款 ' + cost + ' 升到 ' + ((cell.level || 0) + 2) + ' 级？(过路费变 ' + (rentOf(cell, cells) + cell.rent) + '，过起点扣息)', confirmText: '贷款升级', cancelText: '不了', success: r => res(r.confirm ? 'loan' : false) });
+              wx.showModal({ title: '升级「' + cell.name + '」', content: '升到 ' + ((cell.level || 0) + 2) + ' 级？花 ' + cost + '（过路费变 ' + (rentOf(cell, cells) + cell.rent) + '）', confirmText: '升级', cancelText: '不了', success: r => res(r.confirm) });
             });
-            if (up === 'cash') { cash[role] -= cost; cells[idx] = Object.assign({}, cell, { level: (cell.level || 0) + 1 }); log.push({ who: role, text: '升级「' + cell.name + '」到 ' + (cells[idx].level + 1) + ' 级' }); this.showFx('good', '升级！过路费上涨'); }
-            else if (up === 'loan') { loan[role] = (loan[role] || 0) + cost; cells[idx] = Object.assign({}, cell, { level: (cell.level || 0) + 1 }); log.push({ who: role, text: '贷款升级「' + cell.name + '」到 ' + (cells[idx].level + 1) + ' 级 (欠款+' + cost + ')' }); this.showFx('good', '贷款升级！过路费上涨'); }
+            if (up) { cash[role] -= cost; cells[idx] = Object.assign({}, cell, { level: (cell.level || 0) + 1 }); log.push({ who: role, text: '升级「' + cell.name + '」到 ' + (cells[idx].level + 1) + ' 级' }); this.showFx('good', '升级！过路费上涨'); }
           }
         } else { log.push({ who: role, text: '「' + cell.name + '」已满级' }); }
       } else {
@@ -526,31 +501,31 @@ Page({
 
     // 现金为负 → 破产救助（存款→卖地→贷款→破产），不再直接判输
     if (cash[role] < 0) {
-      const bankrupt = await this.coverShortfall(role, cells, cash, savings, loan, log);
+      const bankrupt = await this.coverShortfall(role, cells, cash, savings, log);
       if (bankrupt) winner = role === 'boy' ? rt.BLUE : rt.RED;
     }
     if (toIdx !== idx) pos = Object.assign({}, pos, { [role]: toIdx });
     let nextRole = peer;
     if (!winner && (skip[peer] || 0) > 0) { skip[peer]--; nextRole = role; log.push({ who: peer, text: '停一回合（跳过本次）' }); }
-    rt.setState('monopoly', Object.assign({}, this._state, { cells: cells.map(c => Object.assign({}, c)), pos, cash, savings, skip, loan, turn: winner ? turn : rt.seatOf(nextRole), dice: this.data.dice, log: log.slice(-30), winner, req: null }));
+    rt.setState('monopoly', Object.assign({}, this._state, { cells: cells.map(c => Object.assign({}, c)), pos, cash, savings, skip, turn: winner ? turn : rt.seatOf(nextRole), dice: this.data.dice, log: log.slice(-30), winner, req: null }));
   },
 
-  // 破产救助：现金为负时按「存款→卖地(优先还贷)→紧急贷款」自救；仍不足才真破产。
-  // 就地修改传入的 cash/savings/loan/cells/log，返回是否破产。
-  async coverShortfall(role, cells, cash, savings, loan, log) {
+  // 破产救助：现金为负时按「存款→卖地给银行」自救；仍不足才真破产。
+  // 就地修改传入的 cash/savings/cells/log，返回是否破产。
+  async coverShortfall(role, cells, cash, savings, log) {
     while (cash[role] < 0 && (savings[role] || 0) > 0) {                       // 1) 存款补
       const need = Math.min(-cash[role], savings[role]);
       savings[role] -= need; cash[role] += need;
       log.push({ who: role, text: '取出存款 ' + need + ' 补亏空' });
-      this.syncLog(cells, cash, log, this._state.pos, this._state.skip, { savings, loan });
+      this.syncLog(cells, cash, log, this._state.pos, this._state.skip, { savings });
     }
-    while (cash[role] < 0) {                                                    // 2) 卖地补（困境中只卖银行；变卖款优先还贷）
+    while (cash[role] < 0) {                                                    // 2) 卖地补（困境中只卖银行）
       const mine = [];
       cells.forEach((c, i) => { if (c && c.type === 'property' && c.owner === role) mine.push(i); });
       if (!mine.length) break;
       const pick = await new Promise(res => {
         wx.showActionSheet({
-          alertText: '现金为负 ' + cash[role] + '，选一块地卖给银行自救（变卖款优先还贷）',
+          alertText: '现金为负 ' + cash[role] + '，选一块地卖给银行自救',
           itemList: mine.slice(0, 6).map(i => cells[i].name + ' +' + bankRecover(cells[i])),
           success: r => res(mine[r.tapIndex]),
           fail: () => res(null)
@@ -558,23 +533,18 @@ Page({
       });
       if (pick == null) break;
       const c = cells[pick], get = bankRecover(c);
-      cells[pick] = Object.assign({}, c, { owner: null, level: 0 });
-      if ((loan[role] || 0) > 0) { const payL = Math.min(get, loan[role]); loan[role] -= payL; cash[role] += get - payL; log.push({ who: role, text: '变卖「' + c.name + '」+' + get + '（优先还贷 ' + payL + '）' }); }
-      else { cash[role] += get; log.push({ who: role, text: '变卖「' + c.name + '」+' + get }); }
+      cells[pick] = Object.assign({}, c, { owner: null, level: 0, mortgaged: false });
+      cash[role] += get; log.push({ who: role, text: '变卖「' + c.name + '」+' + get });
       this.showFx('bad', '变卖「' + c.name + '」+' + get);
-      this.syncLog(cells, cash, log, this._state.pos, this._state.skip, { savings, loan });
+      this.syncLog(cells, cash, log, this._state.pos, this._state.skip, { savings });
     }
-    if (cash[role] < 0) {                                                       // 3) 紧急贷款补
-      const avail = availableLoan(cells, role, loan[role] || 0);
-      if (avail > 0) { const take = Math.min(-cash[role], avail); loan[role] = (loan[role] || 0) + take; cash[role] += take; log.push({ who: role, text: '紧急贷款 ' + take + ' 补亏空' }); this.syncLog(cells, cash, log, this._state.pos, this._state.skip, { savings, loan }); }
-    }
-    if (cash[role] < 0) { this.showFx('bad', '资产耗尽，破产！'); return true; }   // 4) 仍为负 → 破产
+    if (cash[role] < 0) { this.showFx('bad', '资产耗尽，破产！'); return true; }   // 3) 仍为负 → 破产
     return false;
   },
 
   dismissCard() { this._cardAnim = null; this.draw(); },
 
-  // —— 银行/资产：存款/贷款/卖地 ——
+  // —— 银行/资产：存款/卖地 ——
   openBank() { this.setData({ bankOpen: true }); },
   noop() {},
   closeBank() { this.setData({ bankOpen: false }); setTimeout(() => this.setupCanvas(), 50); },
@@ -584,7 +554,7 @@ Page({
     // 走 transactionState：从 DB 现读整份状态再派生，避免从陈旧 this._state 带出 turn/pos 把错回合写回（丢摇骰 bug 根因）
     rt.transactionState('monopoly', s => {
       if (!s || !s.cash) return s;
-      const cash = Object.assign({}, s.cash), savings = Object.assign({}, s.savings || { boy: 0, girl: 0 }), loan = Object.assign({}, s.loan || { boy: 0, girl: 0 });
+      const cash = Object.assign({}, s.cash), savings = Object.assign({}, s.savings || { boy: 0, girl: 0 });
       const lg = (s.log || []).slice();
       if (act === 'deposit') {
         if ((cash[role] || 0) < amt) { toast('现金不足'); return s; }
@@ -592,16 +562,8 @@ Page({
       } else if (act === 'withdraw') {
         const v = Math.min(amt, savings[role] || 0); if (v <= 0) { toast('没有存款'); return s; }
         savings[role] -= v; cash[role] += v; lg.push({ who: role, text: '取出存款 ' + v });
-      } else if (act === 'borrow') {
-        const want = 200, take = Math.min(want, availableLoan(s.cells, role, loan[role] || 0));
-        if (take <= 0) { toast('贷款额度不足'); return s; }
-        cash[role] += take; loan[role] = (loan[role] || 0) + take; lg.push({ who: role, text: '向银行贷款 ' + take + (take < want ? '（已达额度上限）' : '') });
-      } else if (act === 'repay') {
-        const due = loan[role] || 0, pay = Math.min(due, cash[role] || 0);
-        if (pay <= 0) { toast('没有欠款或现金不足'); return s; }
-        cash[role] -= pay; loan[role] = due - pay; lg.push({ who: role, text: '还款 ' + pay });
       } else { toast('操作失败'); return s; }
-      return Object.assign({}, s, { cash, savings, loan, log: lg.slice(-30) });
+      return Object.assign({}, s, { cash, savings, log: lg.slice(-30) });
     });
   },
   sellToBank(e) {
