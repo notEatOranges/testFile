@@ -1,4 +1,5 @@
-.gr-sheet { max-height: 80vh; overflow-y: auto; }
+.gr-sheet { max-height: 80vh; display: flex; flex-direction: column; overflow: hidden; }
+.gr-body { flex: 1; overflow-y: auto; padding-bottom: 20rpx; }
 .gr-head { display: flex; align-items: center; gap: 14rpx; justify-content: center; margin-bottom: 14rpx; }
 .gr-ic { width: 64rpx; height: 64rpx; border-radius: 16rpx; background: var(--chip); color: var(--primary); display: flex; align-items: center; justify-content: center; }
 .gr-title { margin: 0; }
