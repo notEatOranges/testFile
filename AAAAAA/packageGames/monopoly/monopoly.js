@@ -135,14 +135,14 @@ Page({
     started: false, turnSeat: 'red', mySeat: 'red', myTurn: false,
     dice: 1, log: [], myCash: START_CASH, peerCash: START_CASH, myPos: 0, peerPos: 0,
     winner: null, winnerText: '', rolling: false, requestPending: false, rulesOpen: false,
-    mode: 'casual', iconTheme: 'tdesign',   // iconTheme: tdesign(默认) | emoji | image，本地存储，9.9g 加切换
+    mode: 'casual', iconTheme: 'emoji',   // iconTheme: emoji(默认) | tdesign | image，本地存储，9.9g 加切换
     grid: [], tokenMe: null, tokenPeer: null,   // DOM 棋盘 28 格 + 两个棋子(绝对定位)
     diceAnim: null, cardAnim: null, fx: null,    // 骰子/抽牌/特效 DOM 动画数据
     bankOpen: false, mySavings: 0, peerSavings: 0, myProps: [], mySets: [], sellReqPending: false
   },
 
   onLoad() {
-    this.setData({ theme: getApp().globalData.theme || 'sakura', iconTheme: wx.getStorageSync('mono_iconTheme') || 'tdesign' });
+    this.setData({ theme: getApp().globalData.theme || 'sakura', iconTheme: wx.getStorageSync('mono_iconTheme') || 'emoji' });
     if (!user.isPaired()) return wx.redirectTo({ url: '/pages/main/main' });
     user.applyToRoom(); room.join();
     this.setData({ mySeat: rt.seatOf(room.getRole()) });
