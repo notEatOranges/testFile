@@ -99,3 +99,12 @@
 
 /* 胜利遮罩(复用 .mp-over-mask/.mp-over-text) */
 .mp-over-sub { color: rgba(255,255,255,.7); font-size: 26rpx; margin-top: 20rpx; }
+
+/* 图标主题：emoji 字体 / 本地图片 */
+.mp-emoji { font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif; font-size: 34rpx; line-height: 1; }
+.mp-emoji.sm { font-size: 24rpx; }
+.mp-emoji.xs { font-size: 20rpx; }
+.mp-img-icon { width: 36rpx; height: 36rpx; }
+.mp-img-icon.sm { width: 26rpx; height: 26rpx; }
+.mp-img-icon.xs { width: 20rpx; height: 20rpx; }
+.mp-theme-btn { display: inline-flex; align-items: center; gap: 6rpx; padding: 2rpx 14rpx; border-radius: 20rpx; background: var(--chip); color: var(--primary-deep); font-size: 22rpx; vertical-align: middle; margin-right: 12rpx; }

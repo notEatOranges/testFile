@@ -220,8 +220,8 @@ Page({
         cls: 'type-' + (c.type || 'property'),
         groupColor: c.type === 'property' ? (GROUP_COLOR[c.group] || '#666') : '',
         ownerColor: c.owner ? seatColor(c.owner) : '',
-        icon: icon || null,                       // 店铺/功能格图标(三主题素材，9.9b 用 t)
-        houseIcon: ICONS.house.t, hotelIcon: ICONS.hotel.t,
+        icon: icon || null,                       // 店铺/功能格图标(三主题素材 {t,e,i})
+        houseIcon: ICONS.house, hotelIcon: ICONS.hotel,
         isFullSet: c.type === 'property' && !!c.owner && ownsFullSet(cells, c.group, c.owner),
         levelArr: c.type === 'property' ? new Array(c.level || 0).fill(1) : []
       });
@@ -593,6 +593,19 @@ Page({
   },
   openRules() { this.setData({ rulesOpen: true }); },
   closeRules() { this.setData({ rulesOpen: false }); },
+  switchIconTheme() {
+    wx.showActionSheet({
+      alertText: '图标主题',
+      itemList: ['TDesign 图标', 'Emoji 表情', '在线图片(待补资源)'],
+      success: r => {
+        const map = ['tdesign', 'emoji', 'image'];
+        const t = map[r.tapIndex];
+        if (t === 'image') { toast('图片主题资源准备中(9.9h)'); return; }
+        this.setData({ iconTheme: t });
+        wx.setStorageSync('mono_iconTheme', t);
+      }
+    });
+  },
 
   // 棋子像素坐标：按连续位置 f(可小数) 在 8×8 外圈插值算中心。tokenMe/tokenPeer 的 left/top 用。
   tokenXY(f) {

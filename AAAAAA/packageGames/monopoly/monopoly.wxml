@@ -4,11 +4,25 @@
     <view wx:if="{{started && !rulesOpen && !bankOpen}}" class="mp-board">
       <!-- 28 格外圈 -->
       <view wx:for="{{grid}}" wx:key="idx" class="mp-cell {{item.cls}}" style="grid-column:{{item.col}};grid-row:{{item.row}};">
-        <view wx:if="{{item.icon}}" class="mp-cell-icon"><t-icon name="{{item.icon.t}}" size="34rpx" /></view>
+        <view wx:if="{{item.icon}}" class="mp-cell-icon">
+          <t-icon wx:if="{{iconTheme === 'tdesign'}}" name="{{item.icon.t}}" size="34rpx" />
+          <text wx:elif="{{iconTheme === 'emoji'}}" class="mp-emoji">{{item.icon.e}}</text>
+          <image wx:else class="mp-img-icon" src="/assets/monopoly-icons/{{item.icon.i}}.png" />
+        </view>
         <view wx:if="{{item.type === 'property'}}" class="mp-cell-price" style="color:{{item.groupColor}};">${{item.price}}</view>
         <view class="mp-cell-name">{{item.name}}</view>
-        <view wx:if="{{item.type === 'property' && item.level === 3}}" class="mp-cell-build"><t-icon name="{{item.hotelIcon}}" size="26rpx" /></view>
-        <view wx:elif="{{item.type === 'property' && item.level}}" class="mp-cell-build"><t-icon wx:for="{{item.levelArr}}" wx:for-item="s" wx:key="index" name="{{item.houseIcon}}" size="20rpx" /></view>
+        <view wx:if="{{item.type === 'property' && item.level === 3}}" class="mp-cell-build">
+          <t-icon wx:if="{{iconTheme === 'tdesign'}}" name="{{item.hotelIcon.t}}" size="26rpx" />
+          <text wx:elif="{{iconTheme === 'emoji'}}" class="mp-emoji sm">{{item.hotelIcon.e}}</text>
+          <image wx:else class="mp-img-icon sm" src="/assets/monopoly-icons/{{item.hotelIcon.i}}.png" />
+        </view>
+        <view wx:elif="{{item.type === 'property' && item.level}}" class="mp-cell-build">
+          <block wx:for="{{item.levelArr}}" wx:for-item="s" wx:key="index">
+            <t-icon wx:if="{{iconTheme === 'tdesign'}}" name="{{item.houseIcon.t}}" size="20rpx" />
+            <text wx:elif="{{iconTheme === 'emoji'}}" class="mp-emoji xs">{{item.houseIcon.e}}</text>
+            <image wx:else class="mp-img-icon xs" src="/assets/monopoly-icons/{{item.houseIcon.i}}.png" />
+          </block>
+        </view>
         <view wx:if="{{item.isFullSet}}" class="mp-cell-fullset"></view>
         <view wx:if="{{item.type === 'property' && item.owner}}" class="mp-cell-owner" style="background:{{item.ownerColor}};"></view>
       </view>
@@ -53,6 +67,7 @@
 
   <view class="mp-info">
     <view wx:if="{{started}}" class="mp-mode-tag {{mode === 'classic' ? 'classic' : 'casual'}}"><t-icon name="{{mode === 'classic' ? 'star' : 'heart'}}" size="20rpx" /><text>{{mode === 'classic' ? '经典' : '休闲'}}</text></view>
+    <view wx:if="{{started}}" class="mp-theme-btn" bindtap="switchIconTheme"><t-icon name="palette" size="20rpx" /><text>图标</text></view>
     <text wx:if="{{started}}" class="mp-turn">{{myTurn ? '该你掷骰' : '等 ' + peerName + ' 掷骰'}}</text>
     <text wx:if="{{requestPending}}" class="mp-pending"> 已请求重开 <text class="mp-link" bindtap="cancelReq">取消</text></text>
     <text wx:if="{{sellReqPending}}" class="mp-pending"> 等对方买地 <text class="mp-link" bindtap="cancelSell">取消</text></text>
