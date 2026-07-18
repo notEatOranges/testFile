@@ -329,11 +329,9 @@ Page({
     }
     log.push({ who: role, text: '掷出 ' + steps + (crossed ? '，经过起点 +200' : '') });
 
-    // 仅更新本地 _state(棋子已移动)，不在此 rt.setState：
-    // 中间态 turn 还=自己，它的 emit/watch 回调若晚于 resolve 末尾(turn=对方)到达，
-    // 即使有 ts 比较也存在同毫秒风险，会把回合覆盖回自己 → 连摇。棋子滑行靠本地 animateMove，
-    // 对端在 resolve 落点的 syncLog 统一收到最终 pos/log。
-    this._state = Object.assign({}, s, { pos: Object.assign({}, s.pos, { [role]: to }), cash, savings, log, seq: (s.seq || 0) + 1 });
+    // 摇点 + 棋子移动即时推送(commit 自动 seq+1，watch 回调 seq 拒旧防覆盖，不会连摇)。
+    // 对方实时看到「掷出 N」+ 棋子移动；fix7 当时砍它是为旧 rolling 锁，现 seq+ts 拒旧已根治覆盖。
+    this.commit({ pos: Object.assign({}, s.pos, { [role]: to }), cash, savings, log });
 
     // 棋子滑行动画（沿环形），完成后结算
     await this.animateMove(role, from, to);
