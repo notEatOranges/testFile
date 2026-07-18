@@ -1,7 +1,7 @@
 .gr-sheet { max-height: 80vh; display: flex; flex-direction: column; overflow: hidden; }
 .gr-body { flex: 1; overflow-y: auto; padding-bottom: 20rpx; }
 .gr-head { display: flex; align-items: center; gap: 14rpx; justify-content: center; margin-bottom: 14rpx; padding-bottom: 14rpx; border-bottom: 1rpx solid var(--border); }
-.gr-sheet .sf-ok { display: inline-flex; align-items: center; gap: 8rpx; }
+.gr-sheet .sf-ok { display: flex; align-items: center; justify-content: center; gap: 8rpx; }
 .gr-ic { width: 64rpx; height: 64rpx; border-radius: 16rpx; background: var(--chip); color: var(--primary); display: flex; align-items: center; justify-content: center; }
 .gr-title { margin: 0; }
 .gr-goal { background: var(--chip); border-radius: 16rpx; padding: 18rpx 22rpx; font-size: 27rpx; color: var(--text); line-height: 1.55; }
