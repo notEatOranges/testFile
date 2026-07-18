@@ -220,6 +220,9 @@
   transform: translateY(0);
 }
 .bk-sum {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   font-size: 28rpx;
   color: var(--primary-deep);
   font-weight: 600;

@@ -123,7 +123,10 @@
   <view class="sf-mask {{bankOpen ? 'show' : ''}}" bindtap="closeBank"></view>
   <view class="bank-sheet {{bankOpen ? 'show' : ''}}" catchtap="noop">
     <view class="sf-title">银行 / 资产 <text class="mp-mode-mini {{mode === 'classic' ? 'classic' : 'casual'}}">{{mode === 'classic' ? '经典' : '休闲'}}</text></view>
-    <view class="bk-sum">现金 {{myCashFmt}}<text wx:if="{{mode !== 'classic'}}"> 存款 {{mySavingsFmt}}</text>　地皮 {{myPropCount}} 抵押 {{myMortgagedCount}}</view>
+    <view class="bk-sum">
+      <view class="bk-sum-l">现金:{{myCashFmt}}<text wx:if="{{mode !== 'classic'}}">　存款:{{mySavingsFmt}}</text></view>
+      <view class="bk-sum-r">地皮:{{myPropCount}}　抵押:{{myMortgagedCount}}</view>
+    </view>
     <block wx:if="{{mode !== 'classic'}}">
       <view class="bk-label">存款(过起点 +5% 利息)</view>
       <view class="bk-btns">
