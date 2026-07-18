@@ -232,7 +232,7 @@ Page({
     }
 
     Object.assign(patch, {
-      started: true, turnSeat, myTurn: myTurnFlag,
+      started: true, turnSeat, myTurn: myTurnFlag, rolling: myTurnFlag ? this.data.rolling : false,
       mode: s.mode || 'casual',
       grid,
       log: (s.log || []).slice(-30).reverse().map(it => fmtLog(it, role, this.data.peerName)),
@@ -277,9 +277,11 @@ Page({
     }
     log.push({ who: role, text: '掷出 ' + steps + (crossed ? '，经过起点 +200' : '') });
 
-    // 先写一次：棋子已移动 + 日志立即可见（携带 savings）
-    this._state = Object.assign({}, s, { pos: Object.assign({}, s.pos, { [role]: to }), cash, savings, dice: d, log });
-    rt.setState('monopoly', this._state);
+    // 仅更新本地 _state(棋子已移动)，不在此 rt.setState：
+    // 中间态 turn 还=自己，它的 emit/watch 回调若晚于 resolve 末尾(turn=对方)到达，
+    // 即使有 ts 比较也存在同毫秒风险，会把回合覆盖回自己 → 连摇。棋子滑行靠本地 animateMove，
+    // 对端在 resolve 落点的 syncLog 统一收到最终 pos/log。
+    this._state = Object.assign({}, s, { pos: Object.assign({}, s.pos, { [role]: to }), cash, savings, log });
 
     // 棋子滑行动画（沿环形），完成后结算
     await this.animateMove(role, from, to);
@@ -291,7 +293,10 @@ Page({
       const st = this._state || s;
       if (st && !st.winner) rt.setState('monopoly', Object.assign({}, st, { turn: rt.seatOf(peer) }));
     }
-    finally { if (this._rollWatchdog) { clearTimeout(this._rollWatchdog); this._rollWatchdog = null; } this.setData({ rolling: false, myTurn: !!(this._state && this._state.turn === rt.seatOf(room.getRole())) }); }
+    finally { if (this._rollWatchdog) { clearTimeout(this._rollWatchdog); this._rollWatchdog = null; } }
+    // 关键：rolling 不在 finally 清！交给 applyState 在「watch 推来 turn=对方」时清。
+    // 从摇完到回合被确认交出去之前，本地 rolling 恒为 true，彻底堵住重复摇/连摇
+    // (不受 watch 异步覆盖 turn 的影响——纯本地锁)。12s watchdog 兜底释放防卡死。
   },
 
   // 棋子沿外圈滑行：setTimeout(33ms) 逐帧 setData 棋子 x/y(百分比)/hop(rpx)；moving 标志防 applyState 覆盖；结束 res()。
