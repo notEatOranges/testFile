@@ -19,15 +19,34 @@ function cellCR(i) {
   if (i < 22) return [21 - i, 0];       // 顶边 右→左
   return [0, i - 21];                   // 左边 上→下
 }
-// 双卡组：机会(偏移动/机缘) + 公共基金(偏金钱事件)。cash 自己加减；cashPeer 对方给/收；to 回起点；back 后退；skip 停一回合
-const DECK = [
-  { t: '银行分红 +50', cash: 50 }, { t: '生日红包 对方送你 +100', cashPeer: 100 }, { t: '遗产继承 +100', cash: 100 },
-  { t: '股票大涨 +150', cash: 150 }, { t: '退税 +40', cash: 40 }, { t: '中奖 +200', cash: 200 }, { t: '捡到钱包 +80', cash: 80 },
-  { t: '前进到起点 +200', to: 0 }, { t: '对方请客 你 +60', cashPeer: 60 }, { t: '利息到账 +30', cash: 30 },
-  { t: '经验骰子 摇骰前进(同正常掷骰)', fwdRoll: true }, { t: '幸运骰子 自选前进 1~8 步', luckyDice: true }, { t: '惩罚骰子 摇骰后退(落对方铺交租)', backRoll: true },
-  { t: '修缮费 -120', cash: -120 }, { t: '医药费 -150', cash: -150 }, { t: '违章 -90', cash: -90 }, { t: '丢手机 -120', cash: -120 },
-  { t: '进修学费 -150', cash: -150 }, { t: '爱心捐款 -60', cash: -60 }, { t: '请客吃饭 -80', cash: -80 }, { t: '进监狱 移到监狱并停一回合', toJail: true, skip: true }
-];
+// 双牌组(符合经典 Monopoly):机会(chance)偏移动、公共基金(fate)偏金钱。落到对应格抽对应副。
+const DECK = {
+  chance: [   // 机会:移动为主
+    { t: '前进到起点 +200', to: 0 },
+    { t: '经验骰子 摇骰前进(同正常掷骰)', fwdRoll: true },
+    { t: '幸运骰子 自选前进 1~8 步', luckyDice: true },
+    { t: '惩罚骰子 摇骰后退(落对方铺交租)', backRoll: true },
+    { t: '进监狱 移到监狱并停一回合', toJail: true, skip: true },
+    { t: '退税 +40', cash: 40 },
+    { t: '中奖 +200', cash: 200 },
+    { t: '捡到钱包 +80', cash: 80 }
+  ],
+  fate: [     // 公共基金:金钱为主
+    { t: '银行分红 +50', cash: 50 },
+    { t: '生日红包 对方送你 +100', cashPeer: 100 },
+    { t: '遗产继承 +100', cash: 100 },
+    { t: '股票大涨 +150', cash: 150 },
+    { t: '对方请客 你 +60', cashPeer: 60 },
+    { t: '利息到账 +30', cash: 30 },
+    { t: '修缮费 -120', cash: -120 },
+    { t: '医药费 -150', cash: -150 },
+    { t: '违章 -90', cash: -90 },
+    { t: '丢手机 -120', cash: -120 },
+    { t: '进修学费 -150', cash: -150 },
+    { t: '爱心捐款 -60', cash: -60 },
+    { t: '请客吃饭 -80', cash: -80 }
+  ]
+};
 const GROUP_COLOR = ['#9b7fd4', '#3a86ff', '#06d6a0', '#ffb703', '#e85a86', '#fb8500'];
 
 function buildCells() {
@@ -320,9 +339,10 @@ Page({
   },
 
   // 抽牌：9.9a 最简版(直接揭晓文字 1.5s)；翻面动画 9.9e 加(rotateY)。
-  drawCard() {
+  drawCard(deckKind) {
     return new Promise(res => {
-      const c = DECK[Math.floor(Math.random() * DECK.length)];
+      const pile = DECK[deckKind] || DECK.chance;   // 机会(chance)/公共基金(fate) 各抽各的
+      const c = pile[Math.floor(Math.random() * pile.length)];
       const kind = (c.cash != null && c.cash < 0) || c.skip || c.back || c.backRoll ? 'bad' : 'good';
       this.setData({ cardAnim: { kind, text: c.t } });
       this._cardTimer = setTimeout(() => { this.setData({ cardAnim: null }); res(c); }, 1500);
@@ -354,7 +374,7 @@ Page({
     else if (cell.type === 'card') {
       if (opts.backward) { log.push({ who: role, text: '后退路过「' + cell.name + '」（不触发抽牌）' }); }   // 后退落地不抽牌，避免移动卡循环
       else {
-        const card = await this.drawCard();
+        const card = await this.drawCard(cell.kind);
         log.push({ who: role, text: (cell.kind === 'fate' ? '抽中公共基金：' : '抽中机会：') + card.t });
         if (card.cash) cash[role] = (cash[role] || 0) + card.cash;
         if (card.cashPeer) { cash[role] = (cash[role] || 0) + card.cashPeer; cash[peer] = (cash[peer] || 0) - card.cashPeer; }
