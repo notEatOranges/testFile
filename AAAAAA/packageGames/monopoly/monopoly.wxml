@@ -45,7 +45,6 @@
       <!-- 中心 6×6:金额(上)+ 骰子(中)+ 工具按钮(下,分多行) -->
       <view class="mp-center">
         <view class="mp-center-cash">
-          <text class="mp-mode-mini {{mode === 'classic' ? 'classic' : 'casual'}}">{{mode === 'classic' ? '经典' : '休闲'}}</text>
           <text class="{{started && myTurn ? 'on' : ''}}">{{myName}} {{myCash}}</text>
           <text class="mp-vs">·</text>
           <text class="{{started && !myTurn ? 'on' : ''}}">{{peerName}} {{peerCash}}</text>
@@ -60,8 +59,8 @@
             <view class="mp-tool" bindtap="switchIconTheme" wx:if="{{started}}"><t-icon name="palette" size="36rpx" /><text>图标</text></view>
           </view>
           <view class="mp-tool-row">
-            <view class="mp-tool-btn" bindtap="resign" wx:if="{{started && !winner}}"><t-icon name="user-clear" size="36rpx" /><text>投降</text></view>
-            <view class="mp-tool-btn" bindtap="requestRestart"><t-icon name="refresh" size="36rpx" /><text>{{winner ? '再来' : '重来'}}</text></view>
+            <t-button theme="default" size="small" bind:tap="resign" wx:if="{{started && !winner}}">投降</t-button>
+            <t-button theme="default" size="small" bind:tap="requestRestart">{{winner ? '再来' : '重来'}}</t-button>
           </view>
         </view>
         <view wx:if="{{requestPending}}" class="mp-center-req">已请求重开 <text class="mp-link" bindtap="cancelReq">取消</text></view>
