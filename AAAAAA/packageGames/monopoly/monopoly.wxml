@@ -1,7 +1,7 @@
 <view class="theme-{{theme}} love-page mp-page">
 
   <view class="mp-board-wrap">
-    <view wx:if="{{started && !rulesOpen && !bankOpen}}" class="mp-board">
+    <view wx:if="{{started && !rulesOpen}}" class="mp-board">
       <!-- 28 格外圈 -->
       <view wx:for="{{grid}}" wx:key="idx" class="mp-cell {{item.cls}}" style="grid-column:{{item.col}};grid-row:{{item.row}};">
         <view wx:if="{{item.isFullSet}}" class="mp-cell-fullset"></view>

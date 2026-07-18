@@ -219,10 +219,11 @@ Page({
     // 棋子像素坐标(按 pos + cellW)；动画进行中(moving)不被对端 state 覆盖
     const peerRole = role === 'boy' ? 'girl' : 'boy';
     if (s.pos) {
+      const same = s.pos[role] === s.pos[peerRole];   // 同格并排(我左、对方右)，不叠在一起
       const [mx, my] = this.tokenXY(s.pos[role]);
       const [px, py] = this.tokenXY(s.pos[peerRole]);
-      if (!this.data.tokenMe || !this.data.tokenMe.moving) patch.tokenMe = { x: mx, y: my, hop: 0, kind: seatShape(role), color: seatColor(role), moving: false };
-      if (!this.data.tokenPeer || !this.data.tokenPeer.moving) patch.tokenPeer = { x: px, y: py, hop: 0, kind: seatShape(peerRole), color: seatColor(peerRole), moving: false };
+      if (!this.data.tokenMe || !this.data.tokenMe.moving) patch.tokenMe = { x: same ? mx - 3 : mx, y: my, hop: 0, kind: seatShape(role), color: seatColor(role), moving: false };
+      if (!this.data.tokenPeer || !this.data.tokenPeer.moving) patch.tokenPeer = { x: same ? px + 3 : px, y: py, hop: 0, kind: seatShape(peerRole), color: seatColor(peerRole), moving: false };
     }
 
     Object.assign(patch, {
@@ -246,9 +247,10 @@ Page({
   },
 
   async roll() {
-    if (!this.data.myTurn || this.data.winner || this.data.rolling) return;
     const role = room.getRole();
     const s = this._state;
+    // 严格从权威 state.turn 判断(不依赖可能陈旧的 data.myTurn)，防 watch 异步期间重复摇/连摇
+    if (!s || s.winner || this.data.rolling || s.turn !== rt.seatOf(role)) return;
     this.setData({ rolling: true });
     // rolling 现在交由 applyState 在「回合离开我/胜负已定」时清掉（期间保持 true，堵住重复摇）。
     // 安全网：若回合未推进（异常/watch 漏推）导致 rolling 卡死，12s 后强制释放，避免「点摇骰无反应需重进」。
@@ -285,7 +287,7 @@ Page({
       const st = this._state || s;
       if (st && !st.winner) rt.setState('monopoly', Object.assign({}, st, { turn: rt.seatOf(peer) }));
     }
-    finally { if (this._rollWatchdog) { clearTimeout(this._rollWatchdog); this._rollWatchdog = null; } this.setData({ rolling: false }); }
+    finally { if (this._rollWatchdog) { clearTimeout(this._rollWatchdog); this._rollWatchdog = null; } this.setData({ rolling: false, myTurn: !!(this._state && this._state.turn === rt.seatOf(room.getRole())) }); }
   },
 
   // 棋子沿外圈滑行：setTimeout(33ms) 逐帧 setData 棋子 x/y(百分比)/hop(rpx)；moving 标志防 applyState 覆盖；结束 res()。
@@ -404,14 +406,16 @@ Page({
           if (backward) this.showFx('bad', '后退 ' + steps);
           return await this.resolve(role, to, cash, log, turn, backward ? { backward: true } : {});
         }
-        this.syncLog(cells, cash, log, pos, skip, { savings });
+        if (toIdx !== idx) { pos = Object.assign({}, pos, { [role]: toIdx }); this.syncLog(cells, cash, log, pos, skip, { savings }); await this.animateMove(role, idx, toIdx); }
+        else this.syncLog(cells, cash, log, pos, skip, { savings });
       }
     } else if (cell.type === 'property') {
       if (opts.backward) {
         // 后退惩罚落地：对方铺交过路费；空地/自家都不能购买或升级
         if (cell.owner && cell.owner !== role) {
-          const r = rentOf(cell, cells); cash[role] -= r; cash[peer] += r;
-          log.push({ who: role, text: '后退到{{' + cell.owner + '}}的「' + cell.name + '」付过路费 ' + r }); this.showFx('bad', '后退付过路费 ' + r);
+          const r = rentOf(cell, cells);
+          if (r > 0) { cash[role] -= r; cash[peer] += r; log.push({ who: role, text: '后退到{{' + cell.owner + '}}的「' + cell.name + '」付过路费 ' + r }); this.showFx('bad', '后退付过路费 ' + r); }
+          else { log.push({ who: role, text: '后退到{{' + cell.owner + '}}的「' + cell.name + '」(已抵押，免过路费)' }); }
         } else { log.push({ who: role, text: '后退到「' + cell.name + '」(' + (cell.owner === role ? '自家' : '空地') + '，不能购买/升级)' }); }
       } else if (!cell.owner) {
         const afford = (cash[role] || 0) >= cell.price;
@@ -433,9 +437,9 @@ Page({
           }
         } else { log.push({ who: role, text: '「' + cell.name + '」已满级' }); }
       } else {
-        const r = rentOf(cell, cells); cash[role] -= r; cash[peer] += r;
-        log.push({ who: role, text: '路过{{' + cell.owner + '}}的「' + cell.name + '」付过路费 ' + r });
-        this.showFx('bad', '付过路费 ' + r);
+        const r = rentOf(cell, cells);
+        if (r > 0) { cash[role] -= r; cash[peer] += r; log.push({ who: role, text: '路过{{' + cell.owner + '}}的「' + cell.name + '」付过路费 ' + r }); this.showFx('bad', '付过路费 ' + r); }
+        else { log.push({ who: role, text: '路过{{' + cell.owner + '}}的「' + cell.name + '」(已抵押，免过路费)' }); }
       }
     }
     this.syncLog(cells, cash, log, pos, skip, { savings });   // 落点结算即时同步(日志/资金/位置实时推送,不等末尾)
@@ -448,7 +452,9 @@ Page({
     if (toIdx !== idx) pos = Object.assign({}, pos, { [role]: toIdx });
     let nextRole = peer;
     if (!winner && (skip[peer] || 0) > 0) { skip[peer]--; nextRole = role; log.push({ who: peer, text: '停一回合（跳过本次）' }); }
-    rt.setState('monopoly', Object.assign({}, this._state, { cells: cells.map(c => Object.assign({}, c)), pos, cash, savings, skip, turn: winner ? turn : rt.seatOf(nextRole), dice: this.data.dice, log: log.slice(-30), winner, req: null }));
+    const ns = Object.assign({}, this._state, { cells: cells.map(c => Object.assign({}, c)), pos, cash, savings, skip, turn: winner ? turn : rt.seatOf(nextRole), dice: this.data.dice, log: log.slice(-30), winner, req: null });
+    this._state = ns;   // 立即同步本地(防 watch 异步期间 stale turn 致重复摇)
+    rt.setState('monopoly', ns);
   },
 
   // 破产救助：现金为负时自动自救，全程不弹窗。顺序：取存款 → 自动抵押自有地(拿半价) → 卖地给银行；仍不足才真破产。
