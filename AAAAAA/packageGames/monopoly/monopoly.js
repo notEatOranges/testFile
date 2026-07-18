@@ -116,7 +116,12 @@ Page({
   onShow() {
     if (this._bound) return;
     this._bound = true;
-    rt.bind(this, 'monopoly', s => { this._state = s; this.applyState(); });
+    rt.bind(this, 'monopoly', s => {
+      // 拒绝旧推送：自己一次摇骰里多次 setState(棋子移动/结算)的 emit+watch 回调可能乱序到达，
+      // 旧态(turn 还是自己)晚到会把 this._state 覆盖回去 → 又能摇(连摇 bug 真根因)。用 ts 拦。
+      if (s && this._state && s.ts && this._state.ts && s.ts < this._state.ts) return;
+      this._state = s; this.applyState();
+    });
   },
   onUnload() {
     rt.teardown(this); ident.teardown(this);
@@ -229,7 +234,6 @@ Page({
     Object.assign(patch, {
       started: true, turnSeat, myTurn: myTurnFlag,
       mode: s.mode || 'casual',
-      dice: s.dice || 1,
       grid,
       log: (s.log || []).slice(-30).reverse().map(it => fmtLog(it, role, this.data.peerName)),
       myCash: (s.cash && s.cash[role]) || 0, peerCash: (s.cash && s.cash[peer]) || 0,
