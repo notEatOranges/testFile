@@ -28,6 +28,8 @@ module.exports = {
   jail:     { t: 'lock-on',    e: '⛓️', i: '26d3' },
   bonus:    { t: 'gift',       e: '🎁', i: '1f381' },
   freepark: { t: 'location',   e: '🅿️', i: '1f17f' },     // 缺 parking，用定位
+  hospital: { t: 'hospital',   e: '🏥', i: '1f3e5' },
+  police:   { t: 'location',   e: '🚓', i: '1f693' },     // 缺 police-car，用定位
   tax:      { t: 'percent',    e: '💸', i: '1f4b8' },
   card:     { t: 'card',       e: '❓', i: '2753' },       // 机会
   fate:     { t: 'money',      e: '💰', i: '1f4b0' },       // 公共基金

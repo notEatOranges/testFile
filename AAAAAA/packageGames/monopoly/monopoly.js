@@ -60,6 +60,8 @@ function buildCells() {
     else if (i === 16) cells.push({ name: '监狱', type: 'jail' });
     else if (i === 27 || i === 38) cells.push({ name: '奖金', type: 'bonus', amt: 180 });
     else if (i === 21 || i === 43) cells.push({ name: '免费停车', type: 'freepark' });
+    else if (i === 7) cells.push({ name: '医院', type: 'hospital' });
+    else if (i === 15) cells.push({ name: '警局', type: 'police' });
     else { const g = ni % 6; const price = 80 + g * 60 + ni * 4; cells.push({ name: names[ni % names.length], type: 'property', group: g, price, rent: Math.round(price * 0.12), owner: null, level: 0, mortgaged: false }); ni++; }
   }
   return cells;
@@ -77,6 +79,20 @@ function bankRecover(cell) { return Math.round((cell.price + (cell.level || 0) *
 // 经典抵押：抵押拿地价一半现金(抵押中的地不收租)，赎回付抵押值 +10%(一次性，无循环利息)。
 function mortgageValueOf(cell) { return Math.round(cell.price * 0.5); }
 function redeemValueOf(cell) { return Math.round(cell.price * 0.55); }
+// 医院看病花销(可变偏小,大额低概率)+ 住院(25% 低概率,其中 85% 1天 / 15% 2天)
+function pickHospital() {
+  const r = Math.random();
+  const cost = r < 0.70 ? 50 + Math.floor(Math.random() * 100) : r < 0.95 ? 150 + Math.floor(Math.random() * 150) : 300 + Math.floor(Math.random() * 200);
+  const stay = Math.random() < 0.25 ? (Math.random() < 0.85 ? 1 : 2) : 0;
+  return { cost, stay };
+}
+// 警局奖励(可变偏小,大奖低概率)+ 蹲监狱(25% 低概率,其中 85% 1天 / 15% 2天)
+function pickPolice() {
+  const r = Math.random();
+  const reward = r < 0.70 ? 50 + Math.floor(Math.random() * 100) : r < 0.95 ? 150 + Math.floor(Math.random() * 150) : 300 + Math.floor(Math.random() * 200);
+  const jailDays = Math.random() < 0.25 ? (Math.random() < 0.85 ? 1 : 2) : 0;
+  return { reward, jailDays };
+}
 // 同色组（连铺）：groupCells 取某色组全部地皮；ownsFullSet 判断是否被一人集齐（成套）。
 function groupCells(cells, g) { return cells.filter(c => c && c.type === 'property' && c.group === g); }
 function ownsFullSet(cells, g, owner) { const gs = groupCells(cells, g); return gs.length > 0 && gs.every(c => c.owner === owner); }
@@ -409,6 +425,16 @@ Page({
     else if (cell.type === 'bonus') { cash[role] += cell.amt; log.push({ who: role, text: '获得奖金 +' + cell.amt }); this.showFx('good', cell.name + ' +' + cell.amt); }
     else if (cell.type === 'jail') { skip[role] = (skip[role] || 0) + 1; log.push({ who: role, text: '进了监狱，下回合停留' }); this.showFx('bad', '进监狱，停一回合'); }
     else if (cell.type === 'freepark') { cash[role] = (cash[role] || 0) + 50; log.push({ who: role, text: '免费停车 +50' }); this.showFx('good', '免费停车 +50'); }
+    else if (cell.type === 'hospital') {
+      const h = pickHospital();
+      cash[role] -= h.cost; log.push({ who: role, text: '医院看病 -' + h.cost }); this.showFx('bad', '看病 -' + h.cost);
+      if (h.stay > 0) { skip[role] = (skip[role] || 0) + h.stay; log.push({ who: role, text: '需住院 ' + h.stay + ' 天' }); this.showFx('bad', '住院 ' + h.stay + ' 天'); }
+    }
+    else if (cell.type === 'police') {
+      const p = pickPolice();
+      if (p.reward > 0) { cash[role] += p.reward; log.push({ who: role, text: '见义勇为奖金 +' + p.reward }); this.showFx('good', '见义勇为 +' + p.reward); }
+      if (p.jailDays > 0) { skip[role] = (skip[role] || 0) + p.jailDays; const ji = cells.findIndex(c => c && c.type === 'jail'); if (ji >= 0) toIdx = ji; log.push({ who: role, text: '打架斗殴被抓,蹲监狱 ' + p.jailDays + ' 天' }); this.showFx('bad', '进监狱 ' + p.jailDays + ' 天'); }
+    }
     else if (cell.type === 'card') {
       if (opts.backward) { log.push({ who: role, text: '后退路过「' + cell.name + '」（不触发抽牌）' }); }   // 后退落地不抽牌，避免移动卡循环
       else {

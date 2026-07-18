@@ -69,6 +69,8 @@
 .mp-cell.type-jail { background: #d8c4ad; }
 .mp-cell.type-bonus { background: #c5dcf3; }
 .mp-cell.type-freepark { background: #c5ecd9; }
+.mp-cell.type-hospital { background: #f4d6dc; }
+.mp-cell.type-police { background: #c9d8f0; }
 .mp-cell-icon { line-height: 1; color: #6b4a2a; display: flex; align-items: center; justify-content: center; }
 .mp-cell-icon-mini { line-height: 1; display: flex; align-items: center; justify-content: center; }
 .mp-cell-top { display: flex; align-items: center; justify-content: center; gap: 3rpx; width: 100%; }
