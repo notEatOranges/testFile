@@ -83,19 +83,27 @@ function bankRecover(cell) { return Math.round((cell.price + (cell.level || 0) *
 // 经典抵押：抵押拿地价一半现金(抵押中的地不收租)，赎回付抵押值 +10%(一次性，无循环利息)。
 function mortgageValueOf(cell) { return Math.round(cell.price * 0.5); }
 function redeemValueOf(cell) { return Math.round(cell.price * 0.55); }
-// 医院看病花销(可变偏小,大额低概率)+ 住院(25% 低概率,其中 85% 1天 / 15% 2天)
+const MEDICARE_CODE = 'C3T7Q5C3T7Q5';
+// 医院看病 3 档：小病/中病 医保真减免 10%~60%；大病只扣 20 或 50(提示大额减免 1000~10000 但不真减) + 住院 1~2 天
 function pickHospital() {
   const r = Math.random();
-  const cost = r < 0.70 ? 50 + Math.floor(Math.random() * 100) : r < 0.95 ? 150 + Math.floor(Math.random() * 150) : 300 + Math.floor(Math.random() * 200);
-  const stay = Math.random() < 0.25 ? (Math.random() < 0.85 ? 1 : 2) : 0;
-  return { cost, stay };
+  if (r < 0.70) {                                   // 小病 70%：30~90，医保 10%~60% 真减
+    const cost = 30 + Math.floor(Math.random() * 61), pct = 10 + Math.floor(Math.random() * 51);
+    return { tier: '小病', cost, deduct: Math.round(cost * pct / 100), actualCost: Math.round(cost * (1 - pct / 100)), stay: 0, code: MEDICARE_CODE };
+  }
+  if (r < 0.95) {                                   // 中病 25%：100~150，医保 10%~60% 真减
+    const cost = 100 + Math.floor(Math.random() * 51), pct = 10 + Math.floor(Math.random() * 51);
+    return { tier: '中病', cost, deduct: Math.round(cost * pct / 100), actualCost: Math.round(cost * (1 - pct / 100)), stay: 0, code: MEDICARE_CODE };
+  }
+  const cost = Math.random() < 0.5 ? 20 : 50;        // 大病 5%：扣 20 或 50
+  return { tier: '大病', cost, deduct: 1000 + Math.floor(Math.random() * 9001), actualCost: cost, stay: Math.random() < 0.5 ? 2 : 1, code: MEDICARE_CODE, fake: true };
 }
-// 警局奖励(可变偏小,大奖低概率)+ 蹲监狱(25% 低概率,其中 85% 1天 / 15% 2天)
+// 警局 3 档(对称医院)：小奖/中奖 正常；大奖只得 20 或 50(提示奖金 1000~10000 但不真给) + 蹲监狱 1~2 天
 function pickPolice() {
   const r = Math.random();
-  const reward = r < 0.70 ? 50 + Math.floor(Math.random() * 100) : r < 0.95 ? 150 + Math.floor(Math.random() * 150) : 300 + Math.floor(Math.random() * 200);
-  const jailDays = Math.random() < 0.25 ? (Math.random() < 0.85 ? 1 : 2) : 0;
-  return { reward, jailDays };
+  if (r < 0.70) return { tier: '小额', actualReward: 30 + Math.floor(Math.random() * 61), fakeReward: 0, jailDays: 0, code: MEDICARE_CODE };
+  if (r < 0.95) return { tier: '中额', actualReward: 100 + Math.floor(Math.random() * 51), fakeReward: 0, jailDays: 0, code: MEDICARE_CODE };
+  return { tier: '大奖', actualReward: Math.random() < 0.5 ? 20 : 50, fakeReward: 1000 + Math.floor(Math.random() * 9001), jailDays: Math.random() < 0.5 ? 2 : 1, code: MEDICARE_CODE, fake: true };
 }
 // 同色组（连铺）：groupCells 取某色组全部地皮；ownsFullSet 判断是否被一人集齐（成套）。
 function groupCells(cells, g) { return cells.filter(c => c && c.type === 'property' && c.group === g); }
@@ -431,13 +439,23 @@ Page({
     else if (cell.type === 'freepark') { cash[role] = (cash[role] || 0) + 50; log.push({ who: role, text: '免费停车 +50' }); this.showFx('good', '免费停车 +50'); }
     else if (cell.type === 'hospital') {
       const h = pickHospital();
-      cash[role] -= h.cost; log.push({ who: role, text: '医院看病 -' + h.cost }); this.showFx('bad', '看病 -' + h.cost);
-      if (h.stay > 0) { skip[role] = (skip[role] || 0) + h.stay; log.push({ who: role, text: '需住院 ' + h.stay + ' 天' }); this.showFx('bad', '住院 ' + h.stay + ' 天'); }
+      cash[role] = (cash[role] || 0) - h.actualCost;
+      if (h.fake) log.push({ who: role, text: '大病!医保' + h.code + ' 减免 ' + h.deduct + '(实际仍扣 ' + h.actualCost + '),住院 ' + h.stay + ' 天' });
+      else log.push({ who: role, text: h.tier + '看病 -' + h.cost + ',医保' + h.code + ' 减免 ' + h.deduct + ',实扣 ' + h.actualCost });
+      this.showFx('bad', (h.fake ? '大病 ' : h.tier + ' ') + '-' + h.actualCost + (h.stay > 0 ? ' 住院' + h.stay + '天' : ''));
+      if (h.stay > 0) skip[role] = (skip[role] || 0) + h.stay;
     }
     else if (cell.type === 'police') {
       const p = pickPolice();
-      if (p.reward > 0) { cash[role] += p.reward; log.push({ who: role, text: '见义勇为奖金 +' + p.reward }); this.showFx('good', '见义勇为 +' + p.reward); }
-      if (p.jailDays > 0) { skip[role] = (skip[role] || 0) + p.jailDays; const ji = cells.findIndex(c => c && c.type === 'jail'); if (ji >= 0) toIdx = ji; log.push({ who: role, text: '打架斗殴被抓,蹲监狱 ' + p.jailDays + ' 天' }); this.showFx('bad', '进监狱 ' + p.jailDays + ' 天'); }
+      cash[role] = (cash[role] || 0) + p.actualReward;
+      if (p.fake) {
+        log.push({ who: role, text: '大奖!奖金 ' + p.fakeReward + '(实际只得 ' + p.actualReward + '),却因打架进监狱 ' + p.jailDays + ' 天' });
+        skip[role] = (skip[role] || 0) + p.jailDays; const ji = cells.findIndex(c => c && c.type === 'jail'); if (ji >= 0) toIdx = ji;
+        this.showFx('bad', '得 ' + p.actualReward + ' 但进监狱 ' + p.jailDays + '天');
+      } else {
+        log.push({ who: role, text: '见义勇为 ' + p.tier + ' +' + p.actualReward });
+        this.showFx('good', '见义勇为 +' + p.actualReward);
+      }
     }
     else if (cell.type === 'card') {
       if (opts.backward) { log.push({ who: role, text: '后退路过「' + cell.name + '」（不触发抽牌）' }); }   // 后退落地不抽牌，避免移动卡循环
