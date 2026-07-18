@@ -50,15 +50,17 @@ function buildCells() {
     else if (i === 16) cells.push({ name: '监狱', type: 'jail' });
     else if (i === 27 || i === 38) cells.push({ name: '奖金', type: 'bonus', amt: 180 });
     else if (i === 21 || i === 43) cells.push({ name: '免费停车', type: 'freepark' });
-    else { const g = ni % 6; const price = 80 + g * 60 + ni * 4; cells.push({ name: names[ni % names.length], type: 'property', group: g, price, rent: Math.round(price * 0.3), owner: null, level: 0, mortgaged: false }); ni++; }
+    else { const g = ni % 6; const price = 80 + g * 60 + ni * 4; cells.push({ name: names[ni % names.length], type: 'property', group: g, price, rent: Math.round(price * 0.12), owner: null, level: 0, mortgaged: false }); ni++; }
   }
   return cells;
 }
 function cellCR(i) { return PATH[((i % BOARD) + BOARD) % BOARD]; }
 function rentOf(cell, cells) {
-  let r = cell.rent * (1 + (cell.level || 0));
-  if (cell.owner && cells && ownsFullSet(cells, cell.group, cell.owner)) r = Math.round(r * 1.5);   // 同色组成套：过路费 +50%
-  return r;
+  if (cell.mortgaged) return 0;                                  // 经典：抵押中的地不收过路费
+  const LEVEL_MULT = [1, 2, 3, 5];                               // 非线性：越高级涨幅越陡(对标 Monopoly 建房阶梯)
+  let r = cell.rent * LEVEL_MULT[cell.level || 0];
+  if (cell.owner && cells && ownsFullSet(cells, cell.group, cell.owner)) r = r * 2;   // 同色成套：过路费翻倍(经典原版)
+  return Math.round(r);
 }
 function upgradeCost(cell) { return Math.round(cell.price * 0.5); }
 // 卖银行回收价：(地皮价值 + 已投入升级费) × 60%。sellToBank / myProps 共用，避免重复公式。
@@ -193,7 +195,7 @@ Page({
     [0, 1, 2, 3, 4, 5].forEach(g => {
       const gs = groupCells(cells, g);
       if (gs.length && gs.every(c => c.owner === role) && gs.every(c => (c.level || 0) < 3)) {
-        mySets.push({ group: g, count: gs.length, cost: Math.round(gs.reduce((sum, c) => sum + upgradeCost(c), 0) * 0.9), names: gs.map(c => c.name).join('/') });
+        mySets.push({ group: g, count: gs.length, cost: Math.round(gs.reduce((sum, c) => sum + upgradeCost(c), 0) * (s.mode === 'classic' ? 1 : 0.9)), names: gs.map(c => c.name).join('/') });
       }
     });
     Object.assign(patch, {
@@ -487,7 +489,7 @@ Page({
           if ((cash[role] || 0) < cost) { log.push({ who: role, text: '现金不足，无法升级「' + cell.name + '」' }); }
           else {
             const up = await new Promise(res => {
-              wx.showModal({ title: '升级「' + cell.name + '」', content: '升到 ' + ((cell.level || 0) + 2) + ' 级？花 ' + cost + '（过路费变 ' + (rentOf(cell, cells) + cell.rent) + '）', confirmText: '升级', cancelText: '不了', success: r => res(r.confirm) });
+              wx.showModal({ title: '升级「' + cell.name + '」', content: '升到 ' + ((cell.level || 0) + 2) + ' 级？花 ' + cost + '（过路费变 ' + rentOf(Object.assign({}, cell, { level: (cell.level || 0) + 1 }), cells) + '）', confirmText: '升级', cancelText: '不了', success: r => res(r.confirm) });
             });
             if (up) { cash[role] -= cost; cells[idx] = Object.assign({}, cell, { level: (cell.level || 0) + 1 }); log.push({ who: role, text: '升级「' + cell.name + '」到 ' + (cells[idx].level + 1) + ' 级' }); this.showFx('good', '升级！过路费上涨'); }
           }
@@ -608,12 +610,12 @@ Page({
       if (!s || !s.cells) return s;
       const gs = s.cells.filter(c => c && c.type === 'property' && c.group === g);
       if (!gs.length || !gs.every(c => c.owner === role) || !gs.every(c => (c.level || 0) < 3)) { toast('整组不可升级'); return s; }
-      const cost = Math.round(gs.reduce((sum, c) => sum + upgradeCost(c), 0) * 0.9);
+      const cost = Math.round(gs.reduce((sum, c) => sum + upgradeCost(c), 0) * (s.mode === 'classic' ? 1 : 0.9));
       const cash = Object.assign({}, s.cash);
       if ((cash[role] || 0) < cost) { toast('现金不足，无法整组升级'); return s; }
       cash[role] -= cost;
       const cs = s.cells.map(c => (c && c.type === 'property' && c.group === g) ? Object.assign({}, c, { level: (c.level || 0) + 1 }) : c);
-      const lg = (s.log || []).slice(); lg.push({ who: role, text: '整组升级[' + gs.map(c => c.name).join('/') + '] -' + cost + '（过路费 +50%）' });
+      const lg = (s.log || []).slice(); lg.push({ who: role, text: '整组升级[' + gs.map(c => c.name).join('/') + '] -' + cost + '（过路费翻倍）' });
       this.showFx('good', '整组升级！过路费大涨');
       return Object.assign({}, s, { cells: cs, cash, log: lg.slice(-30) });
     });
