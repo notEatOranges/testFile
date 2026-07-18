@@ -10,14 +10,14 @@ const { toast } = require('@utils/util.js');
 const ICONS = require('./mono-icons.js');   // 棋盘图标表(店铺/功能格/房子酒店/标记，三主题素材)
 
 const START_CASH = 1500;
-const BOARD = 28;                       // 8×8 方形外圈：2*8+2*6=28，与原凹形一致，buildCells/pos 语义零变化
-// cellCR：8×8 方形外圈格子的 [col,row]（0-based）。起点在左下，顺时针环绕（与原 PATH 顺序对齐）。
+const BOARD = 32;                       // 8×10 长方形外圈：2*8+2*8=32，比 8×8 多 4 格，容纳医院/警局且不减少 property
+// cellCR：8×10 外圈格子的 [col,row]（0-based，col 0-7 × row 0-9）。起点在左下，顺时针环绕。
 function cellCR(i) {
   i = ((i % BOARD) + BOARD) % BOARD;    // 支持负数/环绕（棋子插值复用）
-  if (i < 8) return [i, 7];             // 底边 左→右（格0=起点=左下）
-  if (i < 15) return [7, 14 - i];       // 右边 下→上
-  if (i < 22) return [21 - i, 0];       // 顶边 右→左
-  return [0, i - 21];                   // 左边 上→下
+  if (i < 8) return [i, 9];             // 底边 左→右（格0=起点=左下）
+  if (i < 16) return [7, 16 - i];       // 右边 下→上
+  if (i < 24) return [23 - i, 0];       // 顶边 右→左
+  return [0, i - 23];                   // 左边 上→下
 }
 // 双牌组(符合经典 Monopoly):机会(chance)偏移动、公共基金(fate)偏金钱。落到对应格抽对应副。
 const DECK = {
@@ -693,6 +693,6 @@ Page({
     const i0 = Math.floor(f) % BOARD, i1 = (i0 + 1) % BOARD, fr = f - Math.floor(f);
     const [c0, r0] = cellCR(i0), [c1, r1] = cellCR(i1);
     const c = c0 + (c1 - c0) * fr, r = r0 + (r1 - r0) * fr;
-    return [(c + 0.5) / 8 * 100, (r + 0.5) / 8 * 100];
+    return [(c + 0.5) / 8 * 100, (r + 0.5) / 10 * 100];   // 8×10：宽8列 / 高10行
   }
 });
