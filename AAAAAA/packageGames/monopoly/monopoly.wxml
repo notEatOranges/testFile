@@ -42,7 +42,7 @@
           <view class="mp-card-shuffle-hint">洗牌中</view>
         </view>
         <view wx:else class="mp-card-reveal {{cardAnim.kind}}" style="transform: scaleX({{cardAnim.flip || 1}});">
-          <view wx:if="{{cardAnim.face}}" class="mp-card-face">
+          <view wx:if="{{cardAnim.face}}" class="mp-card-face {{cardAnim.kind}}">
             <view class="mp-card-title">{{cardAnim.kind === 'good' ? '好事' : '坏事'}}</view>
             <view class="mp-card-text">{{cardAnim.text}}</view>
           </view>

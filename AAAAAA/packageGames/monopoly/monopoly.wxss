@@ -89,16 +89,17 @@
 
 /* 抽牌浮层(9.9a 最简，翻面 9.9e 加) */
 .mp-card-layer { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 8; pointer-events: none; }
-.mp-card-reveal { width: 260rpx; min-height: 320rpx; padding: 24rpx 18rpx; border-radius: 20rpx; border: 3rpx solid #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14rpx; color: #fff; box-shadow: 0 8rpx 24rpx rgba(0,0,0,.2); }
-.mp-card-reveal.good { background: #2ec24e; }
-.mp-card-reveal.bad { background: #e85a86; }
-.mp-card-title { font-size: 38rpx; font-weight: 800; }
-.mp-card-text { font-size: 26rpx; text-align: center; line-height: 1.4; }
+.mp-card-reveal { width: 260rpx; height: 360rpx; display: flex; align-items: center; justify-content: center; }
+.mp-card-back { width: 260rpx; height: 360rpx; border-radius: 20rpx; background: #e85a86; color: rgba(255,255,255,.5); font-size: 100rpx; font-weight: 800; display: flex; align-items: center; justify-content: center; border: 3rpx solid #fff; box-shadow: 0 8rpx 24rpx rgba(0,0,0,.2); }
 .mp-card-shuffle { display: flex; flex-direction: column; align-items: center; gap: 18rpx; }
-.mp-card-back { width: 160rpx; height: 220rpx; border-radius: 14rpx; background: #e85a86; color: rgba(255,255,255,.5); font-size: 80rpx; font-weight: 800; display: flex; align-items: center; justify-content: center; border: 2rpx solid #fff; animation: mpCardShake .6s ease-in-out infinite; }
+.mp-card-shuffle .mp-card-back { animation: mpCardShake .6s ease-in-out infinite; }
 .mp-card-shuffle-hint { font-size: 24rpx; color: #8a6b78; }
 @keyframes mpCardShake { 0%,100% { transform: rotate(-6deg) translateX(-6rpx); } 50% { transform: rotate(6deg) translateX(6rpx); } }
-.mp-card-face { display: flex; flex-direction: column; align-items: center; gap: 14rpx; }
+.mp-card-face { width: 260rpx; height: 360rpx; border-radius: 20rpx; border: 3rpx solid #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14rpx; color: #fff; box-shadow: 0 8rpx 24rpx rgba(0,0,0,.2); }
+.mp-card-face.good { background: #2ec24e; }
+.mp-card-face.bad { background: #e85a86; }
+.mp-card-title { font-size: 38rpx; font-weight: 800; }
+.mp-card-text { font-size: 26rpx; text-align: center; line-height: 1.4; }
 
 /* 事件特效横幅 */
 .mp-fx { position: absolute; top: 50%; left: 50%; padding: 18rpx 40rpx; border-radius: 14rpx; color: #fff; font-weight: 800; font-size: 30rpx; z-index: 9; pointer-events: none; max-width: 80%; text-align: center; box-shadow: 0 6rpx 18rpx rgba(0,0,0,.2); animation: mpFxIn .25s ease-out both, mpFxOut .35s ease-in 1.15s both; }

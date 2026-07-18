@@ -439,6 +439,7 @@ Page({
         this.showFx('bad', '付过路费 ' + r);
       }
     }
+    this.syncLog(cells, cash, log, pos, skip, { savings });   // 落点结算即时同步(日志/资金/位置实时推送,不等末尾)
 
     // 现金为负 → 破产救助（存款→抵押→卖地→破产），不再直接判输
     if (cash[role] < 0) {
