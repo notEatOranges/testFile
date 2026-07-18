@@ -288,10 +288,9 @@ Page({
     finally { if (this._rollWatchdog) { clearTimeout(this._rollWatchdog); this._rollWatchdog = null; } this.setData({ rolling: false }); }
   },
 
-  // 棋子沿外圈滑行：setTimeout(33ms) 逐帧 setData 棋子 x/y/hop；moving 标志防 applyState 覆盖；结束 res()。
+  // 棋子沿外圈滑行：setTimeout(33ms) 逐帧 setData 棋子 x/y(百分比)/hop(rpx)；moving 标志防 applyState 覆盖；结束 res()。
   animateMove(role, from, to, backward) {
     return new Promise(res => {
-      if (!this.cellW) { res(); return; }
       const span = backward ? -(((from - to + BOARD) % BOARD) || 0) : (((to < from ? to + BOARD : to)) - from);
       const key = role === room.getRole() ? 'tokenMe' : 'tokenPeer';
       const t0 = Date.now(); const dur = 760;
