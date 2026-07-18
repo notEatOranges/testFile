@@ -274,9 +274,24 @@ Page({
     finally { if (this._rollWatchdog) { clearTimeout(this._rollWatchdog); this._rollWatchdog = null; } }
   },
 
-  // 棋子滑行：9.9a 最简版(瞬移，由 applyState 按 pos 渲染)；真实滑行动画 9.9c 加(setTimeout + setData)。
+  // 棋子沿外圈滑行：setTimeout(33ms) 逐帧 setData 棋子 x/y/hop；moving 标志防 applyState 覆盖；结束 res()。
   animateMove(role, from, to, backward) {
-    return Promise.resolve();
+    return new Promise(res => {
+      if (!this.cellW) { res(); return; }
+      const span = backward ? -(((from - to + BOARD) % BOARD) || 0) : (((to < from ? to + BOARD : to)) - from);
+      const key = role === room.getRole() ? 'tokenMe' : 'tokenPeer';
+      const t0 = Date.now(); const dur = 760;
+      const step = () => {
+        const p = Math.min(1, (Date.now() - t0) / dur);
+        const hop = Math.abs(Math.sin(p * Math.PI * 2)) * this.cellW * 0.4;   // 跳动
+        const f = from + span * p;
+        const [x, y] = this.tokenXY(f);
+        this.setData({ [key]: Object.assign({}, this.data[key], { x, y, hop, moving: true }) });
+        if (p < 1) this._raf = setTimeout(step, 33);
+        else { this.setData({ [key]: Object.assign({}, this.data[key], { hop: 0, moving: false }) }); res(); }
+      };
+      step();
+    });
   },
 
   // 骰子翻滚：tumble(数字乱跳+摆动衰减) → settle(落定显点数+前进提示) → idle。
