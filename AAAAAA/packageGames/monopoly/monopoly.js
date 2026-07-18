@@ -117,9 +117,9 @@ Page({
     if (this._bound) return;
     this._bound = true;
     rt.bind(this, 'monopoly', s => {
-      // 拒绝旧推送：自己一次摇骰里多次 setState(棋子移动/结算)的 emit+watch 回调可能乱序到达，
-      // 旧态(turn 还是自己)晚到会把 this._state 覆盖回去 → 又能摇(连摇 bug 真根因)。用 ts 拦。
-      if (s && this._state && s.ts && this._state.ts && s.ts < this._state.ts) return;
+      // 拒旧推送：一次摇骰多次写(syncLog/末尾)的 emit+watch 回调可能乱序/同毫秒到达，
+      // 旧态(turn=自己)晚到覆盖 this._state → 连摇。用单调递增 seq 拒旧(比 ts 可靠,无同毫秒漏洞)。
+      if (s && this._state && s.seq != null && this._state.seq != null && s.seq < this._state.seq) return;
       this._state = s; this.applyState();
     });
   },
@@ -134,7 +134,7 @@ Page({
   },
 
   fresh(mode) {
-    return { mode: mode || 'casual', cells: buildCells(), pos: { boy: 0, girl: 0 }, cash: { boy: START_CASH, girl: START_CASH }, savings: { boy: 0, girl: 0 }, skip: { boy: 0, girl: 0 }, turn: Math.random() < 0.5 ? rt.RED : rt.BLUE, dice: 1, log: [], winner: null, req: null, sellReq: null };
+    return { mode: mode || 'casual', cells: buildCells(), pos: { boy: 0, girl: 0 }, cash: { boy: START_CASH, girl: START_CASH }, savings: { boy: 0, girl: 0 }, skip: { boy: 0, girl: 0 }, turn: Math.random() < 0.5 ? rt.RED : rt.BLUE, dice: 1, log: [], winner: null, req: null, sellReq: null, seq: 0 };
   },
   startMatch(e) { this._recorded = false; rt.setState('monopoly', this.fresh(e && e.currentTarget && e.currentTarget.dataset.mode)); },
   requestRestart() { rt.requestRestart('monopoly', this._state, room.getRole(), !!this.data.winner, () => this.fresh(this._state && this._state.mode)); },
@@ -179,7 +179,7 @@ Page({
       wx.showModal({ title: '买地请求', content: (names[sellReq.by] || '对方') + ' 要把「' + (cell ? cell.name : '地块') + '」以 ' + sellReq.price + ' 卖给你，买吗？', confirmText: '买下', cancelText: '不要',
         success: r => {
           if (r.confirm) {
-            rt.transactionState('monopoly', s => {
+            this.mtxn( s => {
               if (!s || !s.cells) return s;
               const cs = s.cells.map(c => Object.assign({}, c));
               const cash = Object.assign({}, s.cash);
@@ -189,7 +189,7 @@ Page({
               const lg = (s.log || []).slice(); lg.push({ who: role, text: '买下{{' + sellReq.by + '}}的「' + cs[sellReq.idx].name + '」-' + sellReq.price });
               return Object.assign({}, s, { cells: cs, cash, log: lg.slice(-30), sellReq: null });
             });
-          } else { rt.transactionState('monopoly', s => Object.assign({}, s, { sellReq: null })); }
+          } else { this.mtxn( s => Object.assign({}, s, { sellReq: null })); }
         } });
     } else if (!sellReq) { this._sellPrompted = false; }
     patch.sellReqPending = !!(sellReq && sellReq.by === role);
@@ -281,7 +281,7 @@ Page({
     // 中间态 turn 还=自己，它的 emit/watch 回调若晚于 resolve 末尾(turn=对方)到达，
     // 即使有 ts 比较也存在同毫秒风险，会把回合覆盖回自己 → 连摇。棋子滑行靠本地 animateMove，
     // 对端在 resolve 落点的 syncLog 统一收到最终 pos/log。
-    this._state = Object.assign({}, s, { pos: Object.assign({}, s.pos, { [role]: to }), cash, savings, log });
+    this._state = Object.assign({}, s, { pos: Object.assign({}, s.pos, { [role]: to }), cash, savings, log, seq: (s.seq || 0) + 1 });
 
     // 棋子滑行动画（沿环形），完成后结算
     await this.animateMove(role, from, to);
@@ -291,7 +291,7 @@ Page({
       // 兜底：结算中途出错也要把回合交给对方，避免卡在某人手上或重复摇
       const peer = role === 'boy' ? 'girl' : 'boy';
       const st = this._state || s;
-      if (st && !st.winner) rt.setState('monopoly', Object.assign({}, st, { turn: rt.seatOf(peer) }));
+      if (st && !st.winner) this.commit({ turn: rt.seatOf(peer) });
     }
     finally { if (this._rollWatchdog) { clearTimeout(this._rollWatchdog); this._rollWatchdog = null; } }
     // 关键：rolling 不在 finally 清！交给 applyState 在「watch 推来 turn=对方」时清。
@@ -360,10 +360,23 @@ Page({
     });
   },
 
+  // 统一提交：本地递增 seq + 立即更新 _state + 推送。所有写状态走它，保证 seq 单调(防异步回调旧态覆盖 → 连摇)。
+  commit(patch) {
+    const ns = Object.assign({}, this._state, patch, { seq: (this._state.seq || 0) + 1 });
+    this._state = ns;
+    rt.setState('monopoly', ns);
+    return ns;
+  },
+  // transactionState 包装：updater 派生后自动加 seq(银行/卖地/抵押等「读后改」操作)。
+  mtxn(updater) {
+    return this.mtxn( s => {
+      const next = updater(s);
+      return next ? Object.assign({}, next, { seq: ((s && s.seq) || 0) + 1 }) : next;
+    });
+  },
   // 写一次中间态（让事件日志及时同步给双方）
   syncLog(cells, cash, log, pos, skip, extra) {
-    this._state = Object.assign({}, this._state, { cells: cells.map(c => Object.assign({}, c)), cash: Object.assign({}, cash), pos: Object.assign({}, pos), skip: Object.assign({}, skip), log: log.slice(-30) }, extra || {});
-    rt.setState('monopoly', this._state);
+    this.commit(Object.assign({ cells: cells.map(c => Object.assign({}, c)), cash: Object.assign({}, cash), pos: Object.assign({}, pos), skip: Object.assign({}, skip), log: log.slice(-30) }, extra || {}));
   },
 
   async resolve(role, idx, cash, log, turn, opts) {
@@ -461,9 +474,7 @@ Page({
     if (toIdx !== idx) pos = Object.assign({}, pos, { [role]: toIdx });
     let nextRole = peer;
     if (!winner && (skip[peer] || 0) > 0) { skip[peer]--; nextRole = role; log.push({ who: peer, text: '停一回合（跳过本次）' }); }
-    const ns = Object.assign({}, this._state, { cells: cells.map(c => Object.assign({}, c)), pos, cash, savings, skip, turn: winner ? turn : rt.seatOf(nextRole), dice: this.data.dice, log: log.slice(-30), winner, req: null });
-    this._state = ns;   // 立即同步本地(防 watch 异步期间 stale turn 致重复摇)
-    rt.setState('monopoly', ns);
+    this.commit({ cells: cells.map(c => Object.assign({}, c)), pos, cash, savings, skip, turn: winner ? turn : rt.seatOf(nextRole), dice: this.data.dice, log: log.slice(-30), winner, req: null });
   },
 
   // 破产救助：现金为负时自动自救，全程不弹窗。顺序：取存款 → 自动抵押自有地(拿半价) → 卖地给银行；仍不足才真破产。
@@ -508,7 +519,7 @@ Page({
     const act = e.currentTarget.dataset.act, amt = parseInt(e.currentTarget.dataset.amt || '0', 10);
     const role = room.getRole();
     // 走 transactionState：从 DB 现读整份状态再派生，避免从陈旧 this._state 带出 turn/pos 把错回合写回（丢摇骰 bug 根因）
-    rt.transactionState('monopoly', s => {
+    this.mtxn( s => {
       if (!s || !s.cash) return s;
       const cash = Object.assign({}, s.cash), savings = Object.assign({}, s.savings || { boy: 0, girl: 0 });
       const lg = (s.log || []).slice();
@@ -529,7 +540,7 @@ Page({
     wx.showModal({ title: '卖给银行', content: '确定把「' + cell.name + '」卖给银行，获得 ' + get + '？', confirmText: '卖出', cancelText: '取消',
       success: r => {
         if (!r.confirm) return;
-        rt.transactionState('monopoly', s => {
+        this.mtxn( s => {
           if (!s || !s.cells) return s;
           const c = s.cells[idx];
           if (!c || c.owner !== role) { toast('地块已变化'); return s; }   // 防御：非己地不卖
@@ -550,17 +561,17 @@ Page({
     wx.showModal({ title: '卖给对方', content: '确定把「' + cell.name + '」以 ' + price + ' 卖给对方？', confirmText: '发起', cancelText: '取消',
       success: r => {
         if (!r.confirm) return;
-        rt.transactionState('monopoly', s => Object.assign({}, s, { sellReq: { by: role, idx, price } }));
+        this.mtxn( s => Object.assign({}, s, { sellReq: { by: role, idx, price } }));
         this.setData({ bankOpen: false });
         toast('已发起卖地请求(价 ' + price + ')，等对方');
       }
     });
   },
-  cancelSell() { rt.transactionState('monopoly', s => Object.assign({}, s, { sellReq: null })); toast('已取消卖地'); },
+  cancelSell() { this.mtxn( s => Object.assign({}, s, { sellReq: null })); toast('已取消卖地'); },
   // 经典抵押：把自有地抵押给银行换半价现金，抵押中的地不收过路费。走 transactionState 现读现写 + 防御。
   mortgageProp(e) {
     const idx = parseInt(e.currentTarget.dataset.idx, 10), role = room.getRole();
-    rt.transactionState('monopoly', s => {
+    this.mtxn( s => {
       if (!s || !s.cells) return s;
       const c = s.cells[idx];
       if (!c || c.owner !== role) { toast('地块已变化'); return s; }
@@ -576,7 +587,7 @@ Page({
   // 赎回：付抵押值+10% 解除抵押，恢复收租。
   redeemProp(e) {
     const idx = parseInt(e.currentTarget.dataset.idx, 10), role = room.getRole();
-    rt.transactionState('monopoly', s => {
+    this.mtxn( s => {
       if (!s || !s.cells) return s;
       const c = s.cells[idx];
       if (!c || c.owner !== role) { toast('地块已变化'); return s; }
@@ -593,7 +604,7 @@ Page({
   // 同色组成套升级：整组每块 level+1，休闲模式打 9 折；走 transaction 现读现写
   upgradeGroup(e) {
     const g = parseInt(e.currentTarget.dataset.group, 10), role = room.getRole();
-    rt.transactionState('monopoly', s => {
+    this.mtxn( s => {
       if (!s || !s.cells) return s;
       const gs = s.cells.filter(c => c && c.type === 'property' && c.group === g);
       if (!gs.length || !gs.every(c => c.owner === role) || !gs.every(c => (c.level || 0) < 3)) { toast('整组不可升级'); return s; }
