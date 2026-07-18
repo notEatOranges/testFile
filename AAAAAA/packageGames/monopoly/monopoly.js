@@ -236,7 +236,7 @@ Page({
     }
 
     Object.assign(patch, {
-      started: true, turnSeat, myTurn: myTurnFlag, rolling: myTurnFlag ? this.data.rolling : false,
+      started: true, turnSeat, myTurn: myTurnFlag,
       mode: s.mode || 'casual',
       dice: s.dice || 1,
       grid,
@@ -295,7 +295,7 @@ Page({
       const st = this._state || s;
       if (st && !st.winner) rt.setState('monopoly', Object.assign({}, st, { turn: rt.seatOf(peer) }));
     }
-    finally { if (this._rollWatchdog) { clearTimeout(this._rollWatchdog); this._rollWatchdog = null; } }
+    finally { if (this._rollWatchdog) { clearTimeout(this._rollWatchdog); this._rollWatchdog = null; } this.setData({ rolling: false }); }
   },
 
   // 棋子沿外圈滑行：setTimeout(33ms) 逐帧 setData 棋子 x/y/hop；moving 标志防 applyState 覆盖；结束 res()。

@@ -50,7 +50,7 @@
         </view>
       </view>
       <!-- 事件特效横幅 -->
-      <view wx:if="{{fx}}" class="mp-fx {{fx.kind}}">{{fx.text}}</view>
+      <view wx:if="{{fx && !cardAnim}}" class="mp-fx {{fx.kind}}">{{fx.text}}</view>
       <!-- 胜利遮罩 -->
       <view wx:if="{{winner}}" class="mp-over-mask">
         <view class="mp-over-text">{{winnerText}}</view>

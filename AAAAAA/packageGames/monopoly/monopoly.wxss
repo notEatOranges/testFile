@@ -80,9 +80,9 @@
 .mp-center-hint { font-size: 24rpx; color: var(--text-soft); }
 
 /* 棋子：绝对定位，clip-path 画心/星 */
-.mp-token { position: absolute; width: 36rpx; height: 36rpx; transform: translate(-50%, -60%); box-shadow: 0 4rpx 8rpx rgba(0,0,0,.3); border: 3rpx solid #fff; pointer-events: none; z-index: 3; }
-.mp-token.heart { clip-path: path('M18,33 C-2,19 4,3 18,12 C32,3 38,19 18,33 Z'); border-radius: 50%; }
-.mp-token.star { clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); border-radius: 50%; }
+.mp-token { position: absolute; width: 32rpx; height: 32rpx; transform: translate(-50%, -60%); box-shadow: 0 4rpx 8rpx rgba(0,0,0,.3); border: 3rpx solid #fff; pointer-events: none; z-index: 3; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 800; }
+.mp-token.heart::after { content: '♥'; font-size: 22rpx; line-height: 1; }
+.mp-token.star::after { content: '★'; font-size: 18rpx; line-height: 1; }
 
 /* 抽牌浮层(9.9a 最简，翻面 9.9e 加) */
 .mp-card-layer { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; z-index: 8; pointer-events: none; }
