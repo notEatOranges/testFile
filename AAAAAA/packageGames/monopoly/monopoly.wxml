@@ -68,8 +68,8 @@
   </view>
 
   <view class="mp-pair">
-    <view class="mp-p me"><text class="mp-n">{{myName}}</text><text class="mp-cash">{{myCash}}</text></view>
-    <view class="mp-p"><text class="mp-n">{{peerName}}</text><text class="mp-cash">{{peerCash}}</text></view>
+    <view class="mp-p me {{started && myTurn ? 'active' : ''}}"><text class="mp-n">{{myName}}</text><text class="mp-cash">{{myCash}}</text></view>
+    <view class="mp-p {{started && !myTurn ? 'active' : ''}}"><text class="mp-n">{{peerName}}</text><text class="mp-cash">{{peerCash}}</text></view>
   </view>
 
   <view class="mp-info">

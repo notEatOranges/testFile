@@ -6,13 +6,16 @@
 .mp-empty { position: absolute; inset: 0; border-radius: 16rpx; background: rgba(243,233,210,.95); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14rpx; }
 .mp-title { font-size: 52rpx; font-weight: 800; color: #b58a5a; }
 .mp-start { padding: 16rpx 56rpx; border-radius: 36rpx; background: var(--primary); color: #fff; font-size: 30rpx; }
-.mp-over-mask { position: absolute; inset: 0; border-radius: 16rpx; background: rgba(0,0,0,.45); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20rpx; }
-.mp-over-text { color: #fff; font-size: 44rpx; font-weight: 800; }
+.mp-over-mask { position: absolute; inset: 0; border-radius: 16rpx; background: rgba(0,0,0,.45); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20rpx; animation: mpFade .3s ease-out; }
+@keyframes mpFade { from { opacity: 0; } to { opacity: 1; } }
+.mp-over-text { color: #fff; font-size: 44rpx; font-weight: 800; animation: mpPop .4s cubic-bezier(.2,.9,.3,1.3) .1s both; }
+@keyframes mpPop { from { transform: scale(.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
 /* 双方金币 */
 .mp-pair { display: flex; gap: 18rpx; width: 92vw; max-width: 620rpx; margin: 10rpx 0 4rpx; }
 .mp-p { flex: 1; display: flex; align-items: center; justify-content: space-between; padding: 10rpx 22rpx; border-radius: 16rpx; background: var(--card); box-shadow: 0 4rpx 14rpx var(--card-shadow); }
 .mp-p.me { border-left: 6rpx solid #ff5a5f; }
+.mp-p.active { box-shadow: 0 6rpx 22rpx var(--primary); transform: translateY(-3rpx); transition: transform .2s, box-shadow .2s; }
 .mp-n { font-size: 24rpx; font-weight: 600; }
 .mp-cash { font-size: 34rpx; font-weight: 800; color: var(--primary-deep); }
 
@@ -98,9 +101,11 @@
 .mp-card-face { display: flex; flex-direction: column; align-items: center; gap: 14rpx; }
 
 /* 事件特效横幅 */
-.mp-fx { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); padding: 18rpx 40rpx; border-radius: 14rpx; color: #fff; font-weight: 800; font-size: 30rpx; z-index: 9; pointer-events: none; max-width: 80%; text-align: center; box-shadow: 0 6rpx 18rpx rgba(0,0,0,.2); }
+.mp-fx { position: absolute; top: 50%; left: 50%; padding: 18rpx 40rpx; border-radius: 14rpx; color: #fff; font-weight: 800; font-size: 30rpx; z-index: 9; pointer-events: none; max-width: 80%; text-align: center; box-shadow: 0 6rpx 18rpx rgba(0,0,0,.2); animation: mpFxIn .25s ease-out both, mpFxOut .35s ease-in 1.15s both; }
 .mp-fx.good { background: #2ec24e; }
 .mp-fx.bad { background: #e85a86; }
+@keyframes mpFxIn { from { transform: translate(-50%,-50%) scale(.5); opacity: 0; } to { transform: translate(-50%,-50%) scale(1); opacity: 1; } }
+@keyframes mpFxOut { from { transform: translate(-50%,-50%) scale(1); opacity: 1; } to { transform: translate(-50%,-50%) scale(1.15); opacity: 0; } }
 
 /* 胜利遮罩(复用 .mp-over-mask/.mp-over-text) */
 .mp-over-sub { color: rgba(255,255,255,.7); font-size: 26rpx; margin-top: 20rpx; }
