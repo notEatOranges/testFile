@@ -33,8 +33,8 @@
         <view class="mp-center-hint">{{myTurn ? '该你掷骰' : (peerName + ' 回合')}}</view>
       </view>
       <!-- 棋子(绝对定位) -->
-      <view wx:if="{{tokenMe}}" class="mp-token {{tokenMe.kind}}" style="left:{{tokenMe.x}}px;top:{{tokenMe.y}}px;transform:translate(-50%,-60%) translateY({{-tokenMe.hop || 0}}px);background:{{tokenMe.color}};"></view>
-      <view wx:if="{{tokenPeer}}" class="mp-token {{tokenPeer.kind}}" style="left:{{tokenPeer.x}}px;top:{{tokenPeer.y}}px;transform:translate(-50%,-60%) translateY({{-tokenPeer.hop || 0}}px);background:{{tokenPeer.color}};"></view>
+      <view wx:if="{{tokenMe}}" class="mp-token {{tokenMe.kind}}" style="left:{{tokenMe.x}}%;top:{{tokenMe.y}}%;transform:translate(-50%,-60%) translateY({{-tokenMe.hop || 0}}rpx);background:{{tokenMe.color}};"></view>
+      <view wx:if="{{tokenPeer}}" class="mp-token {{tokenPeer.kind}}" style="left:{{tokenPeer.x}}%;top:{{tokenPeer.y}}%;transform:translate(-50%,-60%) translateY({{-tokenPeer.hop || 0}}rpx);background:{{tokenPeer.color}};"></view>
       <!-- 抽牌浮层 -->
       <view wx:if="{{cardAnim}}" class="mp-card-layer">
         <view wx:if="{{cardAnim.phase === 'shuffle'}}" class="mp-card-shuffle">

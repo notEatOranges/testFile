@@ -112,7 +112,7 @@ Page({
     this.setData({ mySeat: rt.seatOf(room.getRole()) });
     ident.bind(this, { onChange: () => this.applyState() });
   },
-  onReady() { this.measureBoard(); },
+  onReady() {},
   onShow() {
     if (this._bound) return;
     this._bound = true;
@@ -141,16 +141,6 @@ Page({
   },
 
   // 测量棋盘 DOM 尺寸(替代旧 setupCanvas)：只读 .mp-board 宽，算 cellW = w/8。无 ctx/dpr。
-  measureBoard() {
-    wx.createSelectorQuery().in(this).select('.mp-board').boundingClientRect(res => {
-      const f = res && res[0];
-      if (!f || !f.width) { setTimeout(() => this.measureBoard(), 80); return; }   // .mp-board 受 wx:if 控制，未渲染则重试
-      this.boardW = f.width;
-      this.cellW = f.width / 8;
-      this.applyState();
-    }).exec();
-  },
-
   applyState() {
     const s = this._state, role = this.data.role, peer = this.data.peer;
     const names = {}; names[role] = this.data.myName; names[peer] = this.data.peerName;
@@ -228,7 +218,7 @@ Page({
     });
     // 棋子像素坐标(按 pos + cellW)；动画进行中(moving)不被对端 state 覆盖
     const peerRole = role === 'boy' ? 'girl' : 'boy';
-    if (this.cellW && s.pos) {
+    if (s.pos) {
       const [mx, my] = this.tokenXY(s.pos[role]);
       const [px, py] = this.tokenXY(s.pos[peerRole]);
       if (!this.data.tokenMe || !this.data.tokenMe.moving) patch.tokenMe = { x: mx, y: my, hop: 0, kind: seatShape(role), color: seatColor(role), moving: false };
@@ -307,7 +297,7 @@ Page({
       const t0 = Date.now(); const dur = 760;
       const step = () => {
         const p = Math.min(1, (Date.now() - t0) / dur);
-        const hop = Math.abs(Math.sin(p * Math.PI * 2)) * this.cellW * 0.4;   // 跳动
+        const hop = Math.abs(Math.sin(p * Math.PI * 2)) * 10;   // 跳动 rpx
         const f = from + span * p;
         const [x, y] = this.tokenXY(f);
         this.setData({ [key]: Object.assign({}, this.data[key], { x, y, hop, moving: true }) });
@@ -616,12 +606,11 @@ Page({
     });
   },
 
-  // 棋子像素坐标：按连续位置 f(可小数) 在 8×8 外圈插值算中心。tokenMe/tokenPeer 的 left/top 用。
+  // 棋子坐标：按连续位置 f(可小数) 在 8×8 外圈插值算格子中心，返回百分比(0-100)。不依赖 DOM 测量，规避 cellW 时机问题。
   tokenXY(f) {
-    if (!this.cellW) return [0, 0];
     const i0 = Math.floor(f) % BOARD, i1 = (i0 + 1) % BOARD, fr = f - Math.floor(f);
     const [c0, r0] = cellCR(i0), [c1, r1] = cellCR(i1);
     const c = c0 + (c1 - c0) * fr, r = r0 + (r1 - r0) * fr;
-    return [c * this.cellW + this.cellW / 2, r * this.cellW + this.cellW * 0.6];
+    return [(c + 0.5) / 8 * 100, (r + 0.5) / 8 * 100];
   }
 });

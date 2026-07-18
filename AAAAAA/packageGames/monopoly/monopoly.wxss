@@ -75,7 +75,7 @@
 
 /* 中心 6×6：跨 grid 中间，放骰子+提示 */
 .mp-center { grid-column: 2 / 8; grid-row: 2 / 8; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14rpx; }
-.mp-dice { width: 110rpx; height: 110rpx; border-radius: 22rpx; background: linear-gradient(180deg, #fff, #ffd6e2); border: 3rpx solid #e85a86; display: flex; align-items: center; justify-content: center; font-size: 64rpx; font-weight: 800; color: #e85a86; box-shadow: 4rpx 8rpx 0 rgba(0,0,0,.12); }
+.mp-dice { width: 110rpx; height: 110rpx; border-radius: 22rpx; background: linear-gradient(180deg, #fff, #ffd6e2); border: 3rpx solid #e85a86; display: flex; align-items: center; justify-content: center; font-size: 64rpx; font-weight: 800; color: #e85a86; }
 .mp-dice-hint { font-size: 30rpx; font-weight: 800; color: #e85a86; }
 .mp-center-hint { font-size: 24rpx; color: var(--text-soft); }
 
