@@ -114,6 +114,13 @@ function seatColor(role) { return rt.seatOf(role) === rt.RED ? '#ff5a5f' : '#00b
 
 // 日志条目结构化：{ who: 触发者role, text: '描述' }，text 内可用 {{boy}}/{{girl}} 占位指代某个玩家。
 // 渲染时按「当前观看者」视角转换：自己 →「你」，对方 → 对方昵称。双方共享同一份中立 log，各自看到自己的视角。
+function fmtCash(n) {
+  n = Math.abs(n || 0);
+  if (n >= 1e8) return (n / 1e8).toFixed(1) + '亿';
+  if (n >= 1e7) return (n / 1e7).toFixed(1) + '千万';
+  if (n >= 1e4) return (n / 1e4).toFixed(1) + '万';
+  return String(n);
+}
 function fmtLog(item, role, peerName) {
   if (item == null) return '';
   if (typeof item === 'string') return item;   // 兼容历史纯文本日志
@@ -240,6 +247,7 @@ Page({
 
     const myProps = [];
     cells.forEach((c, idx) => { if (c && c.type === 'property' && c.owner === role) myProps.push({ idx, name: c.name, price: c.price, level: c.level || 0, mortgaged: !!c.mortgaged, mortgageValue: mortgageValueOf(c), redeemValue: redeemValueOf(c), sellBank: bankRecover(c), sellPeer: Math.round(c.price * 0.8) }); });
+    const myPropCount = myProps.length, myMortgagedCount = myProps.filter(p => p.mortgaged).length;
     // 同色组成套：集齐且全员 <3 级 → 可整组升级(休闲 9 折)；rentOf 对成套组自动翻倍
     const mySets = [];
     [0, 1, 2, 3, 4, 5].forEach(g => {
@@ -283,7 +291,7 @@ Page({
       myCash: (s.cash && s.cash[role]) || 0, peerCash: (s.cash && s.cash[peer]) || 0,
       mySavings: (s.savings && s.savings[role]) || 0, peerSavings: (s.savings && s.savings[peer]) || 0,
       myPos: (s.pos && s.pos[role]) || 0, peerPos: (s.pos && s.pos[peer]) || 0,
-      myProps, mySets, winner, winnerText
+      myProps, mySets, winner, winnerText, myPropCount, myMortgagedCount, myCashFmt: fmtCash((s.cash && s.cash[role]) || 0), mySavingsFmt: fmtCash((s.savings && s.savings[role]) || 0)
     });
     this.setData(patch);
   },
