@@ -265,7 +265,7 @@ Page({
     patch.sellReqPending = !!(sellReq && sellReq.by === role);
 
     const myProps = [];
-    cells.forEach((c, idx) => { if (c && c.type === 'property' && c.owner === role) myProps.push({ idx, name: c.name, price: c.price, level: c.level || 0, mortgaged: !!c.mortgaged, mortgageValue: mortgageValueOf(c), redeemValue: redeemValueOf(c), sellBank: bankRecover(c), sellPeer: Math.round(c.price * 0.8) }); });
+    cells.forEach((c, idx) => { if (c && c.type === 'property' && c.owner === role) myProps.push({ idx, name: c.name, price: c.price, level: c.level || 0, mortgaged: !!c.mortgaged, mortgageValue: mortgageValueOf(c), redeemValue: redeemValueOf(c), sellBank: bankRecover(c), sellPeer: Math.round(c.price * 0.8), upgradeCost: upgradeCost(c), canUpgrade: (c.level || 0) < 3 && !c.mortgaged }); });
     const myPropCount = myProps.length, myMortgagedCount = myProps.filter(p => p.mortgaged).length;
     // 同色组成套：集齐且全员 <3 级 → 可整组升级(休闲 9 折)；rentOf 对成套组自动翻倍
     const mySets = [];
@@ -736,6 +736,26 @@ Page({
     });
   },
   cancelSell() { this.mtxn( s => Object.assign({}, s, { sellReq: null })); toast('已取消卖地'); },
+  // 单块升级(银行面板,限自己回合)
+  upgradeOne(e) {
+    const idx = parseInt(e.currentTarget.dataset.idx, 10), role = room.getRole();
+    this.mtxn( s => {
+      if (!s || !s.cells) return s;
+      if (s.turn !== rt.seatOf(role)) { toast('等你的回合才能升级'); return s; }
+      const c = s.cells[idx];
+      if (!c || c.owner !== role) { toast('地块已变化'); return s; }
+      if ((c.level || 0) >= 3) { toast('已满级'); return s; }
+      if (c.mortgaged) { toast('已抵押,先赎回再升级'); return s; }
+      const cost = upgradeCost(c);
+      const cash = Object.assign({}, s.cash);
+      if ((cash[role] || 0) < cost) { toast('现金不足'); return s; }
+      cash[role] -= cost;
+      const cs = s.cells.map(x => Object.assign({}, x));
+      cs[idx] = Object.assign({}, c, { level: (c.level || 0) + 1 });
+      const lg = (s.log || []).slice(); lg.push({ who: role, text: '升级「' + c.name + '」到 ' + (cs[idx].level + 1) + ' 级' });
+      return Object.assign({}, s, { cells: cs, cash, log: lg.slice(-20000) });
+    });
+  },
   // 经典抵押：把自有地抵押给银行换半价现金，抵押中的地不收过路费。走 transactionState 现读现写 + 防御。
   mortgageProp(e) {
     const idx = parseInt(e.currentTarget.dataset.idx, 10), role = room.getRole();

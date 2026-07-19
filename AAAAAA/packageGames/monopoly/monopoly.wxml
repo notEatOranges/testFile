@@ -152,6 +152,7 @@
         <view class="bp-acts">
           <view wx:if="{{!item.mortgaged}}" class="bk-btn sm" data-idx="{{item.idx}}" bindtap="mortgageProp">抵押 +{{item.mortgageValue}}</view>
           <view wx:else class="bk-btn sm" data-idx="{{item.idx}}" bindtap="redeemProp">赎回 -{{item.redeemValue}}</view>
+          <view wx:if="{{item.canUpgrade}}" class="bk-btn sm" data-idx="{{item.idx}}" bindtap="upgradeOne">升级 -{{item.upgradeCost}}</view>
           <view class="bk-btn sm" data-idx="{{item.idx}}" bindtap="sellToBank">卖银行 +{{item.sellBank}}</view>
           <view class="bk-btn sm" data-idx="{{item.idx}}" bindtap="sellToPeer">卖对方 {{item.sellPeer}}</view>
         </view>
