@@ -31,7 +31,7 @@ const DECK = {
     { t: '中奖 +200', cash: 200 },
     { t: '捡到钱包 +80', cash: 80 },
     { t: '好人好事 见义勇为 +200', cash: 200 },
-    { t: '打架斗殴 被抓进监狱停一回合', toJail: true, skip: true }
+    { t: '打架斗殴 受伤 -150', cash: -150 }
   ],
   fate: [     // 公共基金:金钱为主
     { t: '银行分红 +50', cash: 50 },
@@ -443,6 +443,14 @@ Page({
     let winner = null;
     let toIdx = idx;
 
+    // 惩罚倒退屏蔽获利:backward 落 start/bonus/freepark/hospital/police 只 log,不给钱/不触发(过路费/税/监狱仍交)
+    if (opts.backward && ['start', 'bonus', 'freepark', 'hospital', 'police'].indexOf(cell.type) >= 0) {
+      log.push({ who: role, text: '后退路过「' + cell.name + '」(惩罚模式,不触发)' });
+      this.syncLog(cells, cash, log, pos, skip, { savings });
+      this.commit({ cells: cells.map(c => Object.assign({}, c)), pos, cash, savings, skip, turn: winner ? turn : rt.seatOf(peer), dice: this.data.dice, log: log.slice(-30), winner, req: null });
+      return;
+    }
+
     if (cell.type === 'start') { cash[role] += 100; log.push({ who: role, text: '到达起点 +100' }); }
     else if (cell.type === 'tax') {
       const props = cells.filter(c => c.type === 'property' && c.owner === role);
@@ -451,7 +459,7 @@ Page({
       cash[role] -= tax; log.push({ who: role, text: '缴税(地皮过路费10%) -' + tax }); this.showFx('bad', '缴税 -' + tax);
     }
     else if (cell.type === 'bonus') { cash[role] += cell.amt; log.push({ who: role, text: '获得奖金 +' + cell.amt }); this.showFx('good', cell.name + ' +' + cell.amt); }
-    else if (cell.type === 'jail') { skip[role] = (skip[role] || 0) + 1; log.push({ who: role, text: '进了监狱，下回合停留' }); this.showFx('bad', '进监狱，停一回合'); }
+    else if (cell.type === 'jail') { log.push({ who: role, text: opts.backward ? '后退路过监狱(无事)' : '路过监狱(只是探望,不坐牢)' }); }
     else if (cell.type === 'freepark') { cash[role] = (cash[role] || 0) + 50; log.push({ who: role, text: '免费停车 +50' }); this.showFx('good', '免费停车 +50'); }
     else if (cell.type === 'hospital') {
       const h = pickHospital();
