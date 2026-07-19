@@ -213,6 +213,24 @@ Page({
         return;
       }
     }
+    // phase 恢复:重进/异常/杀后台后,phase!=idle 但 _rolling=false → roll 断了,恢复 idle + 交回合(防死锁)
+    if (s.phase && s.phase !== 'idle') {
+      if (!this._rolling && s.turn === rt.seatOf(role)) {
+        // 我是 phase 发起者(turn=我)但 roll 已断(_rolling=false)→ 立即恢复
+        const lg = (s.log || []).slice(); lg.push({ text: '中断恢复,自动结束回合' });
+        this.commit({ phase: 'idle', anim: null, turn: rt.seatOf(peer), log: lg.slice(-30) });
+        return;
+      }
+      // 超时兜底(30s,任意一方检测):防发起者不回来,对方永久卡
+      if (!this._phaseT0 || this._phaseT0 !== s.phase) { this._phaseT0 = s.phase; this._phaseT = Date.now(); }
+      else if (Date.now() - this._phaseT > 30000) {
+        const otherSeat = s.turn === rt.RED ? rt.BLUE : rt.RED;
+        const lg = (s.log || []).slice(); lg.push({ text: '操作超时,自动结束回合' });
+        this.commit({ phase: 'idle', anim: null, turn: otherSeat, log: lg.slice(-30) });
+        return;
+      }
+    } else { this._phaseT0 = null; }
+
     const winner = s.winner || null;
     const turnSeat = s.turn || rt.RED;
     const myTurnFlag = !winner && turnSeat === this.data.mySeat;
