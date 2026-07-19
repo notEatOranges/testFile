@@ -305,8 +305,10 @@ Page({
 
   async roll() {
     const role = room.getRole();
-    const s = this._state;
-    // 严格从权威 state.turn 判断(不依赖可能陈旧的 data.myTurn)，防 watch 异步期间重复摇/连摇
+    // 红线:摇骰前从 DB 现读校验 turn(防 this._state 陈旧 - 网络波动/杀后台/重进/watch 漏推)
+    let s;
+    try { s = await rt.getOnce('monopoly'); } catch (e) { s = null; }
+    if (s) this._state = s; else s = this._state;   // DB 读失败兜底本地
     if (!s || s.winner || this.data.rolling || s.turn !== rt.seatOf(role)) return;
     this.setData({ rolling: true });
     // rolling 现在交由 applyState 在「回合离开我/胜负已定」时清掉（期间保持 true，堵住重复摇）。

@@ -55,6 +55,8 @@ function resign(key, curState, myRole) {
 }
 
 /* —— 对战结果记入成绩榜（win/draw/lose → 积分 3/1/0）—— */
+function getOnce(key) { return Store.getOnce(keyPath(key)); }
+
 function recordPvp(game, result, myRole) {
   const score = result === 'win' ? 3 : (result === 'draw' ? 1 : 0);
   return Store.push('gameScores', { game, role: myRole, score, result, ts: Store.now() });
@@ -67,7 +69,7 @@ function myResult(winner, mySeat) {
 
 module.exports = {
   RED, BLUE, seatOf, peerSeatOf, seatRole, keyPath,
-  bind, setState, updateState, transactionState, teardown,
+  bind, setState, updateState, transactionState, getOnce, teardown,
   requestRestart, acceptRestart, rejectRestart, cancelRestart, restartReqSide,
   resign, recordPvp, myResult
 };
