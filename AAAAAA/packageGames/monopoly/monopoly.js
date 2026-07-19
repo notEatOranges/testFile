@@ -209,7 +209,7 @@ Page({
       if (this._servedKey !== key) {
         this._servedKey = key;
         const lg = (s.log || []).slice(); lg.push({ who: role, text: '服刑/住院中,跳过本回合' });
-        this.commit({ skip: Object.assign({}, s.skip, { [role]: s.skip[role] - 1 }), turn: rt.seatOf(peer), log: lg.slice(-30) });
+        this.commit({ skip: Object.assign({}, s.skip, { [role]: s.skip[role] - 1 }), turn: rt.seatOf(peer), log: lg.slice(-200) });
         return;
       }
     }
@@ -218,7 +218,7 @@ Page({
       if (!this._rolling && s.turn === rt.seatOf(role)) {
         // 我是 phase 发起者(turn=我)但 roll 已断(_rolling=false)→ 立即恢复
         const lg = (s.log || []).slice(); lg.push({ text: '中断恢复,自动结束回合' });
-        this.commit({ phase: 'idle', anim: null, turn: rt.seatOf(peer), log: lg.slice(-30) });
+        this.commit({ phase: 'idle', anim: null, turn: rt.seatOf(peer), log: lg.slice(-200) });
         return;
       }
       // 超时兜底(30s,任意一方检测):防发起者不回来,对方永久卡
@@ -226,7 +226,7 @@ Page({
       else if (Date.now() - this._phaseT > 30000) {
         const otherSeat = s.turn === rt.RED ? rt.BLUE : rt.RED;
         const lg = (s.log || []).slice(); lg.push({ text: '操作超时,自动结束回合' });
-        this.commit({ phase: 'idle', anim: null, turn: otherSeat, log: lg.slice(-30) });
+        this.commit({ phase: 'idle', anim: null, turn: otherSeat, log: lg.slice(-200) });
         return;
       }
     } else { this._phaseT0 = null; }
@@ -257,7 +257,7 @@ Page({
               cash[role] -= sellReq.price; cash[sellReq.by] = (cash[sellReq.by] || 0) + sellReq.price;
               cs[sellReq.idx] = Object.assign({}, cs[sellReq.idx], { owner: role });
               const lg = (s.log || []).slice(); lg.push({ who: role, text: '买下{{' + sellReq.by + '}}的「' + cs[sellReq.idx].name + '」-' + sellReq.price });
-              return Object.assign({}, s, { cells: cs, cash, log: lg.slice(-30), sellReq: null });
+              return Object.assign({}, s, { cells: cs, cash, log: lg.slice(-200), sellReq: null });
             });
           } else { this.mtxn( s => Object.assign({}, s, { sellReq: null })); }
         } });
@@ -312,7 +312,7 @@ Page({
       started: true, turnSeat, myTurn: myTurnFlag,
       mode: s.mode || 'casual',
       grid,
-      log: (s.log || []).slice(-30).reverse().map(it => fmtLog(it, role, this.data.peerName)),
+      log: (s.log || []).slice(-200).reverse().map(it => fmtLog(it, role, this.data.peerName)),
       myCash: (s.cash && s.cash[role]) || 0, peerCash: (s.cash && s.cash[peer]) || 0,
       mySavings: (s.savings && s.savings[role]) || 0, peerSavings: (s.savings && s.savings[peer]) || 0,
       myPos: (s.pos && s.pos[role]) || 0, peerPos: (s.pos && s.pos[peer]) || 0,
@@ -353,7 +353,7 @@ Page({
       log.push({ who: role, text: '掷出 ' + steps + (crossed ? '，经过起点 +150' : '') });
 
       // phase=moving:棋子移动中(推 anim 指令让对方看到动画,不含 turn/pos)
-      this.commit({ phase: 'moving', anim: { role, from, to }, dice: d, cash, savings, log: log.slice(-30) });
+      this.commit({ phase: 'moving', anim: { role, from, to }, dice: d, cash, savings, log: log.slice(-200) });
       await this.animateMove(role, from, to);
 
       // phase=resolving:结算中(买房 modal 等,不含 turn)
@@ -452,7 +452,7 @@ Page({
   },
   // 写一次中间态（让事件日志及时同步给双方）
   syncLog(cells, cash, log, pos, skip, extra) {
-    this.commit(Object.assign({ cells: cells.map(c => Object.assign({}, c)), cash: Object.assign({}, cash), pos: Object.assign({}, pos), skip: Object.assign({}, skip), log: log.slice(-30) }, extra || {}));
+    this.commit(Object.assign({ cells: cells.map(c => Object.assign({}, c)), cash: Object.assign({}, cash), pos: Object.assign({}, pos), skip: Object.assign({}, skip), log: log.slice(-200) }, extra || {}));
   },
 
   // resolve:纯计算函数(不 commit/syncLog),返回最终 patch。modal(买房/升级)可 await。
@@ -542,8 +542,8 @@ Page({
         const afford = cashNow >= cell.price;
         const canFromSav = !afford && (cashNow + sav) >= cell.price;
         const choice = await new Promise(res => {
-          if (afford) wx.showModal({ title: cell.name, content: '花 ' + cell.price + ' 买下？（过路费 ' + rentOf(cell, cells) + '）', confirmText: '买下', cancelText: '不买', success: r => res(r.confirm ? 'buy' : false) });
-          else if (canFromSav) wx.showModal({ title: cell.name, content: '现金 ' + cashNow + ' 不足,从存款取 ' + (cell.price - cashNow) + ' 凑 ' + cell.price + ' 购买?(失去少量利息)', confirmText: '取存款买', cancelText: '不买', success: r => res(r.confirm ? 'buyFromSav' : false) });
+          if (afford) wx.showModal({ title: cell.name, content: '花 ' + cell.price + ' 买下？（过路费 ' + rentOf(cell, cells) + '）', confirmText: '买下', cancelText: '不买', fail: () => res(false), success: r => res(r.confirm ? 'buy' : false) });
+          else if (canFromSav) wx.showModal({ title: cell.name, content: '现金 ' + cashNow + ' 不足,从存款取 ' + (cell.price - cashNow) + ' 凑 ' + cell.price + ' 购买?(失去少量利息)', confirmText: '取存款买', cancelText: '不买', fail: () => res(false), success: r => res(r.confirm ? 'buyFromSav' : false) });
           else { toast('现金+存款仍不足,买不起「' + cell.name + '」(可去银行抵押地皮)'); res(false); }
         });
         if (choice === 'buy' || choice === 'buyFromSav') {
@@ -559,8 +559,8 @@ Page({
           if (!afford && !canFromSav) { log.push({ who: role, text: '现金+存款都不足，无法升级「' + cell.name + '」' }); }
           else {
             const up = await new Promise(res => {
-              if (afford) wx.showModal({ title: '升级「' + cell.name + '」', content: '升到 ' + ((cell.level || 0) + 2) + ' 级？花 ' + cost + '（过路费变 ' + rentOf(Object.assign({}, cell, { level: (cell.level || 0) + 1 }), cells) + '）', confirmText: '升级', cancelText: '不了', success: r => res(r.confirm ? 'cash' : false) });
-              else wx.showModal({ title: '取存款升级「' + cell.name + '」', content: '现金 ' + cashNow + ' 不足,从存款取 ' + (cost - cashNow) + ' 升到 ' + ((cell.level || 0) + 2) + ' 级?(过路费变 ' + rentOf(Object.assign({}, cell, { level: (cell.level || 0) + 1 }), cells) + ',失去少量利息)', confirmText: '取存款升级', cancelText: '不了', success: r => res(r.confirm ? 'fromSav' : false) });
+              if (afford) wx.showModal({ title: '升级「' + cell.name + '」', content: '升到 ' + ((cell.level || 0) + 2) + ' 级？花 ' + cost + '（过路费变 ' + rentOf(Object.assign({}, cell, { level: (cell.level || 0) + 1 }), cells) + '）', confirmText: '升级', cancelText: '不了', fail: () => res(false), success: r => res(r.confirm ? 'cash' : false) });
+              else wx.showModal({ title: '取存款升级「' + cell.name + '」', content: '现金 ' + cashNow + ' 不足,从存款取 ' + (cost - cashNow) + ' 升到 ' + ((cell.level || 0) + 2) + ' 级?(过路费变 ' + rentOf(Object.assign({}, cell, { level: (cell.level || 0) + 1 }), cells) + ',失去少量利息)', confirmText: '取存款升级', cancelText: '不了', fail: () => res(false), success: r => res(r.confirm ? 'fromSav' : false) });
             });
             if (up === 'cash') { cash[role] -= cost; cells[idx] = Object.assign({}, cell, { level: (cell.level || 0) + 1 }); log.push({ who: role, text: '升级「' + cell.name + '」到 ' + (cells[idx].level + 1) + ' 级' }); this.showFx('good', '升级！过路费上涨'); }
             else if (up === 'fromSav') { const need = cost - cashNow; savings[role] = sav - need; cash[role] = cashNow + need - cost; cells[idx] = Object.assign({}, cell, { level: (cell.level || 0) + 1 }); log.push({ who: role, text: '取存款 ' + need + ' 升级「' + cell.name + '」到 ' + (cells[idx].level + 1) + ' 级' }); this.showFx('good', '升级！过路费上涨'); }
@@ -579,7 +579,7 @@ Page({
       if (bankrupt) winner = role === 'boy' ? rt.BLUE : rt.RED;
     }
     if (toIdx !== idx) pos = Object.assign({}, pos, { [role]: toIdx });
-    return { cells: cells.map(c => Object.assign({}, c)), pos, cash, savings, skip: { boy: Math.max(0, skip.boy||0), girl: Math.max(0, skip.girl||0) }, turn: winner ? turn : rt.seatOf(peer), dice: this.data.dice, log: log.slice(-30), winner, req: null, sellReq: null };
+    return { cells: cells.map(c => Object.assign({}, c)), pos, cash, savings, skip: { boy: Math.max(0, skip.boy||0), girl: Math.max(0, skip.girl||0) }, turn: winner ? turn : rt.seatOf(peer), dice: this.data.dice, log: log.slice(-200), winner, req: null, sellReq: null };
   },
 
   // resolve 递归入口(移动卡牌用):复用 resolve 逻辑但共享 cells/pos/skip
@@ -613,13 +613,13 @@ Page({
         if (cell.owner && cell.owner !== role) { const r = rentOf(cell, cells); if (r > 0) { cash[role] -= r; cash[peer] += r; log.push({ who: role, text: '后退付过路费 ' + r }); this.showFx('bad', '过路费 ' + r); } }
       } else if (!cell.owner) {
         const afford = (cash[role] || 0) >= cell.price;
-        const choice = await new Promise(res => { if (afford) wx.showModal({ title: cell.name, content: '花 ' + cell.price + ' 买下？', confirmText: '买下', cancelText: '不买', success: r => res(r.confirm ? 'buy' : false) }); else { toast('现金不足'); res(false); } });
+        const choice = await new Promise(res => { if (afford) wx.showModal({ title: cell.name, content: '花 ' + cell.price + ' 买下？', confirmText: '买下', cancelText: '不买', fail: () => res(false), success: r => res(r.confirm ? 'buy' : false) }); else { toast('现金不足'); res(false); } });
         if (choice === 'buy') { cash[role] -= cell.price; cells[idx] = Object.assign({}, cell, { owner: role }); log.push({ who: role, text: '购买「' + cell.name + '」-' + cell.price }); this.showFx('good', '入手'); }
       } else if (cell.owner !== role) { const r = rentOf(cell, cells); if (r > 0) { cash[role] -= r; cash[peer] += r; log.push({ who: role, text: '付过路费 ' + r }); this.showFx('bad', '过路费 ' + r); } }
     }
     if (cash[role] < 0) { const bankrupt = this._coverShortfallPure(role, cells, cash, savings, log); if (bankrupt) winner = role === 'boy' ? rt.BLUE : rt.RED; }
     if (toIdx !== idx) pos = Object.assign({}, pos, { [role]: toIdx });
-    return { cells: cells.map(c => Object.assign({}, c)), pos, cash, savings, skip: { boy: Math.max(0, skip.boy||0), girl: Math.max(0, skip.girl||0) }, turn: winner ? turn : rt.seatOf(peer), dice: this.data.dice, log: log.slice(-30), winner, req: null, sellReq: null };
+    return { cells: cells.map(c => Object.assign({}, c)), pos, cash, savings, skip: { boy: Math.max(0, skip.boy||0), girl: Math.max(0, skip.girl||0) }, turn: winner ? turn : rt.seatOf(peer), dice: this.data.dice, log: log.slice(-200), winner, req: null, sellReq: null };
   },
 
   // 破产救助纯计算版(不 commit/syncLog,就地修改)
@@ -698,7 +698,7 @@ Page({
         const v = Math.min(amt, savings[role] || 0); if (v <= 0) { toast('没有存款'); return s; }
         savings[role] -= v; cash[role] += v; lg.push({ who: role, text: '取出存款 ' + v });
       } else { toast('操作失败'); return s; }
-      return Object.assign({}, s, { cash, savings, log: lg.slice(-30) });
+      return Object.assign({}, s, { cash, savings, log: lg.slice(-200) });
     });
   },
   sellToBank(e) {
@@ -716,7 +716,7 @@ Page({
           cs[idx] = Object.assign({}, c, { owner: null, level: 0, mortgaged: false });
           const cash = Object.assign({}, s.cash); cash[role] = (cash[role] || 0) + get;
           const lg = (s.log || []).slice(); lg.push({ who: role, text: '把「' + c.name + '」卖给银行 +' + get });
-          return Object.assign({}, s, { cells: cs, cash, log: lg.slice(-30) });
+          return Object.assign({}, s, { cells: cs, cash, log: lg.slice(-200) });
         });
         toast('卖给银行 +' + get);
       }
@@ -754,7 +754,7 @@ Page({
           cs[idx] = Object.assign({}, c, { mortgaged: true });
           const cash = Object.assign({}, s.cash); cash[role] = (cash[role] || 0) + g;
           const lg = (s.log || []).slice(); lg.push({ who: role, text: '抵押「' + c.name + '」+' + g + '(抵押中不收租)' });
-          return Object.assign({}, s, { cells: cs, cash, log: lg.slice(-30) });
+          return Object.assign({}, s, { cells: cs, cash, log: lg.slice(-200) });
         });
         toast('已抵押,抵押中不收过路费');
       }
@@ -774,7 +774,7 @@ Page({
       cs[idx] = Object.assign({}, c, { mortgaged: false });
       const cash = Object.assign({}, s.cash); cash[role] = (cash[role] || 0) - due;
       const lg = (s.log || []).slice(); lg.push({ who: role, text: '赎回「' + c.name + '」-' + due });
-      return Object.assign({}, s, { cells: cs, cash, log: lg.slice(-30) });
+      return Object.assign({}, s, { cells: cs, cash, log: lg.slice(-200) });
     });
   },
   // 同色组成套升级：整组每块 level+1，休闲模式打 9 折；走 transaction 现读现写
@@ -792,7 +792,7 @@ Page({
       const cs = s.cells.map(c => (c && c.type === 'property' && c.group === g) ? Object.assign({}, c, { level: (c.level || 0) + 1 }) : c);
       const lg = (s.log || []).slice(); lg.push({ who: role, text: '整组升级[' + gs.map(c => c.name).join('/') + '] -' + cost + '（过路费翻倍）' });
       this.showFx('good', '整组升级！过路费大涨');
-      return Object.assign({}, s, { cells: cs, cash, log: lg.slice(-30) });
+      return Object.assign({}, s, { cells: cs, cash, log: lg.slice(-200) });
     });
   },
   openRules() { this.setData({ rulesOpen: true }); },
