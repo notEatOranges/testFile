@@ -22,7 +22,7 @@ function cellCR(i) {
 // 双牌组(符合经典 Monopoly):机会(chance)偏移动、公共基金(fate)偏金钱。落到对应格抽对应副。
 const DECK = {
   chance: [   // 机会:移动为主
-    { t: '前进到起点 +200', to: 0 },
+    { t: '前进到起点 +150', to: 0 },
     { t: '经验骰子 摇骰前进(同正常掷骰)', fwdRoll: true },
     { t: '幸运骰子 自选前进 1~6 步', luckyDice: true },
     { t: '惩罚骰子 摇骰后退(落对方铺交租)', backRoll: true },
@@ -72,7 +72,7 @@ function buildCells() {
 }
 function rentOf(cell, cells) {
   if (cell.mortgaged) return 0;                                  // 经典：抵押中的地不收过路费
-  const LEVEL_MULT = [1, 2, 3, 5];                               // 非线性：越高级涨幅越陡(对标 Monopoly 建房阶梯)
+  const LEVEL_MULT = [1, 2, 3, 4];                               // 非线性：越高级涨幅越陡(对标 Monopoly 建房阶梯)
   let r = cell.rent * LEVEL_MULT[cell.level || 0];
   if (cell.owner && cells && ownsFullSet(cells, cell.group, cell.owner)) r = r * 2;   // 同色成套：过路费翻倍(经典原版)
   return Math.round(r);
@@ -87,11 +87,12 @@ const MEDICARE_CODE = 'C3T7Q5C3T7Q5';
 // 医院看病 3 档：小病/中病 医保真减免 10%~60%；大病只扣 20 或 50(提示大额减免 1000~10000 但不真减) + 住院 1~2 天
 function pickHospital() {
   const r = Math.random();
-  if (r < 0.70) {                                   // 小病 70%：30~90，医保 10%~60% 真减
+  if (r < 0.25) return { tier: '检查无病', cost: 0, deduct: 0, actualCost: 0, stay: 0, code: MEDICARE_CODE, healthy: true };   // 25% 无病,医保报销检查费不花钱
+  if (r < 0.75) {                                   // 小病 50%：30~90，医保 10%~60% 真减
     const cost = 30 + Math.floor(Math.random() * 61), pct = 10 + Math.floor(Math.random() * 51);
     return { tier: '小病', cost, deduct: Math.round(cost * pct / 100), actualCost: Math.round(cost * (1 - pct / 100)), stay: 0, code: MEDICARE_CODE };
   }
-  if (r < 0.95) {                                   // 中病 25%：100~150，医保 10%~60% 真减
+  if (r < 0.95) {                                   // 中病 20%：100~150，医保 10%~60% 真减
     const cost = 100 + Math.floor(Math.random() * 51), pct = 10 + Math.floor(Math.random() * 51);
     return { tier: '中病', cost, deduct: Math.round(cost * pct / 100), actualCost: Math.round(cost * (1 - pct / 100)), stay: 0, code: MEDICARE_CODE };
   }
@@ -324,10 +325,10 @@ Page({
     const savings = Object.assign({}, s.savings || { boy: 0, girl: 0 });
     const log = (s.log || []).slice();
     if (crossed) {
-      cash[role] = (cash[role] || 0) + 200;
-      if (s.mode !== 'classic') { const sav = savings[role] || 0; if (sav) { const it = Math.round(sav * 0.05); savings[role] = sav + it; log.push({ who: role, text: '存款利息 +' + it }); } }   // 仅休闲模式：存款 +5%
+      cash[role] = (cash[role] || 0) + 150;
+      if (s.mode !== 'classic') { const sav = savings[role] || 0; if (sav) { const it = Math.round(sav * 0.03); savings[role] = sav + it; log.push({ who: role, text: '存款利息 +' + it }); } }   // 仅休闲模式：存款 +5%
     }
-    log.push({ who: role, text: '掷出 ' + steps + (crossed ? '，经过起点 +200' : '') });
+    log.push({ who: role, text: '掷出 ' + steps + (crossed ? '，经过起点 +150' : '') });
 
     // 摇点即时推送(cash/log/savings)；不预推 pos——防对端 tokenPeer 先跳终点造成回弹,棋子动画后由 resolve 推 pos。
     this.commit({ cash, savings, log });
@@ -454,7 +455,7 @@ Page({
     else if (cell.type === 'tax') {
       const props = cells.filter(c => c.type === 'property' && c.owner === role);
       const totalRent = props.reduce((s, c) => s + rentOf(c, cells), 0);
-      const tax = Math.max(20, Math.min(Math.round(totalRent * 0.1), 200));   // 地皮过路费总和 10%,20~200
+      const tax = Math.max(20, Math.min(Math.round(totalRent * 0.1), 400));   // 地皮过路费总和 10%,20~400
       cash[role] -= tax; log.push({ who: role, text: '缴税(地皮过路费10%) -' + tax }); this.showFx('bad', '缴税 -' + tax);
     }
     else if (cell.type === 'bonus') { cash[role] += cell.amt; log.push({ who: role, text: '获得奖金 +' + cell.amt }); this.showFx('good', cell.name + ' +' + cell.amt); }
@@ -462,11 +463,16 @@ Page({
     else if (cell.type === 'freepark') { cash[role] = (cash[role] || 0) + 50; log.push({ who: role, text: '免费停车 +50' }); this.showFx('good', '免费停车 +50'); }
     else if (cell.type === 'hospital') {
       const h = pickHospital();
-      cash[role] = (cash[role] || 0) - h.actualCost;
-      if (h.fake) log.push({ who: role, text: '大病!医保' + h.code + ' 减免 ' + h.deduct + '(实际仍扣 ' + h.actualCost + '),住院 ' + h.stay + ' 天' });
-      else log.push({ who: role, text: h.tier + '看病 -' + h.cost + ',医保' + h.code + ' 减免 ' + h.deduct + ',实扣 ' + h.actualCost });
-      this.showFx('bad', (h.fake ? '大病 ' : h.tier + ' ') + '-' + h.actualCost + (h.stay > 0 ? ' 住院' + h.stay + '天' : ''));
-      if (h.stay > 0) skip[role] = (skip[role] || 0) + h.stay;
+      if (h.healthy) {
+        log.push({ who: role, text: '检查无病,医保' + h.code + ' 报销检查费' });
+        this.showFx('good', '检查无病,免费!');
+      } else {
+        cash[role] = (cash[role] || 0) - h.actualCost;
+        if (h.fake) log.push({ who: role, text: '大病!医保' + h.code + ' 减免 ' + h.deduct + '(实际仍扣 ' + h.actualCost + '),住院 ' + h.stay + ' 天' });
+        else log.push({ who: role, text: h.tier + '看病 -' + h.cost + ',医保' + h.code + ' 减免 ' + h.deduct + ',实扣 ' + h.actualCost });
+        this.showFx('bad', (h.fake ? '大病 ' : h.tier + ' ') + '-' + h.actualCost + (h.stay > 0 ? ' 住院' + h.stay + '天' : ''));
+        if (h.stay > 0) skip[role] = (skip[role] || 0) + h.stay;
+      }
     }
     else if (cell.type === 'police') {
       const p = pickPolice();
@@ -481,7 +487,7 @@ Page({
         log.push({ who: role, text: (cell.kind === 'fate' ? '抽中公共基金：' : '抽中机会：') + card.t });
         if (card.cash) cash[role] = (cash[role] || 0) + card.cash;
         if (card.cashPeer) { cash[role] = (cash[role] || 0) + card.cashPeer; cash[peer] = (cash[peer] || 0) - card.cashPeer; }
-        if (card.to === 0) { cash[role] += 200; toIdx = 0; log.push({ who: role, text: '回到起点 +200' }); }
+        if (card.to === 0) { cash[role] += 150; toIdx = 0; log.push({ who: role, text: '回到起点 +150' }); }
         if (card.toJail) { const ji = cells.findIndex(c => c && c.type === 'jail'); if (ji >= 0) { toIdx = ji; log.push({ who: role, text: '被关进监狱' }); this.showFx('bad', '关进监狱'); } }
         if (card.skip) skip[role] = (skip[role] || 0) + 1;
         // 移动类卡牌：摇/选步数 → 动画移动 → 在新落点递归结算（前进同正常掷骰；后退为惩罚：不买不升级、对方铺交租、监狱坐牢）
@@ -497,9 +503,9 @@ Page({
           }
           const fromIdx = idx, to = backward ? ((idx - steps) % BOARD + BOARD) % BOARD : (idx + steps) % BOARD;
           if (!backward && fromIdx + steps >= BOARD) {       // 前进跨起点：同正常掷骰（+200/休闲模式存款息）
-            cash[role] = (cash[role] || 0) + 200;
-            if ((this._state.mode || 'casual') !== 'classic') { const sav = savings[role] || 0; if (sav) { const it = Math.round(sav * 0.05); savings[role] = sav + it; log.push({ who: role, text: '存款利息 +' + it }); } }
-            log.push({ who: role, text: '经过起点 +200' });
+            cash[role] = (cash[role] || 0) + 150;
+            if ((this._state.mode || 'casual') !== 'classic') { const sav = savings[role] || 0; if (sav) { const it = Math.round(sav * 0.03); savings[role] = sav + it; log.push({ who: role, text: '存款利息 +' + it }); } }
+            log.push({ who: role, text: '经过起点 +150' });
           }
           pos = Object.assign({}, pos, { [role]: to });
           this.syncLog(cells, cash, log, pos, skip, { savings });
