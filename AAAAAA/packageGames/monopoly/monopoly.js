@@ -159,16 +159,9 @@ Page({
       if (s && this._state && s.seq != null && this._state.seq != null && s.seq < this._state.seq) return;
       this._state = s; this.applyState();
     });
-    // 主动刷新:每 15s 从 DB 拉最新(watch 漏推/网络断兜底,不只被动等；seq 校验防旧覆盖)
-    this._pollTimer = setInterval(() => {
-      rt.getOnce('monopoly').then(s => {
-        if (s && (!this._state || this._state.seq == null || s.seq == null || s.seq >= this._state.seq)) { this._state = s; this.applyState(); }
-      }).catch(() => {});
-    }, 15000);
   },
   onUnload() {
     rt.teardown(this); ident.teardown(this);
-    if (this._pollTimer) clearInterval(this._pollTimer);
     if (this._diceTimer) clearTimeout(this._diceTimer);
     if (this._rollWatchdog) clearTimeout(this._rollWatchdog);
     if (this._raf) clearTimeout(this._raf);
@@ -313,9 +306,7 @@ Page({
   async roll() {
     const role = room.getRole();
     // 红线:摇骰前从 DB 现读校验 turn(防 this._state 陈旧 - 网络波动/杀后台/重进/watch 漏推)
-    let s;
-    try { s = await Promise.race([rt.getOnce('monopoly'), new Promise((_, rej) => setTimeout(function () { rej(new Error('timeout')); }, 3000))]); } catch (e) { s = null; }
-    if (s) this._state = s; else s = this._state;   // DB 读失败/超时(3s)兜底本地,不卡死
+    const s = this._state;   // 暂回退 getOnce(与 watch/poll 时序冲突致双方 myTurn=false 死锁,先恢复可玩)
     if (!s || s.winner || this.data.rolling || s.turn !== rt.seatOf(role)) return;
     this.setData({ rolling: true });
     // rolling 现在交由 applyState 在「回合离开我/胜负已定」时清掉（期间保持 true，堵住重复摇）。
