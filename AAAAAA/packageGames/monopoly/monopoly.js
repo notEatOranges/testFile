@@ -564,8 +564,8 @@ Page({
               if (afford) wx.showModal({ title: '升级「' + cell.name + '」', content: '升到 ' + ((cell.level || 0) + 2) + ' 级？花 ' + cost + '（过路费变 ' + rentOf(Object.assign({}, cell, { level: (cell.level || 0) + 1 }), cells) + '）', confirmText: '升级', cancelText: '不了', fail: () => res(false), success: r => res(r.confirm ? 'cash' : false) });
               else wx.showModal({ title: '取存款升级「' + cell.name + '」', content: '现金 ' + cashNow + ' 不足,从存款取 ' + (cost - cashNow) + ' 升到 ' + ((cell.level || 0) + 2) + ' 级?(过路费变 ' + rentOf(Object.assign({}, cell, { level: (cell.level || 0) + 1 }), cells) + ',失去少量利息)', confirmText: '取存款升级', cancelText: '不了', fail: () => res(false), success: r => res(r.confirm ? 'fromSav' : false) });
             });
-            if (up === 'cash') { cash[role] -= cost; cells[idx] = Object.assign({}, cell, { level: (cell.level || 0) + 1 }); log.push({ who: role, text: '升级「' + cell.name + '」到 ' + (cells[idx].level + 1) + ' 级' }); this.showFx('good', '升级！过路费上涨'); }
-            else if (up === 'fromSav') { const need = cost - cashNow; savings[role] = sav - need; cash[role] = cashNow + need - cost; cells[idx] = Object.assign({}, cell, { level: (cell.level || 0) + 1 }); log.push({ who: role, text: '取存款 ' + need + ' 升级「' + cell.name + '」到 ' + (cells[idx].level + 1) + ' 级' }); this.showFx('good', '升级！过路费上涨'); }
+            if (up === 'cash') { cash[role] -= cost; cells[idx] = Object.assign({}, cell, { level: (cell.level || 0) + 1 }); const newRent = rentOf(cells[idx], cells); log.push({ who: role, text: '升级「' + cell.name + '」到 ' + (cells[idx].level + 1) + ' 级(过路费 ' + newRent + ')' }); this.showFx('good', '升级！过路费' + newRent); }
+            else if (up === 'fromSav') { const need = cost - cashNow; savings[role] = sav - need; cash[role] = cashNow + need - cost; cells[idx] = Object.assign({}, cell, { level: (cell.level || 0) + 1 }); const newRent = rentOf(cells[idx], cells); log.push({ who: role, text: '取存款 ' + need + ' 升级「' + cell.name + '」到 ' + (cells[idx].level + 1) + ' 级(过路费 ' + newRent + ')' }); this.showFx('good', '升级！过路费' + newRent); }
           }
         } else { log.push({ who: role, text: '「' + cell.name + '」已满级' }); }
       } else {
@@ -759,7 +759,7 @@ Page({
       cash[role] -= cost;
       const cs = s.cells.map(x => Object.assign({}, x));
       cs[idx] = Object.assign({}, c, { level: (c.level || 0) + 1 });
-      const lg = (s.log || []).slice(); lg.push({ who: role, text: '升级「' + c.name + '」到 ' + (cs[idx].level + 1) + ' 级' });
+      const lg = (s.log || []).slice(); const newRent = rentOf(cs[idx], cs); lg.push({ who: role, text: '升级「' + c.name + '」到 ' + (cs[idx].level + 1) + ' 级(过路费 ' + newRent + ')' });
       return Object.assign({}, s, { cells: cs, cash, log: lg.slice(-20000) });
     });
   },
