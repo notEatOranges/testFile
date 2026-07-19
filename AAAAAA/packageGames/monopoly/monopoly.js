@@ -446,7 +446,6 @@ Page({
   mtxn(updater) {
     return rt.transactionState('monopoly', s => {
       if (s && s.winner) return s;   // 已结束,拒绝银行/卖地/抵押等操作
-      if (s && s.turn !== rt.seatOf(room.getRole())) { toast('等你的回合才能操作银行'); return s; }   // 限自己回合
       const next = updater(s);
       // seq 取 DB 与本地较大者+1：bankAct 等用 transactionState(读 DB),DB.seq 可能落后于本地
       // this._state.seq(roll/resolve 的 commit 已本地 +1 但 setState 异步未到 DB),只按 DB.seq+1
@@ -710,11 +709,7 @@ Page({
   },
 
   // —— 银行/资产：存款/卖地/抵押 ——
-  openBank() {
-    const s = this._state;
-    if (!s || !s.turn || s.turn !== rt.seatOf(room.getRole())) { toast('等你的回合才能操作银行'); return; }
-    this.setData({ bankOpen: true });
-  },
+  openBank() { this.setData({ bankOpen: true }); },
   noop() {},
   closeBank() { this.setData({ bankOpen: false }); },
   bankAct(e) {

@@ -249,6 +249,10 @@
   padding: 8rpx 16rpx;
   font-size: 24rpx;
 }
+.bk-btn.sm.disabled {
+  opacity: 0.35;
+  pointer-events: none;
+}
 .bk-btn.sm.confirming {
   background: #dc2626;
   color: #fff;
