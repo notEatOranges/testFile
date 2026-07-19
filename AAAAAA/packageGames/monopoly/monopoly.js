@@ -171,7 +171,7 @@ Page({
   },
 
   fresh(mode) {
-    return { mode: mode || 'casual', cells: buildCells(), pos: { boy: 0, girl: 0 }, cash: { boy: START_CASH, girl: START_CASH }, savings: { boy: 0, girl: 0 }, skip: { boy: 0, girl: 0 }, turn: Math.random() < 0.5 ? rt.RED : rt.BLUE, dice: 1, log: [], winner: null, req: null, sellReq: null };
+    return { mode: mode || 'casual', cells: buildCells(), pos: { boy: 0, girl: 0 }, cash: { boy: START_CASH, girl: START_CASH }, savings: { boy: 0, girl: 0 }, skip: { boy: 0, girl: 0 }, turn: Math.random() < 0.5 ? rt.RED : rt.BLUE, dice: 1, log: [], winner: null, req: null, sellReq: null, phase: 'idle', anim: null };
   },
   startMatch(e) { this._recorded = false; rt.setState('monopoly', this.fresh(e && e.currentTarget && e.currentTarget.dataset.mode)); },
   requestRestart() { rt.requestRestart('monopoly', this._state, room.getRole(), !!this.data.winner, () => this.fresh(this._state && this._state.mode)); },
@@ -274,14 +274,20 @@ Page({
         levelArr: c.type === 'property' ? new Array(c.level || 0).fill(1) : []
       });
     });
-    // 棋子像素坐标(按 pos + cellW)；动画进行中(moving)不被对端 state 覆盖
+    // 棋子坐标:phase=idle 时才覆盖(rolling/moving/resolving 中由 anim/本地 animateMove 管)
     const peerRole = role === 'boy' ? 'girl' : 'boy';
-    if (s.pos) {
-      const same = s.pos[role] === s.pos[peerRole];   // 同格并排(我左、对方右)，不叠在一起
+    const isIdle = !s.phase || s.phase === 'idle';
+    if (isIdle && s.pos) {
+      const same = s.pos[role] === s.pos[peerRole];
       const [mx, my] = this.tokenXY(s.pos[role]);
       const [px, py] = this.tokenXY(s.pos[peerRole]);
       if (!this.data.tokenMe || !this.data.tokenMe.moving) patch.tokenMe = { x: same ? mx - 3 : mx, y: my, hop: 0, kind: seatShape(role), color: seatColor(role), moving: false };
       if (!this.data.tokenPeer || !this.data.tokenPeer.moving) patch.tokenPeer = { x: same ? px + 3 : px, y: py, hop: 0, kind: seatShape(peerRole), color: seatColor(peerRole), moving: false };
+    }
+    // 对端 moving 动画:对方 phase=moving + anim → 本地播 animateMove(不覆盖 pos)
+    if (s.phase === 'moving' && s.anim && s.anim.role !== role && (!this._peerAnimKey || this._peerAnimKey !== s.seq)) {
+      this._peerAnimKey = s.seq;
+      this.animateMove(s.anim.role, s.anim.from, s.anim.to);
     }
 
     Object.assign(patch, {
@@ -305,41 +311,45 @@ Page({
 
   async roll() {
     const role = room.getRole();
-    // 红线:摇骰前从 DB 现读校验 turn(防 this._state 陈旧 - 网络波动/杀后台/重进/watch 漏推)
-    const s = this._state;   // 暂回退 getOnce(与 watch/poll 时序冲突致双方 myTurn=false 死锁,先恢复可玩)
-    if (!s || s.winner || this._rolling || s.turn !== rt.seatOf(role)) return;   // _rolling 本地标志防并发(不被 watch/watchdog 干扰)
+    const s = this._state;
+    if (!s || s.winner || this._rolling || s.turn !== rt.seatOf(role) || (s.phase && s.phase !== 'idle')) return;
     this._rolling = true;
     this.setData({ rolling: true });
     try {
-    const d = await this.rollDiceAnim();             // 单 6 面骰
-    const steps = d;
-    this.setData({ dice: d });
+      // phase=rolling:摇骰中(不含 turn,对方看到"摇骰中")
+      this.commit({ phase: 'rolling' });
+      const d = await this.rollDiceAnim();
+      const steps = d;
+      this.setData({ dice: d });
 
-    const from = s.pos[role];
-    const crossed = (from + steps) >= BOARD;
-    const to = (from + steps) % BOARD;
-    let cash = Object.assign({}, s.cash);
-    const savings = Object.assign({}, s.savings || { boy: 0, girl: 0 });
-    const log = (s.log || []).slice();
-    if (crossed) {
-      cash[role] = (cash[role] || 0) + 150;
-      if (s.mode !== 'classic') { const sav = savings[role] || 0; if (sav) { const it = Math.round(sav * 0.03); savings[role] = sav + it; log.push({ who: role, text: '存款利息 +' + it }); } }   // 仅休闲模式：存款 +5%
-    }
-    log.push({ who: role, text: '掷出 ' + steps + (crossed ? '，经过起点 +150' : '') });
+      const from = s.pos[role];
+      const crossed = (from + steps) >= BOARD;
+      const to = (from + steps) % BOARD;
+      let cash = Object.assign({}, s.cash);
+      const savings = Object.assign({}, s.savings || { boy: 0, girl: 0 });
+      const log = (s.log || []).slice();
+      if (crossed) {
+        cash[role] = (cash[role] || 0) + 150;
+        if (s.mode !== 'classic') { const sav = savings[role] || 0; if (sav) { const it = Math.round(sav * 0.03); savings[role] = sav + it; log.push({ who: role, text: '存款利息 +' + it }); } }
+      }
+      log.push({ who: role, text: '掷出 ' + steps + (crossed ? '，经过起点 +150' : '') });
 
-    // 摇点即时推送(cash/log/savings)；不预推 pos——防对端 tokenPeer 先跳终点造成回弹,棋子动画后由 resolve 推 pos。
-    this.commit({ cash, savings, log });
+      // phase=moving:棋子移动中(推 anim 指令让对方看到动画,不含 turn/pos)
+      this.commit({ phase: 'moving', anim: { role, from, to }, dice: d, cash, savings, log: log.slice(-30) });
+      await this.animateMove(role, from, to);
 
-    // 棋子滑行动画（沿环形），完成后结算
-    await this.animateMove(role, from, to);
-    await this.resolve(role, to, cash, log, s.turn);
+      // phase=resolving:结算中(买房 modal 等,不含 turn)
+      this.commit({ phase: 'resolving', pos: Object.assign({}, s.pos, { [role]: to }) });
+      const result = await this.resolve(role, to, cash, log, s.turn);
+
+      // phase=idle:最终态,交回合
+      this.commit(Object.assign({}, result, { phase: 'idle', anim: null }));
     } catch (err) {
       console.error('[monopoly] roll err', err); toast('出错了，请重试');
-      // 不盲目交回合(防"没投就变对方投")；_rolling 在 finally 清,玩家可重试
+      // 异常时恢复 idle(不交回合,玩家可重试)
+      try { this.commit({ phase: 'idle', anim: null }); } catch (e) {}
     }
     finally { this._rolling = false; this.setData({ rolling: false }); }
-    // rolling 在 finally 清：seq 拒旧 + store ts 拒旧已防住 watch 旧态覆盖 turn,不再需要 rolling 锁到回合离开；
-    // 否则「对方进监狱、我奖励连摇」时 turn 仍=我,applyState(myTurnFlag true)不清 rolling → 按钮卡 loading。
   },
 
   // 棋子沿外圈滑行：setTimeout(33ms) 逐帧 setData 棋子 x/y(百分比)/hop(rpx)；moving 标志防 applyState 覆盖；结束 res()。
@@ -427,30 +437,26 @@ Page({
     this.commit(Object.assign({ cells: cells.map(c => Object.assign({}, c)), cash: Object.assign({}, cash), pos: Object.assign({}, pos), skip: Object.assign({}, skip), log: log.slice(-30) }, extra || {}));
   },
 
+  // resolve:纯计算函数(不 commit/syncLog),返回最终 patch。modal(买房/升级)可 await。
   async resolve(role, idx, cash, log, turn, opts) {
     opts = opts || {};
     const cells = this._cells.map(c => Object.assign({}, c));
     const cell = cells[idx];
     const peer = role === 'boy' ? 'girl' : 'boy';
     let skip = Object.assign({}, this._state.skip || { boy: 0, girl: 0 });
-    let pos = Object.assign({}, this._state.pos, { [role]: idx });   // 同步到当前落点(roll 不预推 pos,resolve 在此补 pos[role]=idx)
+    let pos = Object.assign({}, this._state.pos, { [role]: idx });
     let savings = Object.assign({}, this._state.savings || { boy: 0, girl: 0 });
     let winner = null;
     let toIdx = idx;
 
-    // 惩罚倒退屏蔽获利:backward 落 start/bonus/freepark/hospital/police 只 log,不给钱/不触发(过路费/税/监狱仍交)
+    // 惩罚倒退屏蔽获利
     if (opts.backward && ['start', 'bonus', 'freepark', 'hospital', 'police'].indexOf(cell.type) >= 0) {
       log.push({ who: role, text: '后退路过「' + cell.name + '」(惩罚模式,不触发)' });
-      this.syncLog(cells, cash, log, pos, skip, { savings });
-      this.commit({ cells: cells.map(c => Object.assign({}, c)), pos, cash, savings, skip: { boy: Math.max(0, skip.boy||0), girl: Math.max(0, skip.girl||0) }, turn: winner ? turn : rt.seatOf(peer), dice: this.data.dice, log: log.slice(-30), winner, req: null, sellReq: null });
-      return;
-    }
-
-    if (cell.type === 'start') { cash[role] += 100; log.push({ who: role, text: '到达起点 +100' }); }
+    } else if (cell.type === 'start') { cash[role] += 100; log.push({ who: role, text: '到达起点 +100' }); }
     else if (cell.type === 'tax') {
       const props = cells.filter(c => c.type === 'property' && c.owner === role);
       const totalRent = props.reduce((s, c) => s + rentOf(c, cells), 0);
-      const tax = Math.max(20, Math.min(Math.round(totalRent * 0.1), 300));   // 地皮过路费总和 10%,20~300
+      const tax = Math.max(20, Math.min(Math.round(totalRent * 0.1), 300));
       cash[role] -= tax; log.push({ who: role, text: '缴税(地皮过路费10%) -' + tax }); this.showFx('bad', '缴税 -' + tax);
     }
     else if (cell.type === 'bonus') { cash[role] += cell.amt; log.push({ who: role, text: '获得奖金 +' + cell.amt }); this.showFx('good', cell.name + ' +' + cell.amt); }
@@ -459,8 +465,7 @@ Page({
     else if (cell.type === 'hospital') {
       const h = pickHospital();
       if (h.healthy) {
-        log.push({ who: role, text: '检查无病,医保' + h.code + ' 报销检查费' });
-        this.showFx('good', '检查无病,免费!');
+        log.push({ who: role, text: '检查无病,医保' + h.code + ' 报销检查费' }); this.showFx('good', '检查无病,免费!');
       } else {
         cash[role] = (cash[role] || 0) - h.actualCost;
         if (h.fake) log.push({ who: role, text: '大病!医保' + h.code + ' 减免 ' + h.deduct + '(实际仍扣 ' + h.actualCost + '),住院 ' + h.stay + ' 天' });
@@ -472,11 +477,10 @@ Page({
     else if (cell.type === 'police') {
       const p = pickPolice();
       cash[role] = (cash[role] || 0) + p.actualReward;
-      log.push({ who: role, text: '警局 ' + p.tier + ' +' + p.actualReward });
-      this.showFx('good', p.tier + ' +' + p.actualReward);
+      log.push({ who: role, text: '警局 ' + p.tier + ' +' + p.actualReward }); this.showFx('good', p.tier + ' +' + p.actualReward);
     }
     else if (cell.type === 'card') {
-      if (opts.backward) { log.push({ who: role, text: '后退路过「' + cell.name + '」（不触发抽牌）' }); }   // 后退落地不抽牌，避免移动卡循环
+      if (opts.backward) { log.push({ who: role, text: '后退路过「' + cell.name + '」（不触发抽牌）' }); }
       else {
         const card = await this.drawCard(cell.kind);
         log.push({ who: role, text: (cell.kind === 'fate' ? '抽中公共基金：' : '抽中机会：') + card.t });
@@ -485,7 +489,6 @@ Page({
         if (card.to === 0) { cash[role] += 150; toIdx = 0; log.push({ who: role, text: '回到起点 +150' }); }
         if (card.toJail) { const ji = cells.findIndex(c => c && c.type === 'jail'); if (ji >= 0) { toIdx = ji; log.push({ who: role, text: '被关进监狱' }); this.showFx('bad', '关进监狱'); } }
         if (card.skip) skip[role] = (skip[role] || 0) + 1;
-        // 移动类卡牌：摇/选步数 → 动画移动 → 在新落点递归结算（前进同正常掷骰；后退为惩罚：不买不升级、对方铺交租、监狱坐牢）
         if (card.fwdRoll || card.luckyDice || card.backRoll) {
           const backward = !!card.backRoll;
           let steps;
@@ -497,23 +500,20 @@ Page({
             log.push({ who: role, text: (backward ? '惩罚骰子' : '经验骰子') + '：摇出 ' + steps + '，' + (backward ? '后退' : '前进') + ' ' + steps + ' 步' });
           }
           const fromIdx = idx, to = backward ? ((idx - steps) % BOARD + BOARD) % BOARD : (idx + steps) % BOARD;
-          if (!backward && fromIdx + steps >= BOARD) {       // 前进跨起点：同正常掷骰（+200/休闲模式存款息）
+          if (!backward && fromIdx + steps >= BOARD) {
             cash[role] = (cash[role] || 0) + 150;
             if ((this._state.mode || 'casual') !== 'classic') { const sav = savings[role] || 0; if (sav) { const it = Math.round(sav * 0.03); savings[role] = sav + it; log.push({ who: role, text: '存款利息 +' + it }); } }
             log.push({ who: role, text: '经过起点 +150' });
           }
           pos = Object.assign({}, pos, { [role]: to });
-          this.syncLog(cells, cash, log, pos, skip, { savings });
           await this.animateMove(role, fromIdx, to, backward);
           if (backward) this.showFx('bad', '后退 ' + steps);
-          return await this.resolve(role, to, cash, log, turn, backward ? { backward: true } : {});
+          return this._resolveInner(role, to, cash, savings, log, cells, pos, skip, turn, peer, winner, backward ? { backward: true } : {});
         }
-        if (toIdx !== idx) { pos = Object.assign({}, pos, { [role]: toIdx }); this.syncLog(cells, cash, log, pos, skip, { savings }); await this.animateMove(role, idx, toIdx); }
-        else this.syncLog(cells, cash, log, pos, skip, { savings });
+        if (toIdx !== idx) { pos = Object.assign({}, pos, { [role]: toIdx }); await this.animateMove(role, idx, toIdx); }
       }
     } else if (cell.type === 'property') {
       if (opts.backward) {
-        // 后退惩罚落地：对方铺交过路费；空地/自家都不能购买或升级
         if (cell.owner && cell.owner !== role) {
           const r = rentOf(cell, cells);
           if (r > 0) { cash[role] -= r; cash[peer] += r; log.push({ who: role, text: '后退到{{' + cell.owner + '}}的「' + cell.name + '」付过路费 ' + r }); this.showFx('bad', '后退付过路费 ' + r); }
@@ -533,7 +533,6 @@ Page({
           cash[role] -= cell.price; cells[idx] = Object.assign({}, cell, { owner: role }); log.push({ who: role, text: '购买「' + cell.name + '」-' + cell.price }); this.showFx('good', '入手「' + cell.name + '」');
         }
       } else if (cell.owner === role) {
-        // 自己的地：可升级（最高 3 级）；现金不足但存款够 → 可取存款升级
         if ((cell.level || 0) < 3) {
           const cost = upgradeCost(cell);
           const cashNow = cash[role] || 0, sav = savings[role] || 0;
@@ -555,16 +554,77 @@ Page({
         else { log.push({ who: role, text: '路过{{' + cell.owner + '}}的「' + cell.name + '」(已抵押，免过路费)' }); }
       }
     }
-    this.syncLog(cells, cash, log, pos, skip, { savings });   // 落点结算即时同步(日志/资金/位置实时推送,不等末尾)
 
-    // 现金为负 → 破产救助（存款→抵押→卖地→破产），不再直接判输
+    // 破产救助(纯计算)
     if (cash[role] < 0) {
-      const bankrupt = await this.coverShortfall(role, cells, cash, savings, log);
+      const bankrupt = this._coverShortfallPure(role, cells, cash, savings, log);
       if (bankrupt) winner = role === 'boy' ? rt.BLUE : rt.RED;
     }
     if (toIdx !== idx) pos = Object.assign({}, pos, { [role]: toIdx });
-    // 末尾不再检查 skip[peer]：服刑改由 applyState 在「轮到该玩家时」自动跳过(经典规则,且避免两人都进监狱的边角)。
-    this.commit({ cells: cells.map(c => Object.assign({}, c)), pos, cash, savings, skip: { boy: Math.max(0, skip.boy||0), girl: Math.max(0, skip.girl||0) }, turn: winner ? turn : rt.seatOf(peer), dice: this.data.dice, log: log.slice(-30), winner, req: null, sellReq: null });
+    return { cells: cells.map(c => Object.assign({}, c)), pos, cash, savings, skip: { boy: Math.max(0, skip.boy||0), girl: Math.max(0, skip.girl||0) }, turn: winner ? turn : rt.seatOf(peer), dice: this.data.dice, log: log.slice(-30), winner, req: null, sellReq: null };
+  },
+
+  // resolve 递归入口(移动卡牌用):复用 resolve 逻辑但共享 cells/pos/skip
+  async _resolveInner(role, idx, cash, savings, log, cells, pos, skip, turn, peer, winner, opts) {
+    opts = opts || {};
+    const cell = cells[idx];
+    let toIdx = idx;
+    if (opts.backward && ['start', 'bonus', 'freepark', 'hospital', 'police'].indexOf(cell.type) >= 0) {
+      log.push({ who: role, text: '后退路过「' + cell.name + '」(惩罚模式,不触发)' });
+    } else if (cell.type === 'start') { cash[role] += 100; log.push({ who: role, text: '到达起点 +100' }); }
+    else if (cell.type === 'tax') {
+      const props = cells.filter(c => c.type === 'property' && c.owner === role);
+      const totalRent = props.reduce((s, c) => s + rentOf(c, cells), 0);
+      const tax = Math.max(20, Math.min(Math.round(totalRent * 0.1), 300));
+      cash[role] -= tax; log.push({ who: role, text: '缴税(地皮过路费10%) -' + tax }); this.showFx('bad', '缴税 -' + tax);
+    }
+    else if (cell.type === 'bonus') { cash[role] += cell.amt; log.push({ who: role, text: '获得奖金 +' + cell.amt }); this.showFx('good', cell.name + ' +' + cell.amt); }
+    else if (cell.type === 'jail') { log.push({ who: role, text: opts.backward ? '后退路过监狱(无事)' : '路过监狱(只是探望)' }); }
+    else if (cell.type === 'freepark') { cash[role] = (cash[role] || 0) + 50; log.push({ who: role, text: '免费停车 +50' }); this.showFx('good', '免费停车 +50'); }
+    else if (cell.type === 'hospital') {
+      const h = pickHospital();
+      if (!h.healthy) {
+        cash[role] = (cash[role] || 0) - h.actualCost;
+        log.push({ who: role, text: h.fake ? '大病!医保减免(实际扣' + h.actualCost + ')' : h.tier + '看病 -' + h.actualCost });
+        this.showFx('bad', h.tier + ' -' + h.actualCost); if (h.stay > 0) skip[role] = (skip[role] || 0) + h.stay;
+      } else { log.push({ who: role, text: '检查无病' }); }
+    }
+    else if (cell.type === 'police') { const p = pickPolice(); cash[role] += p.actualReward; log.push({ who: role, text: '警局 +' + p.actualReward }); this.showFx('good', '+' + p.actualReward); }
+    else if (cell.type === 'property') {
+      if (opts.backward) {
+        if (cell.owner && cell.owner !== role) { const r = rentOf(cell, cells); if (r > 0) { cash[role] -= r; cash[peer] += r; log.push({ who: role, text: '后退付过路费 ' + r }); this.showFx('bad', '过路费 ' + r); } }
+      } else if (!cell.owner) {
+        const afford = (cash[role] || 0) >= cell.price;
+        const choice = await new Promise(res => { if (afford) wx.showModal({ title: cell.name, content: '花 ' + cell.price + ' 买下？', confirmText: '买下', cancelText: '不买', success: r => res(r.confirm ? 'buy' : false) }); else { toast('现金不足'); res(false); } });
+        if (choice === 'buy') { cash[role] -= cell.price; cells[idx] = Object.assign({}, cell, { owner: role }); log.push({ who: role, text: '购买「' + cell.name + '」-' + cell.price }); this.showFx('good', '入手'); }
+      } else if (cell.owner !== role) { const r = rentOf(cell, cells); if (r > 0) { cash[role] -= r; cash[peer] += r; log.push({ who: role, text: '付过路费 ' + r }); this.showFx('bad', '过路费 ' + r); } }
+    }
+    if (cash[role] < 0) { const bankrupt = this._coverShortfallPure(role, cells, cash, savings, log); if (bankrupt) winner = role === 'boy' ? rt.BLUE : rt.RED; }
+    if (toIdx !== idx) pos = Object.assign({}, pos, { [role]: toIdx });
+    return { cells: cells.map(c => Object.assign({}, c)), pos, cash, savings, skip: { boy: Math.max(0, skip.boy||0), girl: Math.max(0, skip.girl||0) }, turn: winner ? turn : rt.seatOf(peer), dice: this.data.dice, log: log.slice(-30), winner, req: null, sellReq: null };
+  },
+
+  // 破产救助纯计算版(不 commit/syncLog,就地修改)
+  _coverShortfallPure(role, cells, cash, savings, log) {
+    while (cash[role] < 0 && (savings[role] || 0) > 0) { const need = Math.min(-cash[role], savings[role]); savings[role] -= need; cash[role] += need; log.push({ who: role, text: '取出存款 ' + need }); }
+    while (cash[role] < 0) {
+      const cand = []; cells.forEach((c, i) => { if (c && c.type === 'property' && c.owner === role && !c.mortgaged) cand.push(i); });
+      if (!cand.length) break;
+      cand.sort((a, b) => mortgageValueOf(cells[b]) - mortgageValueOf(cells[a]));
+      const i = cand[0], c = cells[i], get = mortgageValueOf(c);
+      cells[i] = Object.assign({}, c, { mortgaged: true });
+      cash[role] += get; log.push({ who: role, text: '自动抵押「' + c.name + '」+' + get });
+    }
+    while (cash[role] < 0) {
+      const cand = []; cells.forEach((c, i) => { if (c && c.type === 'property' && c.owner === role) cand.push(i); });
+      if (!cand.length) break;
+      cand.sort((a, b) => bankRecover(cells[b]) - bankRecover(cells[a]));
+      const i = cand[0], c = cells[i], get = bankRecover(c);
+      cells[i] = Object.assign({}, c, { owner: null, level: 0, mortgaged: false });
+      cash[role] += get; log.push({ who: role, text: '变卖「' + c.name + '」+' + get });
+    }
+    if (cash[role] < 0) { this.showFx('bad', '资产耗尽，破产！'); return true; }
+    return false;
   },
 
   // 破产救助：现金为负时自动自救，全程不弹窗。顺序：取存款 → 自动抵押自有地(拿半价) → 卖地给银行；仍不足才真破产。
@@ -705,6 +765,7 @@ Page({
     this.mtxn( s => {
       if (!s || !s.cells) return s;
       const gs = s.cells.filter(c => c && c.type === 'property' && c.group === g);
+      if (s.turn !== rt.seatOf(role)) { toast('等你的回合才能升级'); return s; }
       if (!gs.length || !gs.every(c => c.owner === role) || !gs.every(c => (c.level || 0) < 3)) { toast('整组不可升级'); return s; }
       const cost = Math.round(gs.reduce((sum, c) => sum + upgradeCost(c), 0) * (s.mode === 'classic' ? 1 : 0.9));
       const cash = Object.assign({}, s.cash);
