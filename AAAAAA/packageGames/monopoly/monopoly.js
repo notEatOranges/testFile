@@ -444,6 +444,7 @@ Page({
   mtxn(updater) {
     return rt.transactionState('monopoly', s => {
       if (s && s.winner) return s;   // 已结束,拒绝银行/卖地/抵押等操作
+      if (s && s.turn !== rt.seatOf(room.getRole())) { toast('等你的回合才能操作银行'); return s; }   // 限自己回合
       const next = updater(s);
       // seq 取 DB 与本地较大者+1：bankAct 等用 transactionState(读 DB),DB.seq 可能落后于本地
       // this._state.seq(roll/resolve 的 commit 已本地 +1 但 setState 异步未到 DB),只按 DB.seq+1
@@ -610,7 +611,26 @@ Page({
       } else { log.push({ who: role, text: '检查无病' }); }
     }
     else if (cell.type === 'police') { const p = pickPolice(); cash[role] += p.actualReward; log.push({ who: role, text: '警局 +' + p.actualReward }); this.showFx('good', '+' + p.actualReward); }
-    else if (cell.type === 'property') {
+    else if (cell.type === 'card') {
+      if (!opts.backward) {
+        const card = await this.drawCard(cell.kind);
+        log.push({ who: role, text: (cell.kind === 'fate' ? '抽中公共基金：' : '抽中机会：') + card.t });
+        if (card.cash) cash[role] = (cash[role] || 0) + card.cash;
+        if (card.cashPeer) { cash[role] = (cash[role] || 0) + card.cashPeer; cash[peer] = (cash[peer] || 0) - card.cashPeer; }
+        if (card.skip) skip[role] = (skip[role] || 0) + 1;
+        if (card.fwdRoll || card.luckyDice || card.backRoll) {
+          const backward = !!card.backRoll;
+          let steps2;
+          if (card.luckyDice) { steps2 = await new Promise(res => wx.showModal({ title: '幸运骰子', editable: true, placeholderText: '输入前进 1~6 步', confirmText: '前进', success: r => { if (r.confirm) { const n = parseInt(r.content, 10); res((n >= 1 && n <= 6) ? n : 1); } else res(1); }, fail: () => res(1) })); log.push({ who: role, text: '幸运骰子：前进 ' + steps2 + ' 步' }); }
+          else { steps2 = 1 + Math.floor(Math.random() * 6); log.push({ who: role, text: (backward ? '惩罚骰子' : '经验骰子') + '：' + (backward ? '后退' : '前进') + ' ' + steps2 + ' 步' }); }
+          const fromIdx2 = idx, to2 = backward ? ((idx - steps2) % BOARD + BOARD) % BOARD : (idx + steps2) % BOARD;
+          if (!backward && fromIdx2 + steps2 >= BOARD) { cash[role] = (cash[role] || 0) + 150; log.push({ who: role, text: '经过起点 +150' }); }
+          pos = Object.assign({}, pos, { [role]: to2 });
+          await this.animateMove(role, fromIdx2, to2, backward);
+          return this._resolveInner(role, to2, cash, savings, log, cells, pos, skip, turn, peer, winner, backward ? { backward: true } : {});
+        }
+      }
+    } else if (cell.type === 'property') {
       if (opts.backward) {
         if (cell.owner && cell.owner !== role) { const r = rentOf(cell, cells); if (r > 0) { cash[role] -= r; cash[peer] += r; log.push({ who: role, text: '后退付过路费 ' + r }); this.showFx('bad', '过路费 ' + r); } }
       } else if (!cell.owner) {
