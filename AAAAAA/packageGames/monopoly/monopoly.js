@@ -307,8 +307,8 @@ Page({
     const role = room.getRole();
     // 红线:摇骰前从 DB 现读校验 turn(防 this._state 陈旧 - 网络波动/杀后台/重进/watch 漏推)
     let s;
-    try { s = await rt.getOnce('monopoly'); } catch (e) { s = null; }
-    if (s) this._state = s; else s = this._state;   // DB 读失败兜底本地
+    try { s = await Promise.race([rt.getOnce('monopoly'), new Promise((_, rej) => setTimeout(function () { rej(new Error('timeout')); }, 3000))]); } catch (e) { s = null; }
+    if (s) this._state = s; else s = this._state;   // DB 读失败/超时(3s)兜底本地,不卡死
     if (!s || s.winner || this.data.rolling || s.turn !== rt.seatOf(role)) return;
     this.setData({ rolling: true });
     // rolling 现在交由 applyState 在「回合离开我/胜负已定」时清掉（期间保持 true，堵住重复摇）。
@@ -441,7 +441,7 @@ Page({
     const cell = cells[idx];
     const peer = role === 'boy' ? 'girl' : 'boy';
     let skip = Object.assign({}, this._state.skip || { boy: 0, girl: 0 });
-    let pos = Object.assign({}, this._state.pos);
+    let pos = Object.assign({}, this._state.pos, { [role]: idx });   // 同步到当前落点(roll 不预推 pos,resolve 在此补 pos[role]=idx)
     let savings = Object.assign({}, this._state.savings || { boy: 0, girl: 0 });
     let winner = null;
     let toIdx = idx;
