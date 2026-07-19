@@ -730,19 +730,24 @@ Page({
     const cell = (this._state && this._state.cells[idx]) || {};
     const get = Math.round((cell.price + (cell.level || 0) * upgradeCost(cell)) * 0.6);
     wx.showModal({ title: '卖给银行', content: '确定把「' + cell.name + '」卖给银行，获得 ' + get + '？', confirmText: '卖出', cancelText: '取消', confirmColor: '#dc2626',
-      success: r => {
-        if (!r.confirm) return;
-        this.mtxn( s => {
-          if (!s || !s.cells) return s;
-          const c = s.cells[idx];
-          if (!c || c.owner !== role) { toast('地块已变化'); return s; }   // 防御：非己地不卖
-          const cs = s.cells.map(x => Object.assign({}, x));
-          cs[idx] = Object.assign({}, c, { owner: null, level: 0, mortgaged: false });
-          const cash = Object.assign({}, s.cash); cash[role] = (cash[role] || 0) + get;
-          const lg = (s.log || []).slice(); lg.push({ who: role, text: '把「' + c.name + '」卖给银行 +' + get });
-          return Object.assign({}, s, { cells: cs, cash, log: lg.slice(-20000) });
+      success: r1 => {
+        if (!r1.confirm) return;
+        wx.showModal({ title: '最终确认', content: '「' + cell.name + '」卖出后不再属于你，确定？', confirmText: '确定卖出', cancelText: '算了', confirmColor: '#dc2626',
+          success: r => {
+            if (!r.confirm) return;
+            this.mtxn( s => {
+              if (!s || !s.cells) return s;
+              const c = s.cells[idx];
+              if (!c || c.owner !== role) { toast('地块已变化'); return s; }
+              const cs = s.cells.map(x => Object.assign({}, x));
+              cs[idx] = Object.assign({}, c, { owner: null, level: 0, mortgaged: false });
+              const cash = Object.assign({}, s.cash); cash[role] = (cash[role] || 0) + get;
+              const lg = (s.log || []).slice(); lg.push({ who: role, text: '把「' + c.name + '」卖给银行 +' + get });
+              return Object.assign({}, s, { cells: cs, cash, log: lg.slice(-20000) });
+            });
+            toast('卖给银行 +' + get);
+          }
         });
-        toast('卖给银行 +' + get);
       }
     });
   },
@@ -751,11 +756,16 @@ Page({
     const cell = (this._state && this._state.cells[idx]) || {};
     const price = Math.round((cell.price || 0) * 0.8);
     wx.showModal({ title: '卖给对方', content: '确定把「' + cell.name + '」以 ' + price + ' 卖给对方？', confirmText: '发起', cancelText: '取消', confirmColor: '#dc2626',
-      success: r => {
-        if (!r.confirm) return;
-        this.mtxn( s => Object.assign({}, s, { sellReq: { by: role, idx, price } }));
-        this.setData({ bankOpen: false });
-        toast('已发起卖地请求(价 ' + price + ')，等对方');
+      success: r1 => {
+        if (!r1.confirm) return;
+        wx.showModal({ title: '最终确认', content: '「' + cell.name + '」以 ' + price + ' 卖给对方，确定？', confirmText: '确定发起', cancelText: '算了', confirmColor: '#dc2626',
+          success: r => {
+            if (!r.confirm) return;
+            this.mtxn( s => Object.assign({}, s, { sellReq: { by: role, idx, price } }));
+            this.setData({ bankOpen: false });
+            toast('已发起卖地请求(价 ' + price + ')，等对方');
+          }
+        });
       }
     });
   },
