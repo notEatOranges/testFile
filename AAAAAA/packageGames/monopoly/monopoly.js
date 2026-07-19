@@ -746,6 +746,10 @@ Page({
       if (!c || c.owner !== role) { toast('地块已变化'); return s; }
       if ((c.level || 0) >= 3) { toast('已满级'); return s; }
       if (c.mortgaged) { toast('已抵押,先赎回再升级'); return s; }
+      // 经典均匀:同色组内等级差≤1,不能超过同组最低+1
+      const sibs = s.cells.filter(x => x && x.type === 'property' && x.group === c.group && x.owner === role);
+      const minLevel = Math.min(...sibs.map(x => (x.level || 0)));
+      if ((c.level || 0) > minLevel) { toast('需先升级同组其他地皮到同级'); return s; }
       const cost = upgradeCost(c);
       const cash = Object.assign({}, s.cash);
       if ((cash[role] || 0) < cost) { toast('现金不足'); return s; }
