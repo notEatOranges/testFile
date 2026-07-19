@@ -74,7 +74,7 @@ function rentOf(cell, cells) {
   if (cell.mortgaged) return 0;                                  // 经典：抵押中的地不收过路费
   const LEVEL_MULT = [1, 2, 3, 4];                               // 非线性：越高级涨幅越陡(对标 Monopoly 建房阶梯)
   let r = cell.rent * LEVEL_MULT[cell.level || 0];
-  if (cell.owner && cells && ownsFullSet(cells, cell.group, cell.owner)) r = r * 2;   // 同色成套：过路费翻倍(经典原版)
+  if (cell.owner && cells && ownsFullSet(cells, cell.group, cell.owner)) r = Math.round(r * 1.5);   // 同色成套：过路费 ×1.5(双人对局落对方地概率高,×2 过致命)
   return Math.round(r);
 }
 function upgradeCost(cell) { return Math.round(cell.price * 0.5); }
@@ -102,7 +102,7 @@ function pickHospital() {
 // 警局 4 档奖励(真奖励,不夸大)：小额 70% / 中额 25% / 见义勇为 4%(+200) / 个人三等功 1%(+1000)
 function pickPolice() {
   const r = Math.random();
-  if (r < 0.70) return { tier: '小额奖励', actualReward: 30 + Math.floor(Math.random() * 61) };
+  if (r < 0.70) return { tier: '小额奖励', actualReward: 20 + Math.floor(Math.random() * 51) };   // 20~70
   if (r < 0.95) return { tier: '中额奖励', actualReward: 100 + Math.floor(Math.random() * 51) };
   if (r < 0.99) return { tier: '见义勇为', actualReward: 200 };
   return { tier: '个人三等功', actualReward: 1000 };
@@ -456,7 +456,7 @@ Page({
     else if (cell.type === 'tax') {
       const props = cells.filter(c => c.type === 'property' && c.owner === role);
       const totalRent = props.reduce((s, c) => s + rentOf(c, cells), 0);
-      const tax = Math.max(20, Math.min(Math.round(totalRent * 0.1), 400));   // 地皮过路费总和 10%,20~400
+      const tax = Math.max(20, Math.min(Math.round(totalRent * 0.1), 300));   // 地皮过路费总和 10%,20~300
       cash[role] -= tax; log.push({ who: role, text: '缴税(地皮过路费10%) -' + tax }); this.showFx('bad', '缴税 -' + tax);
     }
     else if (cell.type === 'bonus') { cash[role] += cell.amt; log.push({ who: role, text: '获得奖金 +' + cell.amt }); this.showFx('good', cell.name + ' +' + cell.amt); }
@@ -526,22 +526,33 @@ Page({
           else { log.push({ who: role, text: '后退到{{' + cell.owner + '}}的「' + cell.name + '」(已抵押，免过路费)' }); }
         } else { log.push({ who: role, text: '后退到「' + cell.name + '」(' + (cell.owner === role ? '自家' : '空地') + '，不能购买/升级)' }); }
       } else if (!cell.owner) {
-        const afford = (cash[role] || 0) >= cell.price;
+        const cashNow = cash[role] || 0, sav = savings[role] || 0;
+        const afford = cashNow >= cell.price;
+        const canFromSav = !afford && (cashNow + sav) >= cell.price;
         const choice = await new Promise(res => {
           if (afford) wx.showModal({ title: cell.name, content: '花 ' + cell.price + ' 买下？（过路费 ' + rentOf(cell, cells) + '）', confirmText: '买下', cancelText: '不买', success: r => res(r.confirm ? 'buy' : false) });
-          else { toast('现金不足，买不起「' + cell.name + '」(可去银行抵押地皮周转)'); res(false); }
+          else if (canFromSav) wx.showModal({ title: cell.name, content: '现金 ' + cashNow + ' 不足,从存款取 ' + (cell.price - cashNow) + ' 凑 ' + cell.price + ' 购买?(失去少量利息)', confirmText: '取存款买', cancelText: '不买', success: r => res(r.confirm ? 'buyFromSav' : false) });
+          else { toast('现金+存款仍不足,买不起「' + cell.name + '」(可去银行抵押地皮)'); res(false); }
         });
-        if (choice === 'buy') { cash[role] -= cell.price; cells[idx] = Object.assign({}, cell, { owner: role }); log.push({ who: role, text: '购买「' + cell.name + '」-' + cell.price }); this.showFx('good', '入手「' + cell.name + '」'); }
+        if (choice === 'buy' || choice === 'buyFromSav') {
+          if (choice === 'buyFromSav') { const need = cell.price - cashNow; savings[role] = sav - need; cash[role] = cashNow + need; log.push({ who: role, text: '从存款取 ' + need + ' 凑购房款' }); }
+          cash[role] -= cell.price; cells[idx] = Object.assign({}, cell, { owner: role }); log.push({ who: role, text: '购买「' + cell.name + '」-' + cell.price }); this.showFx('good', '入手「' + cell.name + '」');
+        }
       } else if (cell.owner === role) {
-        // 自己的地：可升级（最高 3 级）
+        // 自己的地：可升级（最高 3 级）；现金不足但存款够 → 可取存款升级
         if ((cell.level || 0) < 3) {
           const cost = upgradeCost(cell);
-          if ((cash[role] || 0) < cost) { log.push({ who: role, text: '现金不足，无法升级「' + cell.name + '」' }); }
+          const cashNow = cash[role] || 0, sav = savings[role] || 0;
+          const afford = cashNow >= cost;
+          const canFromSav = !afford && (cashNow + sav) >= cost;
+          if (!afford && !canFromSav) { log.push({ who: role, text: '现金+存款都不足，无法升级「' + cell.name + '」' }); }
           else {
             const up = await new Promise(res => {
-              wx.showModal({ title: '升级「' + cell.name + '」', content: '升到 ' + ((cell.level || 0) + 2) + ' 级？花 ' + cost + '（过路费变 ' + rentOf(Object.assign({}, cell, { level: (cell.level || 0) + 1 }), cells) + '）', confirmText: '升级', cancelText: '不了', success: r => res(r.confirm) });
+              if (afford) wx.showModal({ title: '升级「' + cell.name + '」', content: '升到 ' + ((cell.level || 0) + 2) + ' 级？花 ' + cost + '（过路费变 ' + rentOf(Object.assign({}, cell, { level: (cell.level || 0) + 1 }), cells) + '）', confirmText: '升级', cancelText: '不了', success: r => res(r.confirm ? 'cash' : false) });
+              else wx.showModal({ title: '取存款升级「' + cell.name + '」', content: '现金 ' + cashNow + ' 不足,从存款取 ' + (cost - cashNow) + ' 升到 ' + ((cell.level || 0) + 2) + ' 级?(过路费变 ' + rentOf(Object.assign({}, cell, { level: (cell.level || 0) + 1 }), cells) + ',失去少量利息)', confirmText: '取存款升级', cancelText: '不了', success: r => res(r.confirm ? 'fromSav' : false) });
             });
-            if (up) { cash[role] -= cost; cells[idx] = Object.assign({}, cell, { level: (cell.level || 0) + 1 }); log.push({ who: role, text: '升级「' + cell.name + '」到 ' + (cells[idx].level + 1) + ' 级' }); this.showFx('good', '升级！过路费上涨'); }
+            if (up === 'cash') { cash[role] -= cost; cells[idx] = Object.assign({}, cell, { level: (cell.level || 0) + 1 }); log.push({ who: role, text: '升级「' + cell.name + '」到 ' + (cells[idx].level + 1) + ' 级' }); this.showFx('good', '升级！过路费上涨'); }
+            else if (up === 'fromSav') { const need = cost - cashNow; savings[role] = sav - need; cash[role] = cashNow + need - cost; cells[idx] = Object.assign({}, cell, { level: (cell.level || 0) + 1 }); log.push({ who: role, text: '取存款 ' + need + ' 升级「' + cell.name + '」到 ' + (cells[idx].level + 1) + ' 级' }); this.showFx('good', '升级！过路费上涨'); }
           }
         } else { log.push({ who: role, text: '「' + cell.name + '」已满级' }); }
       } else {
