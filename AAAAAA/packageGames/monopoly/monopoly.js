@@ -727,47 +727,49 @@ Page({
   },
   sellToBank(e) {
     const idx = parseInt(e.currentTarget.dataset.idx, 10), role = room.getRole();
-    const cell = (this._state && this._state.cells[idx]) || {};
-    const get = Math.round((cell.price + (cell.level || 0) * upgradeCost(cell)) * 0.6);
-    wx.showModal({ title: '卖给银行', content: '确定把「' + cell.name + '」卖给银行，获得 ' + get + '？', confirmText: '卖出', cancelText: '取消', confirmColor: '#dc2626',
-      success: r1 => {
-        if (!r1.confirm) return;
-        wx.showModal({ title: '最终确认', content: '「' + cell.name + '」卖出后不再属于你，确定？', confirmText: '确定卖出', cancelText: '算了', confirmColor: '#dc2626',
-          success: r => {
-            if (!r.confirm) return;
-            this.mtxn( s => {
-              if (!s || !s.cells) return s;
-              const c = s.cells[idx];
-              if (!c || c.owner !== role) { toast('地块已变化'); return s; }
-              const cs = s.cells.map(x => Object.assign({}, x));
-              cs[idx] = Object.assign({}, c, { owner: null, level: 0, mortgaged: false });
-              const cash = Object.assign({}, s.cash); cash[role] = (cash[role] || 0) + get;
-              const lg = (s.log || []).slice(); lg.push({ who: role, text: '把「' + c.name + '」卖给银行 +' + get });
-              return Object.assign({}, s, { cells: cs, cash, log: lg.slice(-20000) });
-            });
-            toast('卖给银行 +' + get);
-          }
-        });
-      }
-    });
+    // 二次确认：第一次点进入待确认状态(按钮变红"再点确认")，3s 内再点才执行，否则自动取消
+    if (this._confirmAct === 'sellBank:' + idx) {
+      this._confirmAct = null; clearTimeout(this._confirmTimer);
+      const cell = (this._state && this._state.cells[idx]) || {};
+      const get = Math.round((cell.price + (cell.level || 0) * upgradeCost(cell)) * 0.6);
+      this.mtxn( s => {
+        if (!s || !s.cells) return s;
+        const c = s.cells[idx];
+        if (!c || c.owner !== role) { toast('地块已变化'); return s; }
+        const cs = s.cells.map(x => Object.assign({}, x));
+        cs[idx] = Object.assign({}, c, { owner: null, level: 0, mortgaged: false });
+        const cash = Object.assign({}, s.cash); cash[role] = (cash[role] || 0) + get;
+        const lg = (s.log || []).slice(); lg.push({ who: role, text: '把「' + c.name + '」卖给银行 +' + get });
+        return Object.assign({}, s, { cells: cs, cash, log: lg.slice(-20000) });
+      });
+      toast('卖给银行 +' + get);
+      return;
+    }
+    this._setConfirm('sellBank:' + idx);
   },
   sellToPeer(e) {
     const idx = parseInt(e.currentTarget.dataset.idx, 10), role = room.getRole();
-    const cell = (this._state && this._state.cells[idx]) || {};
-    const price = Math.round((cell.price || 0) * 0.8);
-    wx.showModal({ title: '卖给对方', content: '确定把「' + cell.name + '」以 ' + price + ' 卖给对方？', confirmText: '发起', cancelText: '取消', confirmColor: '#dc2626',
-      success: r1 => {
-        if (!r1.confirm) return;
-        wx.showModal({ title: '最终确认', content: '「' + cell.name + '」以 ' + price + ' 卖给对方，确定？', confirmText: '确定发起', cancelText: '算了', confirmColor: '#dc2626',
-          success: r => {
-            if (!r.confirm) return;
-            this.mtxn( s => Object.assign({}, s, { sellReq: { by: role, idx, price } }));
-            this.setData({ bankOpen: false });
-            toast('已发起卖地请求(价 ' + price + ')，等对方');
-          }
-        });
-      }
-    });
+    if (this._confirmAct === 'sellPeer:' + idx) {
+      this._confirmAct = null; clearTimeout(this._confirmTimer);
+      const cell = (this._state && this._state.cells[idx]) || {};
+      const price = Math.round((cell.price || 0) * 0.8);
+      this.mtxn( s => Object.assign({}, s, { sellReq: { by: role, idx, price } }));
+      this.setData({ bankOpen: false });
+      toast('已发起卖地请求(价 ' + price + ')，等对方');
+      return;
+    }
+    this._setConfirm('sellPeer:' + idx);
+  },
+  _setConfirm(key) {   // 进入二次确认待定状态：3s 内再点同一按钮才执行，否则自动取消
+    if (this._confirmTimer) clearTimeout(this._confirmTimer);
+    this._confirmAct = key;
+    this.setData({ confirmIdx: key });
+    toast('再点一次确认');
+    this._confirmTimer = setTimeout(() => { this._confirmAct = null; this.setData({ confirmIdx: '' }); }, 3000);
+  },
+  _cancelConfirm() {
+    if (this._confirmTimer) clearTimeout(this._confirmTimer);
+    this._confirmAct = null; this.setData({ confirmIdx: '' });
   },
   cancelSell() { this.mtxn( s => Object.assign({}, s, { sellReq: null })); toast('已取消卖地'); },
   // 单块升级(银行面板,限自己回合)
@@ -799,29 +801,24 @@ Page({
     const idx = parseInt(e.currentTarget.dataset.idx, 10), role = room.getRole();
     const cell = (this._state && this._state.cells[idx]) || {};
     const get = mortgageValueOf(cell);
-    wx.showModal({ title: '抵押', content: '把「' + cell.name + '」抵押给银行 +' + get + '？(抵押中不收过路费) 再次确认？', confirmText: '确认抵押', cancelText: '取消', confirmColor: '#ea580c',
-      success: r1 => {
-        if (!r1.confirm) return;
-        wx.showModal({ title: '最终确认', content: '「' + cell.name + '」抵押后不收过路费，确定？', confirmText: '确定抵押', cancelText: '算了', confirmColor: '#ea580c',
-          success: r => {
-            if (!r.confirm) return;
-            this.mtxn( s => {
-              if (!s || !s.cells) return s;
-              const c = s.cells[idx];
-              if (!c || c.owner !== role) { toast('地块已变化'); return s; }
-              if (c.mortgaged) { toast('已抵押'); return s; }
-              const g = mortgageValueOf(c);
-              const cs = s.cells.map(x => Object.assign({}, x));
-              cs[idx] = Object.assign({}, c, { mortgaged: true });
-              const cash = Object.assign({}, s.cash); cash[role] = (cash[role] || 0) + g;
-              const lg = (s.log || []).slice(); lg.push({ who: role, text: '抵押「' + c.name + '」+' + g + '(抵押中不收租)' });
-              return Object.assign({}, s, { cells: cs, cash, log: lg.slice(-20000) });
-            });
-            toast('已抵押,抵押中不收过路费');
-          }
-        });
-      }
-    });
+    if (this._confirmAct === 'mortgage:' + idx) {
+      this._confirmAct = null; clearTimeout(this._confirmTimer); this.setData({ confirmIdx: '' });
+      this.mtxn( s => {
+        if (!s || !s.cells) return s;
+        const c = s.cells[idx];
+        if (!c || c.owner !== role) { toast('地块已变化'); return s; }
+        if (c.mortgaged) { toast('已抵押'); return s; }
+        const g = mortgageValueOf(c);
+        const cs = s.cells.map(x => Object.assign({}, x));
+        cs[idx] = Object.assign({}, c, { mortgaged: true });
+        const cash = Object.assign({}, s.cash); cash[role] = (cash[role] || 0) + g;
+        const lg = (s.log || []).slice(); lg.push({ who: role, text: '抵押「' + c.name + '」+' + g + '(抵押中不收租)' });
+        return Object.assign({}, s, { cells: cs, cash, log: lg.slice(-20000) });
+      });
+      toast('已抵押,抵押中不收过路费');
+      return;
+    }
+    this._setConfirm('mortgage:' + idx);
   },
   // 赎回：付抵押值+10% 解除抵押，恢复收租。
   redeemProp(e) {
