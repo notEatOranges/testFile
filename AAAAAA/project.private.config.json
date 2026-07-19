@@ -14,10 +14,22 @@
     "useLanDebug": false,
     "showES6CompileOption": false,
     "compileHotReLoad": true,
-    "bigPackageSizeSupport": true,
+    "bigPackageSizeSupport": false,
     "checkInvalidKey": true,
     "useIsolateContext": true,
     "ignoreDevUnusedFiles": true
   },
-  "condition": {}
+  "condition": {
+    "miniprogram": {
+      "list": [
+        {
+          "name": "大富翁",
+          "pathName": "packageGames/monopoly/monopoly",
+          "query": "",
+          "scene": null,
+          "launchMode": "default"
+        }
+      ]
+    }
+  }
 }

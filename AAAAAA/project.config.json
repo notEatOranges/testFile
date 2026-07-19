@@ -27,7 +27,7 @@
     "skylineRenderEnable": true,
     "bigPackageSizeSupport": true,
     "packNpmRelationList": [],
-    "ignoreUploadUnusedFiles": true,
+    "ignoreUploadUnusedFiles": false,
     "babelSetting": {
       "ignore": [],
       "disablePlugins": [],
