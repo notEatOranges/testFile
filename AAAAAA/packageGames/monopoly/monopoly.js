@@ -159,9 +159,16 @@ Page({
       if (s && this._state && s.seq != null && this._state.seq != null && s.seq < this._state.seq) return;
       this._state = s; this.applyState();
     });
+    // 主动刷新:每 15s 从 DB 拉最新(watch 漏推/网络断兜底,不只被动等；seq 校验防旧覆盖)
+    this._pollTimer = setInterval(() => {
+      rt.getOnce('monopoly').then(s => {
+        if (s && (!this._state || this._state.seq == null || s.seq == null || s.seq >= this._state.seq)) { this._state = s; this.applyState(); }
+      }).catch(() => {});
+    }, 15000);
   },
   onUnload() {
     rt.teardown(this); ident.teardown(this);
+    if (this._pollTimer) clearInterval(this._pollTimer);
     if (this._diceTimer) clearTimeout(this._diceTimer);
     if (this._rollWatchdog) clearTimeout(this._rollWatchdog);
     if (this._raf) clearTimeout(this._raf);
