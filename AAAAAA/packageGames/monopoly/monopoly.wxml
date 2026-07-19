@@ -150,11 +150,11 @@
           <text wx:if="{{item.mortgaged}}" class="bp-mort-tag"><t-icon name="lock-on" size="22rpx" /> 已抵押</text>
         </view>
         <view class="bp-acts">
-          <view wx:if="{{!item.mortgaged}}" class="bk-btn sm {{confirmIdx === 'mortgage:' + item.idx ? 'confirming' : ''}}" data-idx="{{item.idx}}" bindtap="mortgageProp">{{confirmIdx === 'mortgage:' + item.idx ? '再点确认' : '抵押 +' + item.mortgageValue}}</view>
+          <view wx:if="{{!item.mortgaged}}" class="bk-btn sm" data-idx="{{item.idx}}" bindtap="mortgageProp">抵押 +{{item.mortgageValue}}</view>
           <view wx:else class="bk-btn sm" data-idx="{{item.idx}}" bindtap="redeemProp">赎回 -{{item.redeemValue}}</view>
           <view wx:if="{{item.canUpgrade}}" class="bk-btn sm" data-idx="{{item.idx}}" bindtap="upgradeOne">升级 -{{item.upgradeCost}}</view>
-          <view class="bk-btn sm {{confirmIdx === 'sellBank:' + item.idx ? 'confirming' : ''}}" data-idx="{{item.idx}}" bindtap="sellToBank">{{confirmIdx === 'sellBank:' + item.idx ? '再点确认' : '卖银行 +' + item.sellBank}}</view>
-          <view class="bk-btn sm {{confirmIdx === 'sellPeer:' + item.idx ? 'confirming' : ''}}" data-idx="{{item.idx}}" bindtap="sellToPeer">{{confirmIdx === 'sellPeer:' + item.idx ? '再点确认' : '卖对方 ' + item.sellPeer}}</view>
+          <view class="bk-btn sm" data-idx="{{item.idx}}" bindtap="sellToBank">卖银行 +{{item.sellBank}}</view>
+          <view class="bk-btn sm" data-idx="{{item.idx}}" bindtap="sellToPeer">卖对方 {{item.sellPeer}}</view>
         </view>
       </view>
       <view wx:if="{{!myProps.length}}" class="muted small" style="padding:20rpx 0">还没有地皮</view>
