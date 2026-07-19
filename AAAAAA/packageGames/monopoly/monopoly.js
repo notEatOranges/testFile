@@ -35,10 +35,10 @@ const DECK = {
   ],
   fate: [     // 公共基金:金钱事件为主
     { t: '银行分红 +50', cash: 50 },
-    { t: '生日红包 对方送你 +80', cashPeer: 80 },
+    { t: '生日红包 {{peer}}送你 +80', cashPeer: 80 },
     { t: '遗产继承 +100', cash: 100 },
     { t: '股票大涨 +120', cash: 120 },
-    { t: '对方请客 你 +50', cashPeer: 50 },
+    { t: '{{peer}}请客 你 +50', cashPeer: 50 },
     { t: '利息到账 +30', cash: 30 },
     { t: '进修学费 -100', cash: -100 },
     { t: '爱心捐款 -50', cash: -50 },
@@ -352,8 +352,9 @@ Page({
       if (crossed) {
         cash[role] = (cash[role] || 0) + 150;
         if (s.mode !== 'classic') { const sav = savings[role] || 0; if (sav) { const it = Math.round(sav * 0.03); savings[role] = sav + it; log.push({ who: role, text: '存款利息 +' + it }); } }
+        log.push({ who: role, text: '经过起点 +150' });
       }
-      log.push({ who: role, text: '掷出 ' + steps + '：「' + (s.cells[from] && s.cells[from].name || from) + '」→「' + (s.cells[to] && s.cells[to].name || to) + '」' + (crossed ? '，经过起点 +150' : '') });
+      log.push({ who: role, text: '掷出 ' + steps + '：「' + (s.cells[from] && s.cells[from].name || from) + '」→「' + (s.cells[to] && s.cells[to].name || to) + '」' });
 
       // phase=moving:棋子移动中(推 anim 指令让对方看到动画,不含 turn/pos)
       this.commit({ phase: 'moving', anim: { role, from, to }, dice: d, cash, savings, log: log.slice(-20000) });
@@ -507,7 +508,10 @@ Page({
         const card = await this.drawCard(cell.kind);
         log.push({ who: role, text: (cell.kind === 'fate' ? '抽中公共基金：' : '抽中机会：') + card.t });
         if (card.cash) cash[role] = (cash[role] || 0) + card.cash;
-        if (card.cashPeer) { cash[role] = (cash[role] || 0) + card.cashPeer; cash[peer] = (cash[peer] || 0) - card.cashPeer; }
+        if (card.cashPeer) {
+          cash[role] = (cash[role] || 0) + card.cashPeer; cash[peer] = (cash[peer] || 0) - card.cashPeer;
+          log.push({ who: peer, text: '送给{{' + role + '}} -' + card.cashPeer });
+        }
         if (card.to === 0) { cash[role] += 150; toIdx = 0; log.push({ who: role, text: '回到起点 +150' }); }
         if (card.toJail) { const ji = cells.findIndex(c => c && c.type === 'jail'); if (ji >= 0) { toIdx = ji; log.push({ who: role, text: '被关进监狱' }); this.showFx('bad', '关进监狱'); } }
         if (card.skip) skip[role] = (skip[role] || 0) + 1;
@@ -617,7 +621,10 @@ Page({
         const card = await this.drawCard(cell.kind);
         log.push({ who: role, text: (cell.kind === 'fate' ? '抽中公共基金：' : '抽中机会：') + card.t });
         if (card.cash) cash[role] = (cash[role] || 0) + card.cash;
-        if (card.cashPeer) { cash[role] = (cash[role] || 0) + card.cashPeer; cash[peer] = (cash[peer] || 0) - card.cashPeer; }
+        if (card.cashPeer) {
+          cash[role] = (cash[role] || 0) + card.cashPeer; cash[peer] = (cash[peer] || 0) - card.cashPeer;
+          log.push({ who: peer, text: '送给{{' + role + '}} -' + card.cashPeer });
+        }
         if (card.skip) skip[role] = (skip[role] || 0) + 1;
         if (card.fwdRoll || card.luckyDice || card.backRoll) {
           const backward = !!card.backRoll;
