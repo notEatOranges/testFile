@@ -703,7 +703,6 @@ Page({
       } else { toast('操作失败'); return s; }
       return Object.assign({}, s, { cash, savings, log: lg.slice(-20000) });
     }).then(() => { this._bankBusy = false; }).catch(() => { this._bankBusy = false; });
-    });
   },
   sellToBank(e) {
     const idx = parseInt(e.currentTarget.dataset.idx, 10), role = room.getRole();
