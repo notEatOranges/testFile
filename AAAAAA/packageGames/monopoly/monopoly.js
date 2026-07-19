@@ -710,7 +710,11 @@ Page({
   },
 
   // —— 银行/资产：存款/卖地/抵押 ——
-  openBank() { this.setData({ bankOpen: true }); },
+  openBank() {
+    const s = this._state;
+    if (!s || !s.turn || s.turn !== rt.seatOf(room.getRole())) { toast('等你的回合才能操作银行'); return; }
+    this.setData({ bankOpen: true });
+  },
   noop() {},
   closeBank() { this.setData({ bankOpen: false }); },
   bankAct(e) {
