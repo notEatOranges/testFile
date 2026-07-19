@@ -285,7 +285,7 @@ Page({
     }
 
     Object.assign(patch, {
-      started: true, turnSeat, myTurn: myTurnFlag, rolling: myTurnFlag ? this.data.rolling : false,
+      started: true, turnSeat, myTurn: myTurnFlag,
       mode: s.mode || 'casual',
       grid,
       log: (s.log || []).slice(-30).reverse().map(it => fmtLog(it, role, this.data.peerName)),
@@ -307,12 +307,9 @@ Page({
     const role = room.getRole();
     // 红线:摇骰前从 DB 现读校验 turn(防 this._state 陈旧 - 网络波动/杀后台/重进/watch 漏推)
     const s = this._state;   // 暂回退 getOnce(与 watch/poll 时序冲突致双方 myTurn=false 死锁,先恢复可玩)
-    if (!s || s.winner || this.data.rolling || s.turn !== rt.seatOf(role)) return;
+    if (!s || s.winner || this._rolling || s.turn !== rt.seatOf(role)) return;   // _rolling 本地标志防并发(不被 watch/watchdog 干扰)
+    this._rolling = true;
     this.setData({ rolling: true });
-    // rolling 现在交由 applyState 在「回合离开我/胜负已定」时清掉（期间保持 true，堵住重复摇）。
-    // 安全网：若回合未推进（异常/watch 漏推）导致 rolling 卡死，12s 后强制释放，避免「点摇骰无反应需重进」。
-    if (this._rollWatchdog) clearTimeout(this._rollWatchdog);
-    this._rollWatchdog = setTimeout(() => { if (this.data.rolling) { console.warn('[monopoly] roll watchdog: force-release'); this.setData({ rolling: false }); } }, 12000);
     try {
     const d = await this.rollDiceAnim();             // 单 6 面骰
     const steps = d;
@@ -338,12 +335,9 @@ Page({
     await this.resolve(role, to, cash, log, s.turn);
     } catch (err) {
       console.error('[monopoly] roll err', err); toast('出错了，请重试');
-      // 兜底：结算中途出错也要把回合交给对方，避免卡在某人手上或重复摇
-      const peer = role === 'boy' ? 'girl' : 'boy';
-      const st = this._state || s;
-      if (st && !st.winner) this.commit({ turn: rt.seatOf(peer) });
+      // 不盲目交回合(防"没投就变对方投")；_rolling 在 finally 清,玩家可重试
     }
-    finally { if (this._rollWatchdog) { clearTimeout(this._rollWatchdog); this._rollWatchdog = null; } this.setData({ rolling: false }); }
+    finally { this._rolling = false; this.setData({ rolling: false }); }
     // rolling 在 finally 清：seq 拒旧 + store ts 拒旧已防住 watch 旧态覆盖 turn,不再需要 rolling 锁到回合离开；
     // 否则「对方进监狱、我奖励连摇」时 turn 仍=我,applyState(myTurnFlag true)不清 rolling → 按钮卡 loading。
   },
