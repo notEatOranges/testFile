@@ -329,9 +329,8 @@ Page({
     }
     log.push({ who: role, text: '掷出 ' + steps + (crossed ? '，经过起点 +200' : '') });
 
-    // 摇点 + 棋子移动即时推送(commit 自动 seq+1，watch 回调 seq 拒旧防覆盖，不会连摇)。
-    // 对方实时看到「掷出 N」+ 棋子移动；fix7 当时砍它是为旧 rolling 锁，现 seq+ts 拒旧已根治覆盖。
-    this.commit({ pos: Object.assign({}, s.pos, { [role]: to }), cash, savings, log });
+    // 摇点即时推送(cash/log/savings)；不预推 pos——防对端 tokenPeer 先跳终点造成回弹,棋子动画后由 resolve 推 pos。
+    this.commit({ cash, savings, log });
 
     // 棋子滑行动画（沿环形），完成后结算
     await this.animateMove(role, from, to);
