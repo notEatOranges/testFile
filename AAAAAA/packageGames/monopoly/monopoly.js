@@ -19,36 +19,40 @@ function cellCR(i) {
   if (i < 24) return [23 - i, 0];       // 顶边 右→左
   return [0, i - 23];                   // 左边 上→下
 }
-// 双牌组(符合经典 Monopoly):机会(chance)偏移动、公共基金(fate)偏金钱。落到对应格抽对应副。
+// 三副独立牌组(经典 Monopoly):机会(移动+奖惩)、公共基金(金钱事件)、缴税(税收)。各落各格抽各副。
 const DECK = {
-  chance: [   // 机会:移动为主
+  chance: [   // 机会:移动+奖惩混合
     { t: '前进到起点 +150', to: 0 },
     { t: '经验骰子 摇骰前进(同正常掷骰)', fwdRoll: true },
     { t: '幸运骰子 自选前进 1~6 步', luckyDice: true },
     { t: '惩罚骰子 摇骰后退(落对方铺交租)', backRoll: true },
-    { t: '进监狱 移到监狱并停一回合', toJail: true, skip: true },
     { t: '退税 +40', cash: 40 },
     { t: '中奖 +150', cash: 150 },
     { t: '捡到钱包 +80', cash: 80 },
     { t: '意外收入 +60', cash: 60 },
-    { t: '打架斗殴 受伤 -150', cash: -150 }
+    { t: '交通罚款 -100', cash: -100 },
+    { t: '打架斗殴 受伤 -120', cash: -120 }
   ],
-  fate: [     // 公共基金:金钱为主
+  fate: [     // 公共基金:金钱事件为主
     { t: '银行分红 +50', cash: 50 },
-    { t: '生日红包 对方送你 +100', cashPeer: 100 },
+    { t: '生日红包 对方送你 +80', cashPeer: 80 },
     { t: '遗产继承 +100', cash: 100 },
-    { t: '股票大涨 +150', cash: 150 },
-    { t: '对方请客 你 +60', cashPeer: 60 },
+    { t: '股票大涨 +120', cash: 120 },
+    { t: '对方请客 你 +50', cashPeer: 50 },
     { t: '利息到账 +30', cash: 30 },
-    { t: '修缮费 -120', cash: -120 },
-    { t: '医药费 -150', cash: -150 },
-    { t: '违章 -90', cash: -90 },
-    { t: '丢手机 -120', cash: -120 },
-    { t: '进修学费 -150', cash: -150 },
-    { t: '爱心捐款 -60', cash: -60 },
-    { t: '请客吃饭 -80', cash: -80 },
-    { t: '门诊 -100', cash: -100 },
+    { t: '进修学费 -100', cash: -100 },
+    { t: '爱心捐款 -50', cash: -50 },
+    { t: '请客吃饭 -60', cash: -60 },
     { t: '住院观察 停一回合', skip: true }
+  ],
+  tax: [      // 缴税格:独立税单
+    { t: '所得税 缴纳 -100', cash: -100 },
+    { t: '房产税 缴纳 -150', cash: -150 },
+    { t: '消费税 缴纳 -80', cash: -80 },
+    { t: '车船税 缴纳 -60', cash: -60 },
+    { t: '奢侈税 缴纳 -120', cash: -120 }
+  ]
+};
   ]
 };
 const GROUP_COLOR = ['#9b7fd4', '#3a86ff', '#06d6a0', '#ffb703', '#e85a86', '#fb8500'];
@@ -60,7 +64,7 @@ function buildCells() {
   for (let i = 1; i < BOARD; i++) {
     const m = i % 6;
     if (m === 0) cells.push({ name: i % 12 === 0 ? '公共基金' : '机会', type: 'card', kind: i % 12 === 0 ? 'fate' : 'chance' });
-    else if (i === 11 || i === 22 || i === 29) cells.push({ name: '缴税', type: 'tax', amt: i === 11 ? 100 : (i === 22 ? 150 : 200) });
+    else if (i === 11 || i === 22) cells.push({ name: '缴税', type: 'tax' });
     else if (i === 16) cells.push({ name: '监狱', type: 'jail' });
     else if (i === 27 || i === 19) cells.push({ name: '奖金', type: 'bonus', amt: 180 });
     else if (i === 21 || i === 28) cells.push({ name: '免费停车', type: 'freepark' });
@@ -350,7 +354,7 @@ Page({
         cash[role] = (cash[role] || 0) + 150;
         if (s.mode !== 'classic') { const sav = savings[role] || 0; if (sav) { const it = Math.round(sav * 0.03); savings[role] = sav + it; log.push({ who: role, text: '存款利息 +' + it }); } }
       }
-      log.push({ who: role, text: '掷出 ' + steps + (crossed ? '，经过起点 +150' : '') });
+      log.push({ who: role, text: '掷出 ' + steps + '：「' + (s.cells[from] && s.cells[from].name || from) + '」→「' + (s.cells[to] && s.cells[to].name || to) + '」' + (crossed ? '，经过起点 +150' : '') });
 
       // phase=moving:棋子移动中(推 anim 指令让对方看到动画,不含 turn/pos)
       this.commit({ phase: 'moving', anim: { role, from, to }, dice: d, cash, savings, log: log.slice(-20000) });
@@ -472,10 +476,10 @@ Page({
       log.push({ who: role, text: '后退路过「' + cell.name + '」(惩罚模式,不触发)' });
     } else if (cell.type === 'start') { cash[role] += 100; log.push({ who: role, text: '到达起点 +100' }); }
     else if (cell.type === 'tax') {
-      const props = cells.filter(c => c.type === 'property' && c.owner === role);
-      const totalRent = props.reduce((s, c) => s + rentOf(c, cells), 0);
-      const tax = Math.max(20, Math.min(Math.round(totalRent * 0.1), 300));
-      cash[role] -= tax; log.push({ who: role, text: '缴税(地皮过路费10%) -' + tax }); this.showFx('bad', '缴税 -' + tax);
+      const taxCard = DECK.tax[Math.floor(Math.random() * DECK.tax.length)];
+      cash[role] = (cash[role] || 0) + (taxCard.cash || 0);
+      log.push({ who: role, text: '缴税格：' + taxCard.t });
+      this.showFx('bad', taxCard.t);
     }
     else if (cell.type === 'bonus') { cash[role] += cell.amt; log.push({ who: role, text: '获得奖金 +' + cell.amt }); this.showFx('good', cell.name + ' +' + cell.amt); }
     else if (cell.type === 'jail') { log.push({ who: role, text: opts.backward ? '后退路过监狱(无事)' : '路过监狱(只是探望,不坐牢)' }); }
@@ -591,10 +595,10 @@ Page({
       log.push({ who: role, text: '后退路过「' + cell.name + '」(惩罚模式,不触发)' });
     } else if (cell.type === 'start') { cash[role] += 100; log.push({ who: role, text: '到达起点 +100' }); }
     else if (cell.type === 'tax') {
-      const props = cells.filter(c => c.type === 'property' && c.owner === role);
-      const totalRent = props.reduce((s, c) => s + rentOf(c, cells), 0);
-      const tax = Math.max(20, Math.min(Math.round(totalRent * 0.1), 300));
-      cash[role] -= tax; log.push({ who: role, text: '缴税(地皮过路费10%) -' + tax }); this.showFx('bad', '缴税 -' + tax);
+      const taxCard = DECK.tax[Math.floor(Math.random() * DECK.tax.length)];
+      cash[role] = (cash[role] || 0) + (taxCard.cash || 0);
+      log.push({ who: role, text: '缴税格：' + taxCard.t });
+      this.showFx('bad', taxCard.t);
     }
     else if (cell.type === 'bonus') { cash[role] += cell.amt; log.push({ who: role, text: '获得奖金 +' + cell.amt }); this.showFx('good', cell.name + ' +' + cell.amt); }
     else if (cell.type === 'jail') { log.push({ who: role, text: opts.backward ? '后退路过监狱(无事)' : '路过监狱(只是探望)' }); }
@@ -686,7 +690,8 @@ Page({
   bankAct(e) {
     const act = e.currentTarget.dataset.act, amt = parseInt(e.currentTarget.dataset.amt || '0', 10);
     const role = room.getRole();
-    // 走 transactionState：从 DB 现读整份状态再派生，避免从陈旧 this._state 带出 turn/pos 把错回合写回（丢摇骰 bug 根因）
+    if (this._bankBusy) { toast('操作太频繁,请稍等'); return; }   // 防快速连点导致并发写冲突(存款丢失根因)
+    this._bankBusy = true;
     this.mtxn( s => {
       if (!s || !s.cash) return s;
       const cash = Object.assign({}, s.cash), savings = Object.assign({}, s.savings || { boy: 0, girl: 0 });
@@ -699,6 +704,7 @@ Page({
         savings[role] -= v; cash[role] += v; lg.push({ who: role, text: '取出存款 ' + v });
       } else { toast('操作失败'); return s; }
       return Object.assign({}, s, { cash, savings, log: lg.slice(-20000) });
+    }).then(() => { this._bankBusy = false; }).catch(() => { this._bankBusy = false; });
     });
   },
   sellToBank(e) {
