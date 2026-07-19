@@ -53,8 +53,6 @@ const DECK = {
     { t: '奢侈税 缴纳 -120', cash: -120 }
   ]
 };
-  ]
-};
 const GROUP_COLOR = ['#9b7fd4', '#3a86ff', '#06d6a0', '#ffb703', '#e85a86', '#fb8500'];
 
 function buildCells() {
