@@ -209,7 +209,7 @@ Page({
       if (this._servedKey !== key) {
         this._servedKey = key;
         const lg = (s.log || []).slice(); lg.push({ who: role, text: '服刑/住院中,跳过本回合' });
-        this.commit({ skip: Object.assign({}, s.skip, { [role]: s.skip[role] - 1 }), turn: rt.seatOf(peer), log: lg.slice(-200) });
+        this.commit({ skip: Object.assign({}, s.skip, { [role]: s.skip[role] - 1 }), turn: rt.seatOf(peer), log: lg.slice(-20000) });
         return;
       }
     }
@@ -218,7 +218,7 @@ Page({
       if (!this._rolling && s.turn === rt.seatOf(role)) {
         // 我是 phase 发起者(turn=我)但 roll 已断(_rolling=false)→ 立即恢复
         const lg = (s.log || []).slice(); lg.push({ text: '中断恢复,自动结束回合' });
-        this.commit({ phase: 'idle', anim: null, turn: rt.seatOf(peer), log: lg.slice(-200) });
+        this.commit({ phase: 'idle', anim: null, turn: rt.seatOf(peer), log: lg.slice(-20000) });
         return;
       }
       // 超时兜底(30s,任意一方检测):防发起者不回来,对方永久卡
@@ -226,7 +226,7 @@ Page({
       else if (Date.now() - this._phaseT > 30000) {
         const otherSeat = s.turn === rt.RED ? rt.BLUE : rt.RED;
         const lg = (s.log || []).slice(); lg.push({ text: '操作超时,自动结束回合' });
-        this.commit({ phase: 'idle', anim: null, turn: otherSeat, log: lg.slice(-200) });
+        this.commit({ phase: 'idle', anim: null, turn: otherSeat, log: lg.slice(-20000) });
         return;
       }
     } else { this._phaseT0 = null; }
@@ -257,7 +257,7 @@ Page({
               cash[role] -= sellReq.price; cash[sellReq.by] = (cash[sellReq.by] || 0) + sellReq.price;
               cs[sellReq.idx] = Object.assign({}, cs[sellReq.idx], { owner: role });
               const lg = (s.log || []).slice(); lg.push({ who: role, text: '买下{{' + sellReq.by + '}}的「' + cs[sellReq.idx].name + '」-' + sellReq.price });
-              return Object.assign({}, s, { cells: cs, cash, log: lg.slice(-200), sellReq: null });
+              return Object.assign({}, s, { cells: cs, cash, log: lg.slice(-20000), sellReq: null });
             });
           } else { this.mtxn( s => Object.assign({}, s, { sellReq: null })); }
         } });
@@ -312,7 +312,7 @@ Page({
       started: true, turnSeat, myTurn: myTurnFlag,
       mode: s.mode || 'casual',
       grid,
-      log: (s.log || []).slice(-200).reverse().map(it => fmtLog(it, role, this.data.peerName)),
+      log: (s.log || []).slice(-20000).reverse().map(it => fmtLog(it, role, this.data.peerName)),
       myCash: (s.cash && s.cash[role]) || 0, peerCash: (s.cash && s.cash[peer]) || 0,
       mySavings: (s.savings && s.savings[role]) || 0, peerSavings: (s.savings && s.savings[peer]) || 0,
       myPos: (s.pos && s.pos[role]) || 0, peerPos: (s.pos && s.pos[peer]) || 0,
@@ -353,7 +353,7 @@ Page({
       log.push({ who: role, text: '掷出 ' + steps + (crossed ? '，经过起点 +150' : '') });
 
       // phase=moving:棋子移动中(推 anim 指令让对方看到动画,不含 turn/pos)
-      this.commit({ phase: 'moving', anim: { role, from, to }, dice: d, cash, savings, log: log.slice(-200) });
+      this.commit({ phase: 'moving', anim: { role, from, to }, dice: d, cash, savings, log: log.slice(-20000) });
       await this.animateMove(role, from, to);
 
       // phase=resolving:结算中(买房 modal 等,不含 turn)
@@ -452,7 +452,7 @@ Page({
   },
   // 写一次中间态（让事件日志及时同步给双方）
   syncLog(cells, cash, log, pos, skip, extra) {
-    this.commit(Object.assign({ cells: cells.map(c => Object.assign({}, c)), cash: Object.assign({}, cash), pos: Object.assign({}, pos), skip: Object.assign({}, skip), log: log.slice(-200) }, extra || {}));
+    this.commit(Object.assign({ cells: cells.map(c => Object.assign({}, c)), cash: Object.assign({}, cash), pos: Object.assign({}, pos), skip: Object.assign({}, skip), log: log.slice(-20000) }, extra || {}));
   },
 
   // resolve:纯计算函数(不 commit/syncLog),返回最终 patch。modal(买房/升级)可 await。
@@ -579,7 +579,7 @@ Page({
       if (bankrupt) winner = role === 'boy' ? rt.BLUE : rt.RED;
     }
     if (toIdx !== idx) pos = Object.assign({}, pos, { [role]: toIdx });
-    return { cells: cells.map(c => Object.assign({}, c)), pos, cash, savings, skip: { boy: Math.max(0, skip.boy||0), girl: Math.max(0, skip.girl||0) }, turn: winner ? turn : rt.seatOf(peer), dice: this.data.dice, log: log.slice(-200), winner, req: null, sellReq: null };
+    return { cells: cells.map(c => Object.assign({}, c)), pos, cash, savings, skip: { boy: Math.max(0, skip.boy||0), girl: Math.max(0, skip.girl||0) }, turn: winner ? turn : rt.seatOf(peer), dice: this.data.dice, log: log.slice(-20000), winner, req: null, sellReq: null };
   },
 
   // resolve 递归入口(移动卡牌用):复用 resolve 逻辑但共享 cells/pos/skip
@@ -619,7 +619,7 @@ Page({
     }
     if (cash[role] < 0) { const bankrupt = this._coverShortfallPure(role, cells, cash, savings, log); if (bankrupt) winner = role === 'boy' ? rt.BLUE : rt.RED; }
     if (toIdx !== idx) pos = Object.assign({}, pos, { [role]: toIdx });
-    return { cells: cells.map(c => Object.assign({}, c)), pos, cash, savings, skip: { boy: Math.max(0, skip.boy||0), girl: Math.max(0, skip.girl||0) }, turn: winner ? turn : rt.seatOf(peer), dice: this.data.dice, log: log.slice(-200), winner, req: null, sellReq: null };
+    return { cells: cells.map(c => Object.assign({}, c)), pos, cash, savings, skip: { boy: Math.max(0, skip.boy||0), girl: Math.max(0, skip.girl||0) }, turn: winner ? turn : rt.seatOf(peer), dice: this.data.dice, log: log.slice(-20000), winner, req: null, sellReq: null };
   },
 
   // 破产救助纯计算版(不 commit/syncLog,就地修改)
@@ -698,7 +698,7 @@ Page({
         const v = Math.min(amt, savings[role] || 0); if (v <= 0) { toast('没有存款'); return s; }
         savings[role] -= v; cash[role] += v; lg.push({ who: role, text: '取出存款 ' + v });
       } else { toast('操作失败'); return s; }
-      return Object.assign({}, s, { cash, savings, log: lg.slice(-200) });
+      return Object.assign({}, s, { cash, savings, log: lg.slice(-20000) });
     });
   },
   sellToBank(e) {
@@ -716,7 +716,7 @@ Page({
           cs[idx] = Object.assign({}, c, { owner: null, level: 0, mortgaged: false });
           const cash = Object.assign({}, s.cash); cash[role] = (cash[role] || 0) + get;
           const lg = (s.log || []).slice(); lg.push({ who: role, text: '把「' + c.name + '」卖给银行 +' + get });
-          return Object.assign({}, s, { cells: cs, cash, log: lg.slice(-200) });
+          return Object.assign({}, s, { cells: cs, cash, log: lg.slice(-20000) });
         });
         toast('卖给银行 +' + get);
       }
@@ -754,7 +754,7 @@ Page({
           cs[idx] = Object.assign({}, c, { mortgaged: true });
           const cash = Object.assign({}, s.cash); cash[role] = (cash[role] || 0) + g;
           const lg = (s.log || []).slice(); lg.push({ who: role, text: '抵押「' + c.name + '」+' + g + '(抵押中不收租)' });
-          return Object.assign({}, s, { cells: cs, cash, log: lg.slice(-200) });
+          return Object.assign({}, s, { cells: cs, cash, log: lg.slice(-20000) });
         });
         toast('已抵押,抵押中不收过路费');
       }
@@ -774,7 +774,7 @@ Page({
       cs[idx] = Object.assign({}, c, { mortgaged: false });
       const cash = Object.assign({}, s.cash); cash[role] = (cash[role] || 0) - due;
       const lg = (s.log || []).slice(); lg.push({ who: role, text: '赎回「' + c.name + '」-' + due });
-      return Object.assign({}, s, { cells: cs, cash, log: lg.slice(-200) });
+      return Object.assign({}, s, { cells: cs, cash, log: lg.slice(-20000) });
     });
   },
   // 同色组成套升级：整组每块 level+1，休闲模式打 9 折；走 transaction 现读现写
@@ -792,7 +792,7 @@ Page({
       const cs = s.cells.map(c => (c && c.type === 'property' && c.group === g) ? Object.assign({}, c, { level: (c.level || 0) + 1 }) : c);
       const lg = (s.log || []).slice(); lg.push({ who: role, text: '整组升级[' + gs.map(c => c.name).join('/') + '] -' + cost + '（过路费翻倍）' });
       this.showFx('good', '整组升级！过路费大涨');
-      return Object.assign({}, s, { cells: cs, cash, log: lg.slice(-200) });
+      return Object.assign({}, s, { cells: cs, cash, log: lg.slice(-20000) });
     });
   },
   openRules() { this.setData({ rulesOpen: true }); },
