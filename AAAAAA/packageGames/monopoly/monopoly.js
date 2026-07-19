@@ -353,7 +353,7 @@ Page({
     return new Promise(res => {
       const span = backward ? -(((from - to + BOARD) % BOARD) || 0) : (((to < from ? to + BOARD : to)) - from);
       const key = role === room.getRole() ? 'tokenMe' : 'tokenPeer';
-      const t0 = Date.now(); const dur = 760;
+      const spanAbs = Math.abs(span); const t0 = Date.now(); const dur = Math.max(260, Math.min(1400, spanAbs * 120));   // 单位距离:每格 120ms,1步≥260,封顶 1400
       const step = () => {
         const p = Math.min(1, (Date.now() - t0) / dur);
         const hop = Math.abs(Math.sin(p * Math.PI * 2)) * 10;   // 跳动 rpx
