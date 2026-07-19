@@ -413,10 +413,10 @@
   position: absolute;
   top: 2rpx;
   right: 2rpx;
-  width: 10rpx;
-  height: 10rpx;
+  width: 14rpx;
+  height: 14rpx;
   border-radius: 50%;
-  background: #ffd23f;
+  background: var(--fullset-color, #ffd23f);
   z-index: 2;
 }
 .mp-mort-stamp {

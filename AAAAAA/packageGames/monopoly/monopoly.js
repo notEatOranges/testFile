@@ -22,7 +22,7 @@ function cellCR(i) {
 // 三副独立牌组(经典 Monopoly):机会(移动+奖惩)、公共基金(金钱事件)、缴税(税收)。各落各格抽各副。
 const DECK = {
   chance: [   // 机会:移动+奖惩混合
-    { t: '前进到起点 +150', to: 0 },
+    { t: '前进到起点', to: 0 },
     { t: '经验骰子 摇骰前进(同正常掷骰)', fwdRoll: true },
     { t: '幸运骰子 自选前进 1~6 步', luckyDice: true },
     { t: '惩罚骰子 摇骰后退(落对方铺交租)', backRoll: true },
@@ -53,7 +53,8 @@ const DECK = {
     { t: '奢侈税 缴纳 -120', cash: -120 }
   ]
 };
-const GROUP_COLOR = ['#9b7fd4', '#3a86ff', '#06d6a0', '#ffb703', '#e85a86', '#fb8500'];
+// 6 色组：饱和度拉开，避免混淆(紫→蓝→绿→黄→粉→橙，明度递增)
+const GROUP_COLOR = ['#7c3aed', '#2563eb', '#16a34a', '#eab308', '#dc2626', '#ea580c'];
 
 function buildCells() {
   const cells = [{ name: '起点', type: 'start' }];
@@ -728,7 +729,7 @@ Page({
     const idx = parseInt(e.currentTarget.dataset.idx, 10), role = room.getRole();
     const cell = (this._state && this._state.cells[idx]) || {};
     const get = Math.round((cell.price + (cell.level || 0) * upgradeCost(cell)) * 0.6);
-    wx.showModal({ title: '卖给银行', content: '确定把「' + cell.name + '」卖给银行，获得 ' + get + '？', confirmText: '卖出', cancelText: '取消',
+    wx.showModal({ title: '卖给银行', content: '确定把「' + cell.name + '」卖给银行，获得 ' + get + '？', confirmText: '卖出', cancelText: '取消', confirmColor: '#dc2626',
       success: r => {
         if (!r.confirm) return;
         this.mtxn( s => {
@@ -749,7 +750,7 @@ Page({
     const idx = parseInt(e.currentTarget.dataset.idx, 10), role = room.getRole();
     const cell = (this._state && this._state.cells[idx]) || {};
     const price = Math.round((cell.price || 0) * 0.8);
-    wx.showModal({ title: '卖给对方', content: '确定把「' + cell.name + '」以 ' + price + ' 卖给对方？', confirmText: '发起', cancelText: '取消',
+    wx.showModal({ title: '卖给对方', content: '确定把「' + cell.name + '」以 ' + price + ' 卖给对方？', confirmText: '发起', cancelText: '取消', confirmColor: '#dc2626',
       success: r => {
         if (!r.confirm) return;
         this.mtxn( s => Object.assign({}, s, { sellReq: { by: role, idx, price } }));
@@ -788,22 +789,27 @@ Page({
     const idx = parseInt(e.currentTarget.dataset.idx, 10), role = room.getRole();
     const cell = (this._state && this._state.cells[idx]) || {};
     const get = mortgageValueOf(cell);
-    wx.showModal({ title: '抵押', content: '把「' + cell.name + '」抵押给银行 +' + get + '？(抵押中不收过路费)', confirmText: '抵押', cancelText: '取消',
-      success: r => {
-        if (!r.confirm) return;
-        this.mtxn( s => {
-          if (!s || !s.cells) return s;
-          const c = s.cells[idx];
-          if (!c || c.owner !== role) { toast('地块已变化'); return s; }
-          if (c.mortgaged) { toast('已抵押'); return s; }
-          const g = mortgageValueOf(c);
-          const cs = s.cells.map(x => Object.assign({}, x));
-          cs[idx] = Object.assign({}, c, { mortgaged: true });
-          const cash = Object.assign({}, s.cash); cash[role] = (cash[role] || 0) + g;
-          const lg = (s.log || []).slice(); lg.push({ who: role, text: '抵押「' + c.name + '」+' + g + '(抵押中不收租)' });
-          return Object.assign({}, s, { cells: cs, cash, log: lg.slice(-20000) });
+    wx.showModal({ title: '抵押', content: '把「' + cell.name + '」抵押给银行 +' + get + '？(抵押中不收过路费) 再次确认？', confirmText: '确认抵押', cancelText: '取消', confirmColor: '#ea580c',
+      success: r1 => {
+        if (!r1.confirm) return;
+        wx.showModal({ title: '最终确认', content: '「' + cell.name + '」抵押后不收过路费，确定？', confirmText: '确定抵押', cancelText: '算了', confirmColor: '#ea580c',
+          success: r => {
+            if (!r.confirm) return;
+            this.mtxn( s => {
+              if (!s || !s.cells) return s;
+              const c = s.cells[idx];
+              if (!c || c.owner !== role) { toast('地块已变化'); return s; }
+              if (c.mortgaged) { toast('已抵押'); return s; }
+              const g = mortgageValueOf(c);
+              const cs = s.cells.map(x => Object.assign({}, x));
+              cs[idx] = Object.assign({}, c, { mortgaged: true });
+              const cash = Object.assign({}, s.cash); cash[role] = (cash[role] || 0) + g;
+              const lg = (s.log || []).slice(); lg.push({ who: role, text: '抵押「' + c.name + '」+' + g + '(抵押中不收租)' });
+              return Object.assign({}, s, { cells: cs, cash, log: lg.slice(-20000) });
+            });
+            toast('已抵押,抵押中不收过路费');
+          }
         });
-        toast('已抵押,抵押中不收过路费');
       }
     });
   },
