@@ -12,20 +12,20 @@
             <view wx:if="{{item.icon}}" class="mp-cell-icon-mini">
               <t-icon wx:if="{{iconTheme === 'tdesign'}}" name="{{item.icon.t}}" size="22rpx" />
               <text wx:elif="{{iconTheme === 'emoji'}}" class="mp-emoji xs">{{item.icon.e}}</text>
-              <image wx:else class="mp-img-icon xs" src="/assets/monopoly-icons/{{item.icon.i}}.png" />
+              <image wx:else class="mp-img-icon xs" src="/packageGames/monopoly/assets/monopoly-icons/{{item.icon.i}}.png" />
             </view>
           </view>
           <view class="mp-cell-build">
             <block wx:if="{{item.level === 3}}">
               <t-icon wx:if="{{iconTheme === 'tdesign'}}" name="{{item.hotelIcon.t}}" size="22rpx" />
               <text wx:elif="{{iconTheme === 'emoji'}}" class="mp-emoji xs">{{item.hotelIcon.e}}</text>
-              <image wx:else class="mp-img-icon xs" src="/assets/monopoly-icons/{{item.hotelIcon.i}}.png" />
+              <image wx:else class="mp-img-icon xs" src="/packageGames/monopoly/assets/monopoly-icons/{{item.hotelIcon.i}}.png" />
             </block>
             <block wx:elif="{{item.level}}">
               <block wx:for="{{item.levelArr}}" wx:for-item="s" wx:key="index">
                 <t-icon wx:if="{{iconTheme === 'tdesign'}}" name="{{item.houseIcon.t}}" size="18rpx" />
                 <text wx:elif="{{iconTheme === 'emoji'}}" class="mp-emoji xs">{{item.houseIcon.e}}</text>
-                <image wx:else class="mp-img-icon xs" src="/assets/monopoly-icons/{{item.houseIcon.i}}.png" />
+                <image wx:else class="mp-img-icon xs" src="/packageGames/monopoly/assets/monopoly-icons/{{item.houseIcon.i}}.png" />
               </block>
             </block>
           </view>
@@ -36,7 +36,7 @@
           <view wx:if="{{item.icon}}" class="mp-cell-icon">
             <t-icon wx:if="{{iconTheme === 'tdesign'}}" name="{{item.icon.t}}" size="32rpx" />
             <text wx:elif="{{iconTheme === 'emoji'}}" class="mp-emoji sm">{{item.icon.e}}</text>
-            <image wx:else class="mp-img-icon sm" src="/assets/monopoly-icons/{{item.icon.i}}.png" />
+            <image wx:else class="mp-img-icon sm" src="/packageGames/monopoly/assets/monopoly-icons/{{item.icon.i}}.png" />
           </view>
           <view class="mp-cell-build"></view>
           <view class="mp-cell-name">{{item.name}}</view>
