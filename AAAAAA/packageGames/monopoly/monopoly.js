@@ -60,10 +60,10 @@ function buildCells() {
   for (let i = 1; i < BOARD; i++) {
     const m = i % 6;
     if (m === 0) cells.push({ name: i % 12 === 0 ? '公共基金' : '机会', type: 'card', kind: i % 12 === 0 ? 'fate' : 'chance' });
-    else if (i === 11 || i === 22 || i === 33) cells.push({ name: '缴税', type: 'tax', amt: 100 + (ni % 3) * 50 });
+    else if (i === 11 || i === 22 || i === 29) cells.push({ name: '缴税', type: 'tax', amt: i === 11 ? 100 : (i === 22 ? 150 : 200) });
     else if (i === 16) cells.push({ name: '监狱', type: 'jail' });
-    else if (i === 27 || i === 38) cells.push({ name: '奖金', type: 'bonus', amt: 180 });
-    else if (i === 21 || i === 43) cells.push({ name: '免费停车', type: 'freepark' });
+    else if (i === 27 || i === 19) cells.push({ name: '奖金', type: 'bonus', amt: 180 });
+    else if (i === 21 || i === 28) cells.push({ name: '免费停车', type: 'freepark' });
     else if (i === 7) cells.push({ name: '医院', type: 'hospital' });
     else if (i === 15) cells.push({ name: '警局', type: 'police' });
     else { const g = ni % 6; const price = 80 + g * 60 + ni * 4; cells.push({ name: names[ni % names.length], type: 'property', group: g, price, rent: Math.round(price * 0.12), owner: null, level: 0, mortgaged: false }); ni++; }
@@ -419,6 +419,7 @@ Page({
   // transactionState 包装：updater 派生后自动加 seq(银行/卖地/抵押等「读后改」操作)。
   mtxn(updater) {
     return rt.transactionState('monopoly', s => {
+      if (s && s.winner) return s;   // 已结束,拒绝银行/卖地/抵押等操作
       const next = updater(s);
       // seq 取 DB 与本地较大者+1：bankAct 等用 transactionState(读 DB),DB.seq 可能落后于本地
       // this._state.seq(roll/resolve 的 commit 已本地 +1 但 setState 异步未到 DB),只按 DB.seq+1
@@ -447,7 +448,7 @@ Page({
     if (opts.backward && ['start', 'bonus', 'freepark', 'hospital', 'police'].indexOf(cell.type) >= 0) {
       log.push({ who: role, text: '后退路过「' + cell.name + '」(惩罚模式,不触发)' });
       this.syncLog(cells, cash, log, pos, skip, { savings });
-      this.commit({ cells: cells.map(c => Object.assign({}, c)), pos, cash, savings, skip, turn: winner ? turn : rt.seatOf(peer), dice: this.data.dice, log: log.slice(-30), winner, req: null });
+      this.commit({ cells: cells.map(c => Object.assign({}, c)), pos, cash, savings, skip: { boy: Math.max(0, skip.boy||0), girl: Math.max(0, skip.girl||0) }, turn: winner ? turn : rt.seatOf(peer), dice: this.data.dice, log: log.slice(-30), winner, req: null, sellReq: null });
       return;
     }
 
@@ -558,7 +559,7 @@ Page({
     }
     if (toIdx !== idx) pos = Object.assign({}, pos, { [role]: toIdx });
     // 末尾不再检查 skip[peer]：服刑改由 applyState 在「轮到该玩家时」自动跳过(经典规则,且避免两人都进监狱的边角)。
-    this.commit({ cells: cells.map(c => Object.assign({}, c)), pos, cash, savings, skip, turn: winner ? turn : rt.seatOf(peer), dice: this.data.dice, log: log.slice(-30), winner, req: null });
+    this.commit({ cells: cells.map(c => Object.assign({}, c)), pos, cash, savings, skip: { boy: Math.max(0, skip.boy||0), girl: Math.max(0, skip.girl||0) }, turn: winner ? turn : rt.seatOf(peer), dice: this.data.dice, log: log.slice(-30), winner, req: null, sellReq: null });
   },
 
   // 破产救助：现金为负时自动自救，全程不弹窗。顺序：取存款 → 自动抵押自有地(拿半价) → 卖地给银行；仍不足才真破产。
@@ -726,7 +727,7 @@ Page({
 
   // 棋子坐标：按连续位置 f(可小数) 在 8×8 外圈插值算格子中心，返回百分比(0-100)。不依赖 DOM 测量，规避 cellW 时机问题。
   tokenXY(f) {
-    const i0 = Math.floor(f) % BOARD, i1 = (i0 + 1) % BOARD, fr = f - Math.floor(f);
+    const i0 = ((Math.floor(f) % BOARD) + BOARD) % BOARD, i1 = (i0 + 1) % BOARD, fr = f - Math.floor(f);   // 负数取模修正(backward 中间帧不越界/不错位)
     const [c0, r0] = cellCR(i0), [c1, r1] = cellCR(i1);
     const c = c0 + (c1 - c0) * fr, r = r0 + (r1 - r0) * fr;
     return [(c + 0.5) / 8 * 100, (r + 0.5) / 10 * 100];   // 8×10：宽8列 / 高10行
