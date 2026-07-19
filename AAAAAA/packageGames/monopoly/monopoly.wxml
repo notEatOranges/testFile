@@ -48,11 +48,13 @@
           <view class="mp-player {{started && myTurn ? 'on' : ''}}">
             <text class="mp-player-name">{{myName}}</text>
             <text class="mp-player-cash">{{myCash}}</text>
+            <text wx:if="{{mySavings > 0}}" class="mp-player-sav">存{{mySavings}}</text>
           </view>
           <text class="mp-vs">VS</text>
           <view class="mp-player {{started && !myTurn ? 'on' : ''}}">
             <text class="mp-player-name">{{peerName}}</text>
             <text class="mp-player-cash">{{peerCash}}</text>
+            <text wx:if="{{peerSavings > 0}}" class="mp-player-sav">存{{peerSavings}}</text>
           </view>
         </view>
         <view class="mp-center-mid">
@@ -140,7 +142,7 @@
     <view class="bk-btns" wx:if="{{mySets.length}}">
       <view class="bk-btn" wx:for="{{mySets}}" wx:key="group" data-group="{{item.group}}" bindtap="upgradeGroup">升级整组({{item.count}}块) -{{item.cost}}</view>
     </view>
-    <view class="bk-label">我的地皮（抵押拿半价·抵押中不收租 / 卖银行 60% / 卖对方 80%）</view>
+    <view class="bk-label">我的地皮(抵押拿半价·抵押中不收租 / 卖银行 60% / 卖对方 80%)</view>
     <scroll-view scroll-y class="bk-props">
       <view wx:for="{{myProps}}" wx:key="idx" class="bk-prop {{item.mortgaged ? 'is-mort' : ''}}">
         <view class="bp-name">

@@ -512,6 +512,11 @@
   font-weight: 800;
   color: var(--primary-deep);
 }
+.mp-player-sav {
+  font-size: 18rpx;
+  color: #c9a227;
+  font-weight: 600;
+}
 .mp-vs {
   font-size: 20rpx;
   color: var(--text-soft);
