@@ -1,0 +1,241 @@
+// 全局样式
+
+// 重置样式
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+    'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
+    'Noto Color Emoji';
+  font-size: 14px;
+  color: #333;
+  background: #f0f2f5;
+}
+
+#app {
+  height: 100%;
+}
+
+// 滚动条样式
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+
+  &:hover {
+    background: #a8a8a8;
+  }
+}
+
+// 卡片通用样式
+.el-card {
+  border-radius: 4px;
+
+  .el-card__header {
+    padding: 12px 16px;
+    border-bottom: 1px solid #eee;
+    font-weight: 500;
+  }
+}
+
+// 表格通用样式
+.el-table {
+  .el-table__header-wrapper {
+    th {
+      background: #fafafa;
+      color: #333;
+      font-weight: 500;
+    }
+  }
+}
+
+// 分页通用样式
+.el-pagination {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
+
+// 表单通用样式
+.el-form {
+  .el-form-item__label {
+    font-weight: 400;
+  }
+}
+
+// 按钮间距
+.el-button + .el-button {
+  margin-left: 8px;
+}
+
+// 页面容器
+.page-container {
+  padding: 20px;
+}
+
+// 页面头部
+.page-header {
+  margin-bottom: 16px;
+
+  .page-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: #333;
+    margin: 0 0 8px 0;
+  }
+
+  .page-desc {
+    font-size: 14px;
+    color: #999;
+    margin: 0;
+  }
+}
+
+// 卡片头部
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+// 工具栏
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding: 12px;
+  background: #fff;
+  border-radius: 4px;
+}
+
+// 状态颜色
+.status-normal {
+  color: #67c23a;
+}
+
+.status-abnormal {
+  color: #f56c6c;
+}
+
+.status-pending {
+  color: #e6a23c;
+}
+
+// Flex 工具类
+.flex {
+  display: flex;
+}
+
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.flex-wrap {
+  flex-wrap: wrap;
+}
+
+// 间距工具类
+.mt-8 {
+  margin-top: 8px;
+}
+
+.mt-16 {
+  margin-top: 16px;
+}
+
+.mb-8 {
+  margin-bottom: 8px;
+}
+
+.mb-16 {
+  margin-bottom: 16px;
+}
+
+.ml-8 {
+  margin-left: 8px;
+}
+
+.mr-8 {
+  margin-right: 8px;
+}
+
+// 文字工具类
+.text-primary {
+  color: var(--el-color-primary);
+}
+
+.text-success {
+  color: #67c23a;
+}
+
+.text-warning {
+  color: #e6a23c;
+}
+
+.text-danger {
+  color: #f56c6c;
+}
+
+.text-info {
+  color: #909399;
+}
+
+.text-muted {
+  color: #999;
+}
+
+// 动画
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+// 空状态
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 0;
+  color: #999;
+
+  .empty-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+  }
+
+  .empty-text {
+    font-size: 14px;
+  }
+}

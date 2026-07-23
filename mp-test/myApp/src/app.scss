@@ -1,0 +1,59 @@
+/**
+ * 全局样式
+ */
+
+// 重置样式
+page {
+  height: 100%;
+  background-color: #f8f9fa;
+}
+
+// 确保所有元素使用 border-box
+* {
+  box-sizing: border-box;
+}
+
+// 基础字体设置
+text {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+}
+
+// 确保容器高度
+.ai-chat-page {
+  height: 100vh !important;
+  min-height: 100vh;
+}
+
+// 确保按钮样式生效
+.suggested-question-btn,
+.action-btn,
+.control-btn,
+.voice-btn,
+.send-btn,
+.stop-btn,
+.restart-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border: none !important;
+  outline: none !important;
+  cursor: pointer !important;
+  text-decoration: none !important;
+}
+
+// 确保文本样式生效
+.question-text,
+.action-text,
+.control-btn-text,
+.voice-icon,
+.send-icon,
+.stop-icon,
+.restart-icon,
+.recording-icon,
+.error-icon,
+.chart-icon,
+.file-icon,
+.avatar-text {
+  display: inline-block !important;
+  line-height: 1 !important;
+}

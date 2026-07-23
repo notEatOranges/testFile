@@ -1,0 +1,11 @@
+// 1. 覆盖 Element Plus 的 SCSS 变量
+@forward 'element-plus/theme-chalk/src/common/var.scss' with (
+  $colors: (
+    'primary': (
+      'base': #AD333A,
+    ),
+  )
+);
+
+// 2. 导入 Element Plus 的主题源文件
+@use "element-plus/theme-chalk/src/index.scss" as *;
