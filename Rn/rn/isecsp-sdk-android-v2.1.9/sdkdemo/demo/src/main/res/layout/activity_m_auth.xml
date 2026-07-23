@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".MAuthActivity">
+
+    <TextView
+        android:background="@color/black"
+        android:padding="20dp"
+        android:gravity="center_horizontal"
+        android:textColor="@color/white"
+        android:text="添加MAuth证书"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"></TextView>
+
+    <EditText
+        android:id="@+id/edit_username"
+        android:text="hanshiwang"
+        android:layout_marginTop="20dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:hint="请输入MAuth用户名"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"></EditText>
+
+    <Button
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:text="获取注册码"
+        android:onClick="getMAuthCode"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"></Button>
+
+    <EditText
+        android:id="@+id/edit_code"
+        android:layout_marginTop="20dp"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:hint="请输入注册码"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"></EditText>
+
+    <Button
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:text="初始化SDK"
+        android:onClick="initSDK"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"></Button>
+
+    <Button
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:text="下载证书"
+        android:onClick="downloadCert"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"></Button>
+</LinearLayout>

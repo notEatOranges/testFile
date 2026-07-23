@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:layout_margin="5dip" >
+    
+    <TextView
+        android:id="@+id/txtTitle"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:gravity="center"
+        android:text="@string/auth"
+        android:textAppearance="?android:attr/textAppearanceLarge" />
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/layout_spinner"
+        android:layout_marginTop="5dip"
+        android:layout_marginLeft="5dip"
+        android:layout_marginRight="5dip" >
+
+        <TextView
+            android:id="@+id/txtMethods"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:text="Login Method"
+            android:width="@dimen/multi_step_login_txt_width"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:layout_centerVertical="true" />
+
+        <Spinner
+            android:id="@+id/spin_methods"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_toRightOf="@+id/txtMethods"
+            android:layout_centerVertical="true" />
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/layout_username"
+        android:layout_marginLeft="5dip"
+        android:layout_marginRight="5dip" >
+
+        <TextView
+            android:id="@+id/txtUsernameMultiLogin"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:text="User Name"
+            android:width="@dimen/multi_step_login_txt_width"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:layout_centerVertical="true" />
+
+        <EditText
+            android:id="@+id/edtUsernameMultiLoginVal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_toRightOf="@+id/txtUsernameMultiLogin"
+            android:ems="10"
+            android:inputType="textPersonName"
+            android:layout_centerVertical="true" >
+
+            <requestFocus />
+        </EditText>
+    </RelativeLayout>
+
+    <LinearLayout
+        android:id="@+id/layout_multi_login_pwd"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginLeft="5dip"
+        android:layout_marginRight="5dip" >
+    </LinearLayout>
+    
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/layout_device_name"
+        android:layout_marginLeft="5dip"
+        android:layout_marginRight="5dip"
+        android:visibility="gone" >
+
+        <TextView
+            android:id="@+id/txtDevicenameMultiLogin"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:text="Device Name"
+            android:width="@dimen/multi_step_login_txt_width"
+            android:textAppearance="?android:attr/textAppearanceMedium" />
+
+        <EditText
+            android:id="@+id/edtDEvicenameMultiLoginVal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_toRightOf="@+id/txtDevicenameMultiLogin"
+            android:ems="10"
+            android:inputType="textPersonName" >
+
+            <requestFocus />
+        </EditText>
+    </RelativeLayout>
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/layout_dycode"
+        android:layout_marginLeft="5dip"
+        android:layout_marginRight="5dip">
+
+        <EditText
+            android:id="@+id/edit_dycode"
+            android:hint="请输入动态码"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content">
+        </EditText>
+
+        <ImageView
+            android:id="@+id/dynamic_code_img"
+            android:background="@color/white"
+            android:layout_width="80dp"
+            android:layout_height="match_parent"></ImageView>
+    </LinearLayout>
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/layout_sms"
+        android:layout_marginLeft="5dip"
+        android:layout_marginRight="5dip">
+
+        <EditText
+            android:id="@+id/edit_phone"
+            android:hint="请输入手机号"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+        </EditText>
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <EditText
+                android:id="@+id/edit_sms_code"
+                android:hint="请输入短信验证码"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content">
+            </EditText>
+
+            <TextView
+                android:id="@+id/login_phone_code_send"
+                android:gravity="center"
+                android:text="发送"
+                android:textColor="@color/white"
+                android:layout_margin="5dp"
+                android:background="@color/main_color"
+                android:paddingLeft="10dp"
+                android:paddingRight="10dp"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"></TextView>
+        </LinearLayout>
+    </LinearLayout>
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="5dip"
+        android:layout_marginRight="5dip" >
+
+        <TextView
+            android:id="@+id/txtUsernameMultiLogin2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:text="customer1"
+            android:width="@dimen/multi_step_login_txt_width"
+            android:textAppearance="?android:attr/textAppearanceMedium"
+            android:layout_centerVertical="true" />
+
+        <EditText
+            android:id="@+id/edtCustomer1MultiLoginVal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_toRightOf="@+id/txtUsernameMultiLogin2"
+            android:inputType="textPersonName"
+            android:layout_centerVertical="true" >
+
+            <requestFocus />
+        </EditText>
+    </RelativeLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical" >
+
+        <Button
+            android:id="@+id/btnMultiStepLogin"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Login"
+            android:onClick="clickLogin" />
+
+        <Button
+            android:id="@+id/btnMultiStepCancel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Cancel"
+            android:onClick="clickCancel" />
+    </LinearLayout>
+
+</LinearLayout>

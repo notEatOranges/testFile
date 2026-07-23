@@ -1,0 +1,584 @@
+/**
+ * AI对话页面样式
+ */
+
+.ai-chat-page {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #f5f5f5;
+  padding-bottom: env(safe-area-inset-bottom); /* 添加底部安全边距 */
+}
+
+/* 调试信息 */
+.debug-info {
+  background-color: #f0f0f0;
+  padding: 5px 10px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.debug-text {
+  font-size: 10px;
+  color: #666;
+  word-break: break-all;
+}
+
+/* 聊天列表 */
+.chat-list {
+  box-sizing: border-box;
+  flex: 1;
+  padding: 10px;
+  overflow-y: auto;
+}
+
+/* 消息项 */
+.message-item {
+  display: flex;
+  margin-bottom: 15px;
+  align-items: flex-start;
+  
+  &.user {
+    flex-direction: row-reverse;
+    
+    .message-content {
+      margin-right: 10px;
+      margin-left: 0;
+      background-color: #007aff;
+      color: white;
+      border-radius: 10px 10px 2px 10px;
+    }
+  }
+  
+  &.ai {
+    .message-content {
+      margin-left: 10px;
+      margin-right: 0;
+      background-color: white;
+      color: #333;
+      border-radius: 10px 10px 10px 2px;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+    }
+  }
+  
+  &.opening {
+    .message-content {
+      background-color: #f0f8ff;
+      border: 1px solid #007aff;
+    }
+  }
+  
+  &.aborted {
+    .message-content {
+      background-color: #fff5f5;
+      border: 1px solid #ff3b30;
+      color: #ff3b30;
+      font-style: italic;
+    }
+  }
+}
+
+/* 头像 */
+.message-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #e0e0e0;
+  flex-shrink: 0;
+  
+  .user & {
+    background-color: #007aff;
+  }
+  
+  .ai & {
+    background-color: #34c759;
+  }
+}
+
+/* 消息内容 */
+.message-content {
+  flex: 1;
+  padding: 10px;
+  max-width: 70%;
+  word-wrap: break-word;
+  line-height: 1.5;
+}
+
+/* 消息文本 */
+.message-text {
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* 建议问题 */
+.suggested-questions {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* 建议问题按钮样式 */
+.suggested-question-btn {
+  display: inline-block;
+  padding: 6px 12px;
+  background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+  color: #1976d2;
+  border: 1px solid #90caf9;
+  border-radius: 16px;
+  font-size: 12px;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  box-shadow: 0 1px 3px rgba(25, 118, 210, 0.1);
+  
+  &:hover {
+    background: linear-gradient(135deg, #bbdefb 0%, #90caf9 100%);
+    border-color: #64b5f6;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(25, 118, 210, 0.2);
+  }
+  
+  &:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 3px rgba(25, 118, 210, 0.1);
+  }
+  
+  /* 移动端优化 */
+  @media (max-width: 768px) {
+    padding: 5px 10px;
+    font-size: 11px;
+  }
+}
+
+/* 图表容器 */
+.chart-container {
+  margin-top: 10px;
+  padding: 10px;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
+}
+
+.chart-title {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 5px;
+  display: block;
+}
+
+.chart-placeholder {
+  height: 100px;
+  background-color: #e9ecef;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  font-size: 12px;
+}
+
+/* 消息操作 */
+.message-actions {
+  margin-top: 8px;
+  display: flex;
+  gap: 5px;
+}
+
+/* 加载项 */
+.loading-item {
+  display: flex;
+  margin-bottom: 15px;
+  align-items: flex-start;
+  
+  .message-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #34c759;
+    flex-shrink: 0;
+  }
+  
+  .message-content {
+    margin-left: 10px;
+    margin-right: 0;
+    background-color: white;
+    border-radius: 10px 10px 10px 2px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+}
+
+.loading-text {
+  font-size: 12px;
+  color: #666;
+}
+
+/* 建议问题区域 */
+.suggested-section {
+  padding: 10px;
+  background-color: white;
+  border-top: 1px solid #e0e0e0;
+}
+
+.suggested-title {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.suggested-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+/* 输入区域 */
+.input-section {
+  background-color: white;
+  border-top: 1px solid #e0e0e0;
+  padding: 10px;
+  padding-bottom: calc(env(safe-area-inset-bottom)); /* 添加底部安全边距 */
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05); /* 添加顶部阴影 */
+}
+
+.input-container {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  margin-bottom: 8px;
+  min-height: 48px; /* 确保最小高度 */
+}
+
+/* 输入框 */
+.nut-textarea {
+  flex: 1;
+  min-height: 40px;
+  max-height: 120px; /* 增加最大高度，减少滚动条出现频率 */
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  padding: 0; /* 增加左右内边距 */
+  font-size: 14px;
+  line-height: 1.4; /* 设置行高 */
+  background-color: #f8f9fa;
+  resize: none; /* 禁止手动调整大小 */
+  overflow-y: auto; /* 只添加垂直滚动条 */
+  overflow-x: hidden; /* 隐藏横向滚动条 */
+  word-wrap: break-word; /* 自动换行 */
+  white-space: pre-wrap; /* 保留换行符 */
+  
+  &:focus {
+    border-color: #007aff;
+    background-color: white;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.1);
+  }
+  
+  &:disabled {
+    background-color: #f5f5f5;
+    color: #999;
+    cursor: not-allowed;
+    opacity: 0.7;
+  }
+  
+  &::placeholder {
+    color: #999;
+    font-size: 14px;
+  }
+  
+  /* 滚动条样式 - 只在需要时显示 */
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 2px;
+  }
+  
+  &::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.3);
+  }
+  
+  /* 隐藏默认的滚动条，使用自定义样式 */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+}
+
+/* 输入操作 */
+.input-actions {
+  display: flex;
+  gap: 5px;
+  flex-shrink: 0;
+  align-items: flex-end; /* 确保按钮与输入框底部对齐 */
+}
+
+/* 语音输入按钮 */
+.voice-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  border: none;
+  outline: none;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  position: relative;
+  overflow: hidden;
+  
+  &:not(:disabled):hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  }
+  
+  &:disabled {
+    background: #e0e0e0;
+    color: #999;
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+  
+  /* 移动端点击效果 */
+  &:active {
+    transform: scale(0.95);
+  }
+  
+  /* 录音状态 */
+  &.recording {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+    animation: recording-pulse 1.5s infinite;
+    
+    &:hover {
+      background: linear-gradient(135deg, #ff5252 0%, #d63031 100%);
+    }
+    
+    /* 录音指示器 */
+    &::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 8px;
+      height: 8px;
+      background-color: #fff;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      animation: recording-dot 1s infinite;
+    }
+  }
+  
+  /* 处理状态 */
+  &.processing {
+    background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+    animation: processing-pulse 2s infinite;
+    
+    &:hover {
+      background: linear-gradient(135deg, #e67e22 0%, #d35400 100%);
+    }
+  }
+  
+  /* 图标样式 */
+  svg {
+    z-index: 1;
+    position: relative;
+  }
+}
+
+/* 录音脉冲动画 */
+@keyframes recording-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 107, 107, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(255, 107, 107, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 107, 107, 0);
+  }
+}
+
+/* 录音点动画 */
+@keyframes recording-dot {
+  0%, 100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: translate(-50%, -50%) scale(1.2);
+  }
+}
+
+/* 处理状态脉冲动画 */
+@keyframes processing-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(243, 156, 18, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(243, 156, 18, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(243, 156, 18, 0);
+  }
+}
+
+/* 发送按钮 */
+.send-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #007aff;
+  color: white;
+  transition: all 0.3s ease;
+  border: none;
+  outline: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  
+  &:not(:disabled):hover {
+    transform: scale(1.05);
+    box-shadow: 0 2px 6px rgba(0, 122, 255, 0.3);
+    background-color: #0056cc;
+  }
+  
+  &:disabled {
+    background-color: #c0c0c0;
+    color: #999;
+    cursor: not-allowed;
+    opacity: 0.6;
+    /* 禁用状态下移除所有动画效果 */
+    transform: none !important;
+    box-shadow: none !important;
+  }
+  
+  /* 移动端点击效果 - 只在非禁用状态下生效 */
+  &:not(:disabled):active {
+    transform: scale(0.95);
+  }
+}
+
+/* 停止按钮 */
+.stop-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #ff3b30;
+  color: white;
+  transition: all 0.3s ease;
+  border: none;
+  outline: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  
+  &:hover {
+    transform: scale(1.05);
+    box-shadow: 0 2px 6px rgba(255, 59, 48, 0.3);
+    background-color: #ff2d55;
+  }
+  
+  /* 移动端点击效果 */
+  &:active {
+    transform: scale(0.95);
+  }
+  
+}
+
+/* 控制操作 - 已移除，停止按钮现在在输入区域 */
+
+/* 响应式设计 */
+@media (max-width: 375px) {
+  .message-content {
+    max-width: 80%;
+  }
+  
+  .input-container {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+  }
+  
+  .input-actions {
+    justify-content: center;
+  }
+  
+  .nut-textarea {
+    max-height: 100px; /* 小屏幕下减少最大高度 */
+  }
+  
+  .voice-btn {
+    width: 36px;
+    height: 36px;
+  }
+}
+
+/* 大屏幕优化 */
+@media (min-width: 768px) {
+  .nut-textarea {
+    max-height: 150px; /* 大屏幕下增加最大高度 */
+  }
+  
+  .input-container {
+    gap: 12px;
+  }
+}
+
+/* 动画效果 */
+.message-item {
+  animation: fadeInUp 0.3s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 录音状态动画 */
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* 按钮点击效果 */
+.voice-btn,
+.send-btn {
+  &:not(:disabled):active {
+    transform: scale(0.95);
+  }
+} 
