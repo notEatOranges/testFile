@@ -23,9 +23,9 @@
     "miniprogram": {
       "list": [
         {
-          "name": "大富翁",
-          "pathName": "packageGames/monopoly/monopoly",
-          "query": "",
+          "name": "测试页面",
+          "pathName": "pages/featuretest/featuretest",
+          "query": "title=%25E5%258A%259F%25E8%2583%25BD%25E6%25B5%258B%25E8%25AF%2595&url=https%253A%252F%252Fwww.baidu.com%252F",
           "scene": null,
           "launchMode": "default"
         }

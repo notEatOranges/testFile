@@ -1,0 +1,18 @@
+<!-- 自定义头部（cover-view）：必须用 cover-view 才能盖在 web-view 之上 -->
+<!-- 普通 view 会被 web-view 原生层盖住（表现为顶部黑块）；cover-view 层级比 web-view 高 -->
+<cover-view class="navbar" style="height:{{navBarHeight}}px;padding-top:{{statusBarHeight}}px;">
+  <cover-view class="navbar__inner">
+    <!-- 返回 -->
+    <cover-view class="navbar__back" bindtap="onBack" hover-class="navbar__back--hover">
+      <cover-view class="navbar__arrow">‹</cover-view>
+    </cover-view>
+    <!-- 标题 -->
+    <cover-view class="navbar__title">{{title}}</cover-view>
+  </cover-view>
+</cover-view>
+
+<!-- web-view：绝对定位压在头部下方，铺满到底 -->
+<web-view
+  src="{{url}}"
+  style="position:absolute;left:0;top:{{navBarHeight}}px;width:100%;height:calc(100% - {{navBarHeight}}px);"
+></web-view>

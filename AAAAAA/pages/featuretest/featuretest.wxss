@@ -1,0 +1,55 @@
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  box-sizing: border-box;
+  background: #ffffff; /* 深色 H5 改这里 + 下面文字色 */
+  z-index: 100;
+}
+
+.navbar__inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.navbar__back {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 88rpx;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #222;
+  font-size: 56rpx;
+  line-height: 1;
+  z-index: 2;
+}
+.navbar__back--hover {
+  opacity: 0.5;
+}
+
+/* cover-view 不支持 transform，返回箭头改用文字符号「‹」；要规范图标可用 cover-image + 箭头 png */
+.navbar__arrow {
+  line-height: 1;
+}
+
+.navbar__title {
+  position: absolute;
+  left: 88rpx;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 42rpx;
+  font-weight: 800;
+  color: red;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}

@@ -4,7 +4,8 @@
     "pages/main/main",
     "pages/me/me",
     "pages/setup/setup",
-    "pages/gulp-error/index"
+    "pages/gulp-error/index",
+    "pages/featuretest/featuretest"
   ],
   "subpackages": [
     {

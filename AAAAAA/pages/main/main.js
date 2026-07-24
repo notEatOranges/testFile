@@ -101,6 +101,14 @@ Page({
     wx.navigateTo({ url: '/packageFunc/' + c.page + '/' + c.page });
   },
 
+  // 功能测试页：web-view 容器（自定义导航栏 + H5），默认加载百度做连通性测试
+  goFeatureTest() {
+    wx.navigateTo({
+      url: '/pages/featuretest/featuretest?title=' + encodeURIComponent('功能测试') +
+           '&url=' + encodeURIComponent('https://www.baidu.com/')
+    });
+  },
+
   onNotifyTap() {
     notify.requestSubscribeMessage().then(async res => {
       const ok = Object.keys(res).some(k => res[k] === 'accept');

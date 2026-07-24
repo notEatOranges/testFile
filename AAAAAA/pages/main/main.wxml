@@ -41,5 +41,14 @@
       </view>
       <view class="notify-arrow"><t-icon name="chevron-right" size="36rpx" /></view>
     </view>
+
+    <view class="notify-card love-card" bindtap="goFeatureTest">
+      <view class="notify-ic"><t-icon name="tools" size="40rpx" /></view>
+      <view class="notify-text">
+        <view class="notify-title">功能测试</view>
+        <view class="notify-sub muted small">web-view 容器测试</view>
+      </view>
+      <view class="notify-arrow"><t-icon name="chevron-right" size="36rpx" /></view>
+    </view>
   </block>
 </view>
