@@ -1412,11 +1412,12 @@ function genOne(settings) {
   const ctx = { country, gender, birthday, areaInfo: settings.areaInfo || randomAddrInfo() };
   const a = ctx.areaInfo;
 
-  // 省市 code：CN 为 GB/T 2260 六位码，国外为 ISO 3166-2
-  let provinceCode = '', cityCode = '';
+  // 省市区 code：CN 为 GB/T 2260 六位码（省2位 / 市4位 / 区6位），国外为 ISO 3166-2（仅省级）
+  let provinceCode = '', cityCode = '', districtCode = '';
   if (C.regionSystem === 'cn-gbt2260' && a.code3) {
     provinceCode = a.code3.slice(0, 2) + '0000';
     cityCode = a.code3.slice(0, 4) + '00';
+    districtCode = a.code3;
   } else if (a.iso) {
     provinceCode = a.iso;
   }
@@ -1430,6 +1431,7 @@ function genOne(settings) {
     postcode: settings.postcode || C.gen.postcode(ctx),
     provinceCode,
     cityCode,
+    districtCode,
     company: C.gen.company(ctx),
     email: C.gen.email(ctx, name),
     address: C.gen.address(ctx),
@@ -1454,7 +1456,7 @@ function genOne(settings) {
 let results = [];
 
 // 按国家动态计算字段清单（共性字段 + 国家开关字段 + 证件列）
-// 默认勾选集合：姓名 / 性别 / 手机号 / 身份证 / 护照 / 固定电话 / 统一信用代码 / 单位名称 / 邮箱 / 地址 / 省·州码 / 银行名称 / 银行卡号
+// 默认勾选集合（中国默认国家下）：姓名 / 性别 / 手机号 / 身份证 / 护照 / 固定电话 / 省·州码 / 市级码 / 区·县码 / 统一信用代码 / 单位名称 / 邮箱 / 地址
 function computeFields(country) {
   const C = COUNTRIES[country];
   const out = [
@@ -1465,13 +1467,14 @@ function computeFields(country) {
   if (C.fields.ethnicity) out.push({ key: 'ethnicity', label: '民族', default: false });
   out.push(
     { key: 'phone', label: '手机号', default: true },
-    { key: 'postcode', label: C.locale.postcode, default: false },
-    { key: 'provinceCode', label: '省/州码', default: true },
-    { key: 'cityCode', label: '市/区码', default: false },
+    { key: 'postcode', label: C.locale.postcode, default: true }, // 邮政编码
+    { key: 'provinceCode', label: '省/州码', default: false },
+    { key: 'cityCode', label: '市级码', default: false },
   );
+  if (C.regionSystem === 'cn-gbt2260') out.push({ key: 'districtCode', label: '区/县码', default: false });
   C.idTypes.forEach(k => out.push({ key: 'idcol_' + k, label: ID_TYPE_DEFS[k].label, group: 'id', default: C.defaultIds.includes(k) }));
   if (C.fields.landline) out.push({ key: 'landline', label: '固定电话', default: true });
-  if (C.fields.bank) out.push({ key: 'bankName', label: '银行名称', default: true }, { key: 'bankCard', label: '银行卡号', default: true });
+  if (C.fields.bank) out.push({ key: 'bankName', label: '银行名称', default: false }, { key: 'bankCard', label: '银行卡号', default: false });
   if (C.fields.creditCode) out.push({ key: 'creditCode', label: '统一信用代码', default: true });
   out.push(
     { key: 'company', label: '单位名称', default: true },
