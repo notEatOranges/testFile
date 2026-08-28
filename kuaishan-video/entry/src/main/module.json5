@@ -1,0 +1,54 @@
+{
+  "module": {
+    "name": "entry",
+    "type": "entry",
+    "description": "$string:module_desc",
+    "mainElement": "EntryAbility",
+    "deviceTypes": [
+      "phone",
+      "tablet",
+      "2in1"
+    ],
+    "deliveryWithInstall": true,
+    "installationFree": false,
+    "pages": "$profile:main_pages",
+    "requestPermissions": [
+      {
+        "name": "ohos.permission.INTERNET",
+        "reason": "$string:internet_reason",
+        "usedScene": {
+          "abilities": ["EntryAbility"],
+          "when": "always"
+        }
+      }
+    ],
+    "abilities": [
+      {
+        "name": "EntryAbility",
+        "srcEntry": "./ets/entryability/EntryAbility.ets",
+        "description": "$string:EntryAbility_desc",
+        "icon": "$media:app_icon",
+        "label": "$string:EntryAbility_label",
+        "startWindowIcon": "$media:startIcon",
+        "startWindowBackground": "$color:start_window_background",
+        "exported": true,
+        "skills": [
+          {
+            "entities": ["entity.system.home"],
+            "actions": ["action.system.home"]
+          },
+          {
+            // 接收短视频平台的分享链接拉起
+            "actions": ["ohos.want.action.viewData"],
+            "uris": [
+              { "scheme": "https", "host": "v.douyin.com" },
+              { "scheme": "https", "host": "www.douyin.com" },
+              { "scheme": "https", "host": "v.kuaishou.com" },
+              { "scheme": "https", "host": "www.kuaishou.com" }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

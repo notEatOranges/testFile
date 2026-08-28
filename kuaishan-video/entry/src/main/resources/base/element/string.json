@@ -1,0 +1,20 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "水印快删主模块"
+    },
+    {
+      "name": "EntryAbility_desc",
+      "value": "短视频链接去水印解析工具"
+    },
+    {
+      "name": "EntryAbility_label",
+      "value": "水印快删"
+    },
+    {
+      "name": "internet_reason",
+      "value": "访问网络以解析分享链接并下载视频，需要联网权限"
+    }
+  ]
+}

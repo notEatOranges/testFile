@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API 请求页面</title>
+    <style>
+        body { font-family: sans-serif; margin: 2em; }
+        label { display: block; margin-top: 1em; }
+        input, textarea { width: 100%; padding: 8px; margin-top: 0.5em; box-sizing: border-box; }
+        textarea { height: 100px; font-family: monospace; }
+        button { margin-top: 1em; padding: 10px 15px; cursor: pointer; }
+        pre { background-color: #f4f4f4; padding: 1em; border: 1px solid #ddd; white-space: pre-wrap; word-wrap: break-word; }
+    </style>
+</head>
+<body>
+
+    <h1>发送 POST 请求</h1>
+
+    <div>
+        <label for="apiUrl">请求接口 URL:</label>
+        <input type="text" id="apiUrl" value="http://14.22.76.43:10087/sszh-api/manage/api/bizCompetitionSingle/save">
+    </div>
+
+    <div>
+        <label for="apiParams">请求参数 (JSON):</label>
+        <textarea id="apiParams">{"id":"e25b522abd3a37caebfe7abc24d6bb31","publishStatus":"Y"}</textarea>
+    </div>
+
+    <button id="sendRequestBtn">发送请求</button>
+    
+    <h2>响应结果:</h2>
+    <pre id="response"></pre>
+
+    <script>
+        document.getElementById('sendRequestBtn').addEventListener('click', () => {
+            const url = document.getElementById('apiUrl').value;
+            const paramsStr = document.getElementById('apiParams').value;
+            const responseElement = document.getElementById('response');
+            
+            let data;
+            try {
+                data = JSON.parse(paramsStr);
+            } catch (e) {
+                responseElement.textContent = '错误: 请求参数不是有效的 JSON 格式。\n' + e.toString();
+                return;
+            }
+
+            responseElement.textContent = '正在发送请求...';
+
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data),
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP 错误! 状态: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('成功:', data);
+                responseElement.textContent = '成功: \n' + JSON.stringify(data, null, 2);
+            })
+            .catch((error) => {
+                console.error('错误:', error);
+                if (error instanceof TypeError && error.message === 'Failed to fetch') {
+                    responseElement.textContent = '错误: 请求失败。\n\n这很可能是由于浏览器的跨域资源共享（CORS）策略导致的。\n请确保目标服务器允许来自您当前域的请求，或者在浏览器中禁用CORS安全策略（仅限开发环境）。';
+                } else {
+                    responseElement.textContent = '错误: \n' + error.toString();
+                }
+            });
+        });
+    </script>
+
+</body>
+</html>

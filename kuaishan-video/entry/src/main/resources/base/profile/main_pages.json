@@ -1,0 +1,13 @@
+{
+  "src": [
+    "pages/Index",
+    "pages/ParsePage",
+    "pages/SettingsPage",
+    "pages/BatchParsePage",
+    "pages/UserPage",
+    "pages/Md5Page",
+    "pages/InpaintPage",
+    "pages/LivePage",
+    "pages/AudioPage"
+  ]
+}

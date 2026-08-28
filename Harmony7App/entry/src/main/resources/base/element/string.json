@@ -1,0 +1,16 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "HarmonyOS 7 应用入口模块"
+    },
+    {
+      "name": "EntryAbility_desc",
+      "value": "HarmonyOS 7 示例应用"
+    },
+    {
+      "name": "EntryAbility_label",
+      "value": "鸿蒙7应用"
+    }
+  ]
+}

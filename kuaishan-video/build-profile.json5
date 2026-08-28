@@ -1,0 +1,57 @@
+{
+  "app": {
+    "signingConfigs": [
+      {
+        "name": "default",
+        "type": "HarmonyOS",
+        "material": {
+          "certpath": "C:\\Users\\Orange\\.ohos\\config\\default_kuaishan-video_yFRwFEVLKGZhUZRg82zlQhuMYUtv1D4DF_g6VvAnSyw=.cer",
+          "keyAlias": "debugKey",
+          "keyPassword": "0000001BC8761916E920C0E42D0C87317D1820D26CF4E116B43831124953CF92A5AF36FDD9677A1029FF68",
+          "profile": "C:\\Users\\Orange\\.ohos\\config\\default_kuaishan-video_yFRwFEVLKGZhUZRg82zlQhuMYUtv1D4DF_g6VvAnSyw=.p7b",
+          "signAlg": "SHA256withECDSA",
+          "storeFile": "C:\\Users\\Orange\\.ohos\\config\\default_kuaishan-video_yFRwFEVLKGZhUZRg82zlQhuMYUtv1D4DF_g6VvAnSyw=.p12",
+          "storePassword": "0000001BE198386575FA5AA5E928ABBFA334FAA5E552C01B95EFCC5BB1F7E2AF6EECBBC6A8BB11F008A262"
+        }
+      }
+    ],
+    "products": [
+      {
+        "name": "default",
+        "signingConfig": "default",
+        // HarmonyOS 26（API 26）Beta2
+        "compatibleSdkVersion": "26.0.0",
+        "targetSdkVersion": "26.0.0",
+        "runtimeOS": "HarmonyOS",
+        "buildOption": {
+          "strictMode": {
+            "caseSensitiveCheck": true,
+            "useNormalizedOHMUrl": true
+          }
+        }
+      }
+    ],
+    "buildModeSet": [
+      {
+        "name": "debug"
+      },
+      {
+        "name": "release"
+      }
+    ]
+  },
+  "modules": [
+    {
+      "name": "entry",
+      "srcPath": "./entry",
+      "targets": [
+        {
+          "name": "default",
+          "applyToProducts": [
+            "default"
+          ]
+        }
+      ]
+    }
+  ]
+}
