@@ -1,11 +1,12 @@
 <script setup>
 import { useRoute, useRouter } from 'vue-router'
+import { useChatBadge } from '../core/chatBadge'
 import IconHome from '~icons/lucide/home'
 import IconChat from '~icons/lucide/message-circle'
 import IconGame from '~icons/lucide/gamepad-2'
 import IconUser from '~icons/lucide/user'
 
-const props = defineProps({ badge: { type: Number, default: 0 } })
+const badge = useChatBadge()
 const route = useRoute()
 const router = useRouter()
 const tabs = [
@@ -26,7 +27,7 @@ const active = () => route.meta.tab ?? -1
       :class="{ on: active() === i }"
       @click="router.push(t.path)"
     >
-      <span v-if="i === 1 && props.badge > 0" class="bdg">{{ badge > 99 ? '99+' : badge }}</span>
+      <span v-if="i === 1 && badge.unread > 0" class="bdg">{{ badge.unread > 99 ? '99+' : badge.unread }}</span>
       <component :is="t.icon" />
       <span>{{ t.name }}</span>
     </button>

@@ -8,6 +8,8 @@ import { copyText, inviteLink } from '../core/clip'
 import { showToast } from 'vant'
 import TabBar from '../components/TabBar.vue'
 import Avatar from '../components/Avatar.vue'
+import MoodSheet from '../components/MoodSheet.vue'
+import { useChatBadge } from '../core/chatBadge'
 import IconHeart from '~icons/lucide/heart'
 import IconChat from '~icons/lucide/message-circle'
 import IconGift from '~icons/lucide/gift'
@@ -22,9 +24,11 @@ import IconLink from '~icons/lucide/link'
 
 const router = useRouter()
 const auth = useAuth()
+const badge = useChatBadge()
 const startDate = ref('')
 const mood = ref(null)
 const events = ref([])
+const showMood = ref(false)
 let un1, un2, un3
 
 onMounted(async () => {
@@ -47,16 +51,16 @@ const typeName = Object.fromEntries(ANNIV_TYPES.map((t) => [t.key, t.name]))
 const typeIcon = { anniversary: IconHeart, birthday: IconGift, first: IconStar, festival: IconCal, countdown: IconClock }
 
 const tiles = [
-  { icon: IconChat, label: '悄悄对话', to: '/chat' },
+  { icon: IconChat, label: '悄悄对话', to: '/chat', badge: true },
   { icon: IconGift, label: '心愿清单', to: '/wishlist' },
   { icon: IconHelp, label: '真心话', to: '/truthbox' },
   { icon: IconCal, label: '纪念日', to: '/days' },
   { icon: IconClock, label: '历史心情', to: '/mood-history' },
-  { icon: IconImage, label: '聊天背景', act: () => showToast('聊天背景在 M2 交付') },
+  { icon: IconImage, label: '聊天背景', to: '/chat', query: { bg: 1 } },
   { icon: IconGame, label: '游戏大厅', to: '/games' },
   { icon: IconTrophy, label: '成绩榜', to: '/leaderboard' }
 ]
-function go(t) { t.to ? router.push(t.to) : t.act() }
+function go(t) { router.push({ path: t.to, query: t.query }) }
 </script>
 
 <template>
@@ -86,17 +90,17 @@ function go(t) { t.to ? router.push(t.to) : t.act() }
       </div>
 
       <!-- 今日心情双卡（实时） -->
-      <div class="sec">今日心情 <span style="font-size: 11px; font-weight: 400">记录功能 M2 交付</span></div>
+      <div class="sec">今日心情 <span style="font-size: 11px; font-weight: 400">点我的卡片直接记</span></div>
       <div class="duo">
-        <div class="mcard me" v-if="myMood" :style="myMood.bg ? { background: `linear-gradient(160deg, rgba(0,0,0,.15), rgba(0,0,0,.35)), url(${myMood.bg}) center/cover` } : {}" :class="{ plainbg: !myMood.bg }">
+        <div class="mcard me" v-if="myMood" :style="myMood.bg ? { background: `linear-gradient(160deg, rgba(0,0,0,.15), rgba(0,0,0,.35)), url(${myMood.bg}) center/cover` } : {}" @click="showMood = true">
           <div class="who"><Avatar :size="18" :name="auth.displayName" :avatar="auth.user.avatar" />我 · {{ auth.displayName }}</div>
           <div class="emo">{{ myMood.emoji }}</div>
           <div class="tag">{{ myMood.label || '' }}</div>
           <div class="whi" v-if="myMood.whisper">{{ myMood.whisper }}</div>
         </div>
-        <div class="mcard empty" v-else>
-          <IconHeart style="width: 26px; height: 26px" />
-          <span>还没记今日心情<br>（M2 支持记录）</span>
+        <div class="mcard empty" v-else @click="showMood = true">
+          <IconHeart style="width: 26px; height: 26px; color: var(--accent)" />
+          <span>记下今天的心情<br>点这里</span>
         </div>
         <div class="mcard empty" v-if="!peerMood">
           <IconHeart style="width: 26px; height: 26px" />
@@ -127,12 +131,14 @@ function go(t) { t.to ? router.push(t.to) : t.act() }
       <div class="sec">功能</div>
       <div class="gn">
         <button v-for="t in tiles" :key="t.label" class="gnav" @click="go(t)">
+          <span v-if="t.badge && badge.unread > 0" class="bdg">{{ badge.unread > 99 ? '99+' : badge.unread }}</span>
           <span class="iconwrap tile"><component :is="t.icon" /></span>
           <span class="glabel">{{ t.label }}</span>
         </button>
       </div>
     </div>
 
+    <MoodSheet :show="showMood" :mood="mood" @close="showMood = false" />
     <TabBar />
   </div>
 </template>

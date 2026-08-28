@@ -7,7 +7,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
-import java.io.IOException;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -87,6 +86,13 @@ public class Hub {
         }
     }
 
+    /** 站内通知广播（不受订阅限制，全房间可收） */
+    public void broadcastNotify(String room, ObjectNode msg) {
+        Set<Client> set = rooms.get(room);
+        if (set == null || set.isEmpty()) return;
+        for (Client c : set) send(c, msg);
+    }
+
     /** 前缀相交判定（与 store.js emit 规则一致） */
     static boolean related(String a, String b) {
         return a.equals(b) || a.startsWith(b + "/") || b.startsWith(a + "/");
@@ -95,8 +101,8 @@ public class Hub {
     void send(Client c, ObjectNode msg) {
         try {
             if (c.session.isOpen()) c.session.sendMessage(new TextMessage(msg.toString()));
-        } catch (IOException e) {
-            // 发送失败即视为掉线，容器会触发 afterConnectionClosed 走 leave
+        } catch (Exception e) {
+            // 发送失败（含会话刚关闭的竞态）即视为掉线，容器会触发 afterConnectionClosed 走 leave
         }
     }
 

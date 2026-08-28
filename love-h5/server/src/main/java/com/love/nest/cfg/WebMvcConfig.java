@@ -73,6 +73,6 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 throw new ApiException(401, "请先登录");
             }
         }).addPathPatterns("/api/**")
-          .excludePathPatterns("/api/auth/login", "/api/auth/register");
+          .excludePathPatterns("/api/auth/login", "/api/auth/register", "/api/admin/**");
     }
 }
