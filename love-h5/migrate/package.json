@@ -1,0 +1,9 @@
+{
+  "name": "love-h5-migrate",
+  "private": true,
+  "type": "module",
+  "description": "微信云开发 → love-h5 数据迁移",
+  "dependencies": {
+    "@cloudbase/node-sdk": "^3.13.0"
+  }
+}

@@ -1,0 +1,20 @@
+server:
+  # 8080 常被本机其他后端占用，我们用 8090
+  port: 8090
+
+spring:
+  application:
+    name: love-nest
+  servlet:
+    multipart:
+      max-file-size: 25MB
+      max-request-size: 30MB
+  datasource:
+    url: jdbc:sqlite:./data/love.db?busy_timeout=5000
+    driver-class-name: org.sqlite.JDBC
+
+love:
+  # 生产部署务必改掉这个密钥
+  jwt-secret: love-nest-secret-please-change-2026
+  jwt-days: 30
+  files-dir: ./data/files

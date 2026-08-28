@@ -1,136 +1,54 @@
-# love-h5 · 我们的小窝 💑
+# love-h5 v2 · 我们的小窝（H5 + Java 后端）
 
-挂在 GitHub Pages 的**情侣 H5**（纯静态、零构建、无自建服务器）：实时对话、猫猫吃鱼双人联机（对战/合作/回合三模式）、每日心情+悄悄话、在一起天数+纪念日、共同心愿清单、真心话盲盒、接入 3D 爱心、3 套马卡龙主题切换。
+情侣互动网站：微信小程序版（`../AAAAAA`）的 H5 重构迁移版，v1 纯静态老版本见 [README-legacy-v1.md](./README-legacy-v1.md)（其页面与 js 保留作参考）。
 
-> 实时后端用 **Supabase / MemFire**（配置见 [SETUP.md](./SETUP.md)）；**不配置也能玩**——自动降级到本地预览模式（同浏览器多 tab 模拟双人）。
+- 设计方案：[docs/01-功能清单与迁移设计方案.md](./docs/01-功能清单与迁移设计方案.md)
+- UI 规范：[docs/02-UI设计规范.md](./docs/02-UI设计规范.md)｜高保真设计稿：[design/index.html](./design/index.html)
+- 数据迁移（云开发 → 本站）：[migrate/README.md](./migrate/README.md)
 
----
+## 目录
 
-## 技术栈
+| 目录 | 说明 |
+|---|---|
+| `server/` | Spring Boot 3 后端：注册登录(账号密码+角色) / 情侣空间绑定 / kv 实时层(1:1 复刻原 kvWrite 语义) / WebSocket(变更推送+在线状态) / 文件上传 / 真心话题库 / 云开发数据导入 |
+| `web/` | Vue 3 + Vite + Vant 4 前端；8 套马卡龙主题、App 化安全区适配；构建产物直接输出到 server 静态目录 |
+| `migrate/` | 微信云开发数据迁移脚本与说明 |
+| `docs/` `design/` | 设计文档与设计稿 |
+| `tools/` | 本机便携 Maven（不入库） |
 
-- 纯静态 H5：**原生 JS + ES Modules，零构建**。
-- 实时：**Supabase / MemFire**（Postgres + Realtime），数据抽象层 `js/core/store.js` 屏蔽后端细节。
-- 本地降级：localStorage + BroadcastChannel + storage 事件兜底。
-- 游戏：Canvas2D + requestAnimationFrame。
-- 部署：GitHub Pages（任意静态托管都行）。
-
----
-
-## 一、本地预览
-
-整个站点是纯静态文件，起个静态服务即可（**不要直接双击 file:// 打开**——ES Module / iframe / Supabase 都需要 http(s)）。
-
-任选一种起服务（根目录 = `love-h5/`）：
+## 运行（一个 jar 就是整个网站）
 
 ```bash
-# 方式 A：Python（最常见）
-python -m http.server 5517 --bind 127.0.0.1
+# 1. 构建前端（产物自动进入 server/src/main/resources/static）
+cd web && npm install && npm run build
 
-# 方式 B：Node（无需装东西，npx 拉一次性工具）
-npx http-server -p 5517 -a 127.0.0.1 .
-#  或
-npx serve -l 5517 .
+# 2. 打包后端
+cd ../server
+set JAVA_HOME=C:\Program Files\Huawei\DevEco Studio\jbr
+..\tools\apache-maven-3.9.9\bin\mvn package -DskipTests
+
+# 3. 运行 → 浏览器打开 http://localhost:8090
+java -jar target\love-nest.jar
 ```
 
-> Windows 上若 `python` 是应用商店占位（报错），用方式 B 的 Node，或装真 Python。
+> 开发模式：`cd web && npm run dev`（Vite 5173，已代理 /api /ws 到 8080）
 
-浏览器打开 **http://127.0.0.1:5517/** → 输房间号 → 选男/女身份 → 进入。
+## 自测实时同步（两人双开）
 
----
+1. 普通窗口注册一个**男生**账号 → 创建空间 → 复制邀请链接
+2. 无痕窗口打开邀请链接 → 注册**女生**账号 → 自动加入
+3. 两边同时进小窝：右上角在线状态即连即亮；「我的」页改网名/戳一戳后缀，对方页面实时变化
 
-## 二、双人模拟（本地预览模式下）
+## 数据与部署
 
-本地模式靠 **localStorage + BroadcastChannel** 在**同一个浏览器**的多个 tab 间同步。要点：
+- SQLite 单文件 `server/data/love.db`（备份=复制整个 `data/` 目录）
+- 上传文件在 `server/data/files/`
+- 家庭电脑部署：`java -jar love-nest.jar` + 开机自启；外网访问建议 Cloudflare Tunnel/frp（HTTPS 后解锁语音/系统通知/PWA）
 
-> ⚠️ **必须用「同一个浏览器的两个普通标签页」**（或两个无痕标签页）。
-> **不要一个普通 + 一个无痕**——普通与无痕是不同存储分区，**不共享** localStorage / BroadcastChannel，同步会完全失效。
+## 里程碑进度
 
-步骤：
-
-1. **Tab A（男生）**：打开 `http://127.0.0.1:5517/`，房间号输 `love2026`，选**男生**，进入。
-2. **Tab B（女生）**：同浏览器**新开一个普通标签页**，同样打开 `http://127.0.0.1:5517/`，房间号输**同一个** `love2026`，选**女生**，进入。
-3. 两边互发消息、玩猫猫吃鱼（同选一个模式开局）、看对方实时同步。
-
-> 说明：身份（`lh5_role`）存在 localStorage，两个 tab 共享。因此**先开男生 tab、再开女生 tab**；过程中**不要刷新**（刷新会重读身份）。这是「同浏览器模拟」的固有限制，**真机异地**时每台手机各自记住各自身份，无此问题。
-
-配置云端后端（[SETUP.md](./SETUP.md)）即可两台真机异地实时，不再受此限制。
-
----
-
-## 三、部署到 GitHub Pages
-
-1. 把本仓库（含 `love-h5/` 目录）推到 GitHub。
-2. 仓库 **Settings → Pages → Source** 选 `main` 分支、`/root`，保存。
-3. 等约 1 分钟，访问 `https://<你的用户名>.github.io/<仓库名>/love-h5/`。
-
-> 站点**全程用相对路径**（`./catfish.html`、`./js/...`），所以无论部署在根域名还是 `/love-h5/` 子路径下都能正常工作，无需改配置。
->
-> 想要异地实时：部署前先按 [SETUP.md](./SETUP.md) 填好 `js/config/supabase-config.js` 再推。
-
----
-
-## 四、目录说明
-
-```
-love-h5/
-├── index.html              SPA 入口：引导（房间号+身份）+ 6 个功能 view + 主题切换 + iframe 宿主
-├── catfish.html            猫猫吃鱼游戏宿主页（Canvas + HUD + 选模式/结算弹窗）
-├── heart.html              3D 爱心容器页（顶栏 + 全屏 heart-3d iframe + 两层主题 postMessage 中继）
-├── heart-3d.html           3D 爱心（WebGL，副本，已加 postMessage 主题桥接）
-│
-├── assets/images/          boy.jpg / girl.jpg / tomcat.jpg
-│
-├── css/
-│   ├── theme.css           3 套马卡龙主题（[data-theme] + CSS 变量）
-│   ├── base.css            reset + 移动端 + 通用组件（按钮/输入/卡片/toast）
-│   ├── pages.css           6 个 view + 引导页 + 导航网格 + iframe 宿主
-│   └── catfish.css         游戏 HUD / 模态 / Toast / 主题浮层
-│
-├── js/
-│   ├── app.js              入口编排：init / 定义 view / 引导 / 监听 iframe 回首页
-│   ├── config/supabase-config.js   后端配置占位 + isConfigured 检测
-│   ├── core/
-│   │   ├── store.js        ★ 数据抽象层（Supabase + 本地双实现，所有功能依赖）
-│   │   ├── room.js         房间号 + 身份 + 心跳 12s + onDisconnect + 在线判断
-│   │   ├── router.js       hash 路由（轻量 view + 重页 iframe）
-│   │   ├── theme.js        主题切换 + postMessage 给 heart + CSS 变量取色
-│   │   └── utils.js        时间/id/节流/escape/today/题库/mood 列表/toast
-│   ├── views/              home / chat / mood / days / wishlist / truthbox（6 个功能页）
-│   └── game/catfish/
-│       ├── main.js         编排：选模式→双方 ready→开局→结算→再来
-│       ├── engine.js       Canvas2D 渲染 + 主循环 + 碰撞 + 状态机 + 主题取色
-│       ├── sync.js         联机协议（位置广播 ~12fps / claim 鱼 / setStatus）
-│       ├── input.js        整画布虚拟摇杆（触摸 + 鼠标）
-│       └── modes.js        三模式规则：versus / coop / turn（纯函数）
-│
-├── README.md               ← 你在看
-├── SETUP.md                云端后端配置（Supabase / MemFire）
-└── PROGRESS.md             实施进度 / 架构决策 / 已知问题（给续作者）
-```
-
----
-
-## 五、各功能怎么玩
-
-| 功能 | 入口 | 说明 |
-|---|---|---|
-| 💬 悄悄对话 | 首页「悄悄对话」 | 实时消息，头像+气泡，回车发送 |
-| 💗 今日心情 | 「今日心情」 | 选 emoji + 写悄悄话，看对方今日 |
-| 📅 在一起 | 「在一起」 | 在一起天数 + 纪念日倒计时 + 添加 |
-| ✅ 心愿清单 | 「心愿清单」 | 添加 / 勾完成 / 删除 |
-| 🎲 真心话 | 「真心话」 | 随机抽题，我答 / 看 ta 答 |
-| 🐱 猫猫吃鱼 | 「猫猫吃鱼」 | 双人联机：对战(限时)/合作(凑目标)/回合(轮流) |
-| 💝 3D 爱心 | 「3D 爱心」 | 可旋转的 3D 心形，跟随主题 |
-
----
-
-## 六、主题
-
-右下角 🎨 浮动按钮切换 **樱花粉 / 薄荷绿 / 薰衣草紫** 三套马卡龙配色（`[data-theme]` + CSS 变量，记忆在 localStorage，防 FOUC）。游戏 Canvas 与 3D 心均从主题取色/跟随。
-
----
-
-## 更多
-
-- 架构决策、阶段进度、已知问题：[PROGRESS.md](./PROGRESS.md)
-- 后端配置（Supabase / MemFire）：[SETUP.md](./SETUP.md)
+- ✅ **M1 基建**：注册登录 / 空间绑定 / kv+WebSocket 实时层 / 在线状态 / 主题系统 / 小窝·我的页面 / 迁移工具
+- ⬜ M2 核心功能：聊天、心情记录、纪念日管理、心愿清单、真心话、站内通知
+- ⬜ M3 游戏一期：成绩榜、2048、俄罗斯方块、五子棋、黑白棋、记忆翻牌、翻翻棋
+- ⬜ M4 游戏二期：象棋、军棋、你画我猜、大富翁
+- ⬜ M5 打磨部署：暗色模式、语音消息、浏览器通知、PWA、内网穿透
