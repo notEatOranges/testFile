@@ -46,12 +46,16 @@
 
     /* 可搜索下拉 */
     .ss { position: relative; }
-    .ss-input { width: 100%; padding: 6px 10px; border: 1px solid #d9d9d9; border-radius: 6px; font-size: 13px; min-width: 120px; box-sizing: border-box; background: #fff; }
+    .ss-input { width: 100%; padding: 6px 26px 6px 10px; border: 1px solid #d9d9d9; border-radius: 6px; font-size: 13px; min-width: 120px; box-sizing: border-box; background: #fff; }
     .ss-input:focus { border-color: #4f46e5; outline: none; }
+    .ss-clear { position: absolute; right: 5px; top: 50%; transform: translateY(-50%); width: 17px; height: 17px; line-height: 15px; border-radius: 50%; background: #e5e7eb; color: #888; font-size: 12px; text-align: center; cursor: pointer; display: none; user-select: none; }
+    .ss-clear:hover { background: #d1d5db; color: #333; }
+    .ss-clear.show { display: block; }
     .ss-dropdown { display: none; position: absolute; top: calc(100% + 2px); left: 0; right: 0; max-height: 220px; overflow-y: auto; background: #fff; border: 1px solid #d9d9d9; border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,.12); z-index: 50; }
     .ss-dropdown.open { display: block; }
     .ss-option { padding: 6px 10px; font-size: 13px; cursor: pointer; white-space: nowrap; }
     .ss-option:hover { background: #eef2ff; color: #4f46e5; }
+    .ss-option.selected { background: #eef2ff; color: #4f46e5; font-weight: 600; }
     .ss-empty { padding: 8px 10px; font-size: 12px; color: #aaa; }
 
     .result-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 8px; }
@@ -803,9 +807,11 @@ class SearchSelect {
     this.onChange = null;
     container.innerHTML =
       `<input type="text" class="ss-input" placeholder="${placeholder}" autocomplete="off">
+       <div class="ss-clear" title="清空选择（恢复随机）">×</div>
        <div class="ss-dropdown"></div>`;
     this.input = container.querySelector('.ss-input');
     this.dropdown = container.querySelector('.ss-dropdown');
+    this.clearBtn = container.querySelector('.ss-clear');
     this._bind();
   }
   setItems(items) {
@@ -814,23 +820,31 @@ class SearchSelect {
   }
   setValue(value) {
     this.value = value;
-    if (value === '') { this.input.value = ''; return; }
+    if (value === '') { this.input.value = ''; this._updateClear(); return; }
     const it = this.items.find(i => i.value === value);
     this.input.value = it ? it.label : '';
+    this._updateClear();
   }
   getValue() { return this.value; }
+  _updateClear() { this.clearBtn.classList.toggle('show', this.value !== ''); }
   _filtered() {
     const q = this.input.value.trim().toLowerCase();
     return q ? this.items.filter(it => it.label.toLowerCase().includes(q)) : this.items;
   }
-  _render() {
-    const list = this._filtered();
+  _render(applyFilter = true) {
+    const list = applyFilter ? this._filtered() : this.items;
     this.dropdown.innerHTML = list.length
-      ? list.map(it => `<div class="ss-option" data-value="${it.value}">${it.label}</div>`).join('')
+      ? list.map(it => `<div class="ss-option${it.value === this.value ? ' selected' : ''}" data-value="${it.value}">${it.label}</div>`).join('')
       : '<div class="ss-empty">无匹配项</div>';
   }
-  _open()  { this._render(); this.dropdown.classList.add('open'); }
-  _close() { this.dropdown.classList.remove('open'); }
+  // 打开时全量展示并高亮已选项；过滤只在输入时生效（否则选中后再打开只剩已选一项）
+  _open()  { this._render(false); this.dropdown.classList.add('open'); this.input.select(); }
+  // 关闭时把输入框恢复为已选文案，清掉残留的搜索词
+  _close() {
+    this.dropdown.classList.remove('open');
+    const it = this.value === '' ? null : this.items.find(i => i.value === this.value);
+    this.input.value = it ? it.label : '';
+  }
   _bind() {
     this.input.addEventListener('focus', () => this._open());
     this.input.addEventListener('input', () => {
@@ -838,6 +852,7 @@ class SearchSelect {
       const next = exact ? exact.value : '';
       if (next !== this.value) {
         this.value = next;
+        this._updateClear();
         if (this.onChange) this.onChange(this.value);
       }
       this._render();
@@ -849,6 +864,12 @@ class SearchSelect {
       this.setValue(opt.dataset.value);
       this._close();
       if (this.onChange) this.onChange(this.value);
+    });
+    this.clearBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      this.setValue('');
+      this._close();
+      if (this.onChange) this.onChange('');
     });
     this.input.addEventListener('keydown', e => {
       if (e.key === 'Escape') { this._close(); this.input.blur(); }
@@ -921,7 +942,10 @@ function currentAreaInfoFromSelection() {
   const l1 = currentAddrModel[l1i];
   const l2i = ssCity.getValue();
   if (C.regionSystem === 'cn-gbt2260') {
-    if (l2i === '') return null;
+    if (l2i === '') {
+      // 只选省：借首区码推导省码（6 位码前 2 位 + 0000），避免 getCurrentCodes 拿到 null
+      return { l1: l1.p, l2: null, code3: l1.cities[0].ds[0].code, iso: null, zip: null, area: null };
+    }
     const city = l1.cities[l2i];
     return { l1: l1.p, l2: city.c, l3: null, code3: city.ds[0].code, iso: null, zip: null, area: null };
   }
@@ -939,7 +963,8 @@ function autoFillPostcode() {
   if (C.regionSystem === 'cn-gbt2260') {
     input.value = POSTAL_MAP[ai.l2] || '';
   } else {
-    input.value = C.gen.postcode(ai);
+    // gen 函数期望 { country, areaInfo } 形状；直接传扁平 ai 会因缺 country 崩溃
+    input.value = C.gen.postcode({ country: currentCountry, areaInfo: ai });
   }
 }
 
