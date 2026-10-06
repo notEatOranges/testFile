@@ -37,9 +37,9 @@ Git 私有仓：`notEatOranges/obsidian-vault`（main），**收尾必 commit+pu
 
 git add -A → commit（中文一句话说清改动）→ push（挂代理）→ 告知用户远端已同步。
 
-## WSL（Ubuntu-24.04）侧使用（2026-09-12 增补；2026-10-06 复核更新：主力发行版已恢复为 24.04——zcode Linux/node22 全套随备份档回来，本段生效）
+## WSL（Ubuntu-22.04）侧使用（2026-09-12 增补；2026-10-06 用户拍板：主力=22.04，24.04 当日恢复后即按用户令注销删除——其全套环境 tar 归档在 fnOS NAS `团队文件-vmbackup\WSLBackup-20261003`；22.04 现为干净基础系统，zcode/node 按需再装）
 
-- 本 skill 经 `~/.zcode/skills` 软链对 WSL zcode 同样可见可触发（软链 2026-10-06 已改指 `/mnt/e/Users/Orange/Desktop/testFile/skills`——重装后 testFile 真身迁 E 盘，旧 `/mnt/d/...` 是断链）；vault 路径按平台映射：Windows `D:\Obsidian\Orange` ⇔ WSL `/mnt/d/Obsidian/Orange`（同一份文件，双写互见）。
+- vault 路径按平台映射：Windows `D:\Obsidian\Orange` ⇔ WSL `/mnt/d/Obsidian/Orange`（同一份文件，双写互见）。日后在 22.04 装 zcode 时，`~/.zcode/skills` 软链应指 `/mnt/e/Users/Orange/Desktop/testFile/skills`（重装后 testFile 真身迁 E 盘，旧 `/mnt/d/...` 是断链）。
 - WSL 侧改完磁盘文件，同样要在 Windows 的 Obsidian 里 Ctrl+R 重载再验证。
 - **WSL 里的 git 操作（add/commit/push）一律走 `git.exe` 互操作**，别用 WSL git 碰这个仓（两套 autocrlf 配置会在同一工作树打架；push 代理 `127.0.0.1:7897` 也只在 Windows 侧有效，WSL 的 127.0.0.1 不是 Windows）。示例：`git.exe -C 'D:\Obsidian\Orange' add -A`；互操作报 UNC 警告就回 Windows 侧推。
 - skills 三副本同步在 WSL 同样成立：WSL 的 `~/.zcode/skills` 软链到 testFile（与 Windows 侧同源），在任一侧改 skill 即改上游。
