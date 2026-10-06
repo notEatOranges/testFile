@@ -37,7 +37,7 @@ Git 私有仓：`notEatOranges/obsidian-vault`（main），**收尾必 commit+pu
 
 git add -A → commit（中文一句话说清改动）→ push（挂代理）→ 告知用户远端已同步。
 
-## WSL（Ubuntu-22.04）侧使用（2026-09-12 增补；2026-10-06 用户拍板：主力=22.04，24.04 当日恢复后即按用户令注销删除——其全套环境 tar 归档在 fnOS NAS `团队文件-vmbackup\WSLBackup-20261003`；22.04 现为干净基础系统，zcode/node 按需再装）
+## WSL（Ubuntu-22.04）侧使用（2026-09-12 增补；2026-10-06 用户拍板：主力=22.04；24.04 当日恢复后即按用户令注销，其备份 tar 亦随「放弃备份留存」令一并删除——本机与 NAS 副本全清；22.04 现为干净基础系统，zcode/node 按需再装）
 
 - vault 路径按平台映射：Windows `D:\Obsidian\Orange` ⇔ WSL `/mnt/d/Obsidian/Orange`（同一份文件，双写互见）。日后在 22.04 装 zcode 时，`~/.zcode/skills` 软链应指 `/mnt/e/Users/Orange/Desktop/testFile/skills`（重装后 testFile 真身迁 E 盘，旧 `/mnt/d/...` 是断链）。
 - WSL 侧改完磁盘文件，同样要在 Windows 的 Obsidian 里 Ctrl+R 重载再验证。
