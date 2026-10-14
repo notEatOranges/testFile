@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>二维码快贴板</title>
+<link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="head">
+    <span class="mark"></span>
+    <b>二维码快速生成</b>
+    <a class="open-full" href="index.html" target="_blank" title="打开完整工具：WiFi/名片/日程/logo美化/条形码/识图">完整工具 →</a>
+  </div>
+  <textarea id="txt" placeholder="输入文字或网址，实时生成…" spellcheck="false"></textarea>
+  <div class="preview" id="pv"></div>
+  <div class="btns">
+    <button id="btnSave" type="button">下载 PNG</button>
+    <button id="btnCopy" type="button">复制图片</button>
+  </div>
+  <div class="foot">换肤 · Logo · 条形码 · 识图转码，请点右上「完整工具」</div>
+  <div class="toast" id="toast"></div>
+  <script src="vendor/qr-code-styling.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>

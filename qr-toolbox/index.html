@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>二维码 · 条形码生成器</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark" id="brandMark"></span>
+    <span class="brand-name">二维码 · 条形码生成器</span>
+    <span class="badge-offline" title="所有生成与识别均在本地完成，不上传任何数据">100% 本地离线</span>
+  </div>
+  <div class="mode-switch" id="modeSwitch">
+    <button data-mode="qr" class="active" type="button">二维码</button>
+    <button data-mode="barcode" type="button">条形码</button>
+  </div>
+</header>
+
+<main class="layout">
+  <!-- ============ 左列：表单 ============ -->
+  <section class="col-left">
+
+    <div class="card">
+      <div class="card-title">内容 <span class="card-sub">选类型、填内容，右侧实时预览</span></div>
+      <div class="type-tabs" id="typeTabs"></div>
+      <div id="typeForms"></div>
+      <div class="hint-bar hidden" id="typeHint"></div>
+    </div>
+
+    <div class="card" id="qrStyleCard">
+      <div class="card-title">外观样式</div>
+
+      <div class="row3">
+        <label class="field"><span>尺寸 px</span><input type="number" id="inpSize" min="128" max="1000" step="10" value="200"></label>
+        <label class="field"><span>留白边距</span><input type="range" id="inpMargin" min="0" max="64" value="16"><b id="valMargin">16</b></label>
+        <label class="field"><span>纠错级别</span>
+          <select id="selEc">
+            <option value="L">L 低 7%</option>
+            <option value="M" selected>M 中 15%</option>
+            <option value="Q">Q 高 25%</option>
+            <option value="H">H 最高 30%</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="row3">
+        <label class="field"><span>码点风格</span>
+          <select id="selDots">
+            <option value="square" selected>经典方块</option>
+            <option value="dots">圆点</option>
+            <option value="rounded">圆角</option>
+            <option value="classy">优雅</option>
+            <option value="classy-rounded">优雅圆角</option>
+          </select>
+        </label>
+        <label class="field"><span>定位角样式</span>
+          <select id="selCornerSquare">
+            <option value="square" selected>方块</option>
+            <option value="dot">圆点</option>
+            <option value="extra-rounded">圆润</option>
+          </select>
+        </label>
+        <label class="field"><span>定位点样式</span>
+          <select id="selCornerDot">
+            <option value="square" selected>方块</option>
+            <option value="dot">圆点</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="color-row">
+        <label class="field color-field"><span>码颜色</span>
+          <span class="color-input"><input type="color" id="inpFgColor" value="#000000"><input type="text" id="inpFgHex" value="#000000" maxlength="7" spellcheck="false"></span>
+        </label>
+        <label class="field color-field"><span>底色</span>
+          <span class="color-input"><input type="color" id="inpBgColor" value="#ffffff"><input type="text" id="inpBgHex" value="#ffffff" maxlength="7" spellcheck="false"></span>
+        </label>
+        <label class="check-inline"><input type="checkbox" id="chkTransparent"> 透明底</label>
+      </div>
+
+      <div class="field">
+        <span>马卡龙配色</span>
+        <div class="macaron-row" id="macaronRow"></div>
+      </div>
+
+      <details class="adv" id="gradBox">
+        <summary>渐变色（进阶）</summary>
+        <div class="row3">
+          <label class="check-inline"><input type="checkbox" id="chkGrad"> 启用渐变</label>
+          <label class="field"><span>类型</span>
+            <select id="selGradType"><option value="linear" selected>线性</option><option value="radial">径向</option></select>
+          </label>
+          <label class="field"><span>旋转 °</span><input type="range" id="inpGradRot" min="0" max="360" step="15" value="45"><b id="valGradRot">45</b></label>
+        </div>
+        <div class="color-row">
+          <label class="field color-field"><span>渐变起始</span><span class="color-input"><input type="color" id="inpGrad1" value="#5B5FEF"><input type="text" id="inpGrad1Hex" value="#5B5FEF" maxlength="7"></span></label>
+          <label class="field color-field"><span>渐变结束</span><span class="color-input"><input type="color" id="inpGrad2" value="#C44FE0"><input type="text" id="inpGrad2Hex" value="#C44FE0" maxlength="7"></span></label>
+        </div>
+      </details>
+    </div>
+
+    <div class="card" id="logoCard">
+      <div class="card-title">
+        中心 Logo
+        <span class="card-sub">共 100 款预设，可搜索、可上传</span>
+        <span class="logo-current" id="logoCurrent">未使用</span>
+        <button class="mini-btn hidden" id="btnLogoRemove" type="button">移除</button>
+      </div>
+      <div class="logo-tools">
+        <input type="search" id="logoSearch" placeholder="搜索 logo：如 wifi / 购物 / github …">
+        <select id="logoCat"></select>
+        <label class="upload-btn">上传自定义<input type="file" id="logoFile" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden></label>
+      </div>
+      <div class="logo-grid" id="logoGrid"></div>
+      <div class="row3">
+        <label class="field"><span>Logo 大小 <b id="valLogoSize">40%</b></span><input type="range" id="inpLogoSize" min="20" max="60" value="40"></label>
+        <label class="check-inline"><input type="checkbox" id="chkLogoPad"> 白色衬底</label>
+        <label class="check-inline"><input type="checkbox" id="chkLogoHide" checked> 抠去底部码点</label>
+      </div>
+    </div>
+
+    <div class="card hidden" id="barcodeCard">
+      <div class="card-title">条形码设置</div>
+      <div class="row3">
+        <label class="field"><span>编码格式</span>
+          <select id="selBcFormat">
+            <option value="CODE128" selected>CODE128（通用）</option>
+            <option value="CODE128A">CODE128 A</option>
+            <option value="CODE128B">CODE128 B</option>
+            <option value="CODE128C">CODE128 C（纯数字）</option>
+            <option value="EAN13">EAN-13（13位商品码）</option>
+            <option value="EAN8">EAN-8</option>
+            <option value="EAN5">EAN-5</option>
+            <option value="EAN2">EAN-2</option>
+            <option value="UPC">UPC-A（12位）</option>
+            <option value="UPCE">UPC-E</option>
+            <option value="CODE39">CODE39（大写+数字）</option>
+            <option value="ITF">ITF（偶数位数字）</option>
+            <option value="ITF14">ITF-14（14位）</option>
+            <option value="MSI">MSI</option>
+            <option value="MSI10">MSI + Mod10</option>
+            <option value="MSI11">MSI + Mod11</option>
+            <option value="MSI1010">MSI + Mod1010</option>
+            <option value="MSI1110">MSI + Mod1110</option>
+            <option value="pharmacode">Pharmacode（药品码）</option>
+            <option value="codabar">Codabar（自定义数字）</option>
+          </select>
+        </label>
+        <label class="field"><span>条码内容</span><input type="text" id="inpBcValue" value="NEC8-2026" spellcheck="false"></label>
+        <label class="check-inline"><input type="checkbox" id="chkBcText" checked> 显示文字</label>
+      </div>
+      <div class="row3">
+        <label class="field"><span>模块宽度 <b id="valBcWidth">2</b></span><input type="range" id="inpBcWidth" min="1" max="5" value="2"></label>
+        <label class="field"><span>条码高度 <b id="valBcHeight">100</b></span><input type="range" id="inpBcHeight" min="40" max="300" step="10" value="100"></label>
+        <span class="field-note">颜色沿用上方「码颜色 / 底色」</span>
+      </div>
+      <div class="hint-bar" id="bcHint"></div>
+    </div>
+  </section>
+
+  <!-- ============ 右列：预览 ============ -->
+  <section class="col-right">
+    <div class="card preview-card">
+      <div class="card-title">预览 <span class="err" id="renderErr"></span></div>
+      <div class="preview-box" id="qrPreview"></div>
+      <div class="preview-box hidden" id="barcodePreview"><canvas id="bcCanvas"></canvas></div>
+      <div class="action-row">
+        <button class="btn primary" id="btnDownload" type="button">下载 PNG</button>
+        <button class="btn" id="btnCopy" type="button">复制图片</button>
+        <span class="tip">带 Logo 时已自动使用 H 级纠错以保识别率</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">以图生图 · 识别已有二维码</div>
+      <div class="drop-zone" id="dropZone" tabindex="0">
+        <span class="dz-icon">🖼️</span>
+        <span>点击选择 / 拖拽 / Ctrl+V 粘贴二维码图片</span>
+        <span class="dz-sub">识别后可重新换肤美化</span>
+      </div>
+      <input type="file" id="decodeFile" accept="image/*" hidden>
+      <div class="decode-result hidden" id="decodeResult">
+        <div class="decode-label">识别结果</div>
+        <div class="decode-text" id="decodeText"></div>
+        <button class="btn primary sm" id="btnUseDecoded" type="button">用此内容重新生成（换肤美化）</button>
+      </div>
+    </div>
+
+    <div class="foot-tips">
+      <b>小贴士</b>：浅色码正式印刷前建议实机扫码验证；Logo 不超过码面 40%；WiFi/名片/日程内容码 iOS、安卓相机可直接识别；所有设置本地保存。
+    </div>
+  </section>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script src="vendor/qr-code-styling.js"></script>
+<script src="vendor/jsQR.js"></script>
+<script src="vendor/JsBarcode.js"></script>
+<script src="js/logos.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

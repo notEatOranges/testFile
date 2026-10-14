@@ -17,6 +17,7 @@
 ├── generate_task_list_v2.js                     # V2 版本（基于 xlsx-js-style，带单元格样式）
 ├── 运动促进健康_开发任务清单.xls / .xlsx         # 上述脚本的生成产物
 ├── mock-data-generator.html                     # 浏览器端测试数据生成器（单文件页面）
+├── qr-toolbox/                                  # 二维码·条形码生成器（网页+Chrome扩展同源，详见其 README）
 ├── flowchart.png                                # 业务流程图
 ├── lanhu_full_page.png                          # 蓝湖设计稿截图
 ├── tencent_doc_sample.png                       # 腾讯文档样例截图
