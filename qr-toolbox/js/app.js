@@ -68,7 +68,8 @@
     { k: 'email', label: '邮件', hint: '扫码拉起邮件客户端并预填主题与正文。' },
     { k: 'geo', label: '位置', hint: '扫码打开地图定位；纬度/经度可从地图分享链接里复制。' },
     { k: 'tel', label: '电话', hint: '扫码拉起拨号盘。' },
-    { k: 'sms', label: '短信', hint: '扫码拉起短信编辑（SMSTO 格式，安卓/iOS 兼容）。' }
+    { k: 'sms', label: '短信', hint: '扫码拉起短信编辑（SMSTO 格式，安卓/iOS 兼容）。' },
+    { k: 'decode', label: '📷 识图转码', hint: '以图生图：上传已有二维码图片 → 本地识别 → 自动重新出码，可任意换肤美化再导出。' }
   ];
   var F = { // 字段快捷定义
     t: function (k, label, ph) { return { k: k, label: label, type: 'text', ph: ph || '' }; },
@@ -78,6 +79,7 @@
     chk: function (k, label) { return { k: k, label: label, type: 'checkbox' }; }
   };
   var TYPE_FIELDS = {
+    decode: [],
     text: [{ k: 'text', label: '文本内容', type: 'textarea', ph: '输入任意文本、网址、JSON……' }],
     url: [F.t('url', '网址', 'https://example.com')],
     wifi: [F.t('ssid', '网络名称 SSID', '例如：Orange-5G'), F.t('password', '密码', '无密码可留空'),
@@ -136,6 +138,8 @@
       case 'sms':
         if (!(v.num || '').trim()) return '';
         return 'SMSTO:' + v.num.trim() + ':' + (v.body || '');
+      case 'decode':
+        return (state.values.text && state.values.text.text) || '';
     }
     return '';
   }
@@ -155,7 +159,15 @@
   }
 
   function renderForm() {
-    var box = $('typeForms'); box.innerHTML = '';
+    var box = $('typeForms');
+    var pane = $('decodePane');
+    if (state.type === 'decode') {
+      box.innerHTML = '';
+      pane.classList.remove('hidden');
+      return;
+    }
+    pane.classList.add('hidden');
+    box.innerHTML = '';
     var grid = document.createElement('div'); grid.className = 'form-grid';
     TYPE_FIELDS[state.type].forEach(function (f) {
       var w = document.createElement('label');
@@ -222,15 +234,23 @@
 
   /* ================= Logo 选择器 ================= */
   function renderLogoPicker() {
+    rebuildLogoCats();
+    drawLogoGrid();
+    $('logoSearch').addEventListener('input', drawLogoGrid);
+    $('logoCat').addEventListener('change', drawLogoGrid);
+  }
+  function rebuildLogoCats() {
     var cats = ['全部'];
     (window.LOGO_PRESETS || []).forEach(function (it) { if (cats.indexOf(it.c) < 0) cats.push(it.c); });
     var sel = $('logoCat');
-    if (!sel.options.length) {
-      cats.forEach(function (c) { var o = document.createElement('option'); o.value = o.textContent = c; sel.appendChild(o); });
-    }
-    drawLogoGrid();
-    $('logoSearch').addEventListener('input', drawLogoGrid);
-    sel.addEventListener('change', drawLogoGrid);
+    var cur = sel.value || '全部';
+    sel.innerHTML = '';
+    cats.forEach(function (c) { var o = document.createElement('option'); o.value = o.textContent = c; sel.appendChild(o); });
+    sel.value = cats.indexOf(cur) >= 0 ? cur : '全部';
+    var n = (window.LOGO_PRESETS || []).length;
+    var shared = 0;
+    (window.LOGO_PRESETS || []).forEach(function (it) { if (it.c === '用户共享') shared++; });
+    $('logoSub').textContent = shared ? (n - shared) + ' 款预设 + ' + shared + ' 款共享' : n + ' 款预设';
   }
   function drawLogoGrid() {
     var q = $('logoSearch').value.trim().toLowerCase();
@@ -269,7 +289,7 @@
     img.onload = function () {
       var S = 512, c = document.createElement('canvas'); c.width = c.height = S;
       var ctx = c.getContext('2d');
-      if (pad) { ctx.fillStyle = '#ffffff'; roundRectPath(ctx, 0, 0, S, S, S * 0.18); ctx.fill(); }
+      if (pad) { ctx.fillStyle = '#ffffff'; roundRectPath(ctx, 0, 0, S, S, S * 0.22); ctx.fill(); }
       var p = pad ? Math.round(S * 0.16) : 0, inner = S - p * 2;
       ctx.drawImage(img, p, p, inner, inner);
       cb(c.toDataURL('image/png'));
@@ -312,7 +332,7 @@
       width: state.size, height: state.size, type: 'canvas', data: data, margin: state.margin,
       image: state.logo.src || undefined,
       qrOptions: { errorCorrectionLevel: state.ec },
-      imageOptions: { hideBackgroundDots: state.logo.hideDots, imageSize: state.logo.size, margin: 0, crossOrigin: 'anonymous' },
+      imageOptions: { hideBackgroundDots: state.logo.pad ? false : state.logo.hideDots, imageSize: state.logo.size, margin: 0, crossOrigin: 'anonymous' },
       dotsOptions: withGrad({ type: state.dots }),
       cornersSquareOptions: withGrad({ type: state.cornerSquare }),
       cornersDotOptions: withGrad({ type: state.cornerDot }),
@@ -440,7 +460,9 @@
       }
       $('decodeText').textContent = code.data;
       $('decodeResult').classList.remove('hidden');
-      toast('识别成功');
+      state.values.text = { text: code.data };  // 识图模式下预览区立即按识别内容出码
+      persist(); schedule();
+      toast('识别成功，预览已更新');
     };
     img.onerror = function () { toast('图片加载失败'); };
     img.src = dataUrl;
@@ -452,8 +474,52 @@
     state.values.text = { text: txt };
     setModeUI();
     renderTypeTabs(); renderForm(); persist(); schedule();
-    toast('已填入识别内容，可任意换肤美化');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    toast('已切到文本模式，可任意编辑换肤');
+    if (document.querySelector('.col-right')) document.querySelector('.col-right').scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  /* ================= 共享 logo（Cloudflare Worker + KV） ================= */
+  var SHARE_API = 'https://logos.1996818.xyz';
+  function loadSharedLogos() {
+    if (!window.fetch) return;
+    fetch(SHARE_API + '/logos').then(function (r) { return r.ok ? r.json() : null; }).then(function (items) {
+      if (!items || !items.length) return;
+      window.LOGO_PRESETS = (window.LOGO_PRESETS || []).filter(function (it) { return it.c !== '用户共享'; });
+      items.forEach(function (it) {
+        window.LOGO_PRESETS.push({ id: 'u_' + it.id, n: it.n, c: '用户共享', a: '共享,上传,custom', d: it.d });
+      });
+      rebuildLogoCats(); drawLogoGrid();
+    }).catch(function () { /* 离线/接口不可用时静默用预设 */ });
+  }
+  function uploadSharedLogo(file) {
+    if (file.size > 400 * 1024) { toast('图片超过 400KB，请压缩后再共享'); return; }
+    var key = '';
+    try { key = localStorage.getItem('qrtb.shareKey') || ''; } catch (e) {}
+    if (!key) {
+      key = (window.prompt('首次共享需要输入共享口令（向仓库管理员索取）：') || '').trim();
+      if (!key) return;
+      try { localStorage.setItem('qrtb.shareKey', key); } catch (e) {}
+    }
+    var reader = new FileReader();
+    reader.onload = function () {
+      fetch(SHARE_API + '/logos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Key': key },
+        body: JSON.stringify({ name: file.name.replace(/\.[^.]+$/, '').slice(0, 24) || '共享Logo', dataUrl: reader.result })
+      }).then(function (r) {
+        if (r.status === 401) {
+          try { localStorage.removeItem('qrtb.shareKey'); } catch (e) {}
+          toast('共享口令不对，已清除，重试会再询问');
+          return null;
+        }
+        return r.ok ? r.json() : null;
+      }).then(function (j) {
+        if (!j) { toast('共享上传失败'); return; }
+        toast('已上传到共享库，所有人可见');
+        loadSharedLogos();
+      }).catch(function () { toast('网络异常，共享上传失败'); });
+    };
+    reader.readAsDataURL(file);
   }
 
   /* ================= 模式切换 & 绑定 ================= */
@@ -517,6 +583,10 @@
     });
     $('logoFile').addEventListener('change', function () {
       if (this.files && this.files[0]) applyLogoFromFile(this.files[0]);
+      this.value = '';
+    });
+    $('logoShareFile').addEventListener('change', function () {
+      if (this.files && this.files[0]) uploadSharedLogo(this.files[0]);
       this.value = '';
     });
     $('inpLogoSize').addEventListener('input', function () { $('valLogoSize').textContent = this.value + '%'; });
@@ -641,6 +711,7 @@
   document.addEventListener('DOMContentLoaded', function () {
     renderTypeTabs(); renderForm(); renderMacarons(); renderLogoPicker();
     bindControls(); restoreUI(); updateLogoUI(); setModeUI();
+    loadSharedLogos();
   });
 
   /* 调试/自检句柄 */

@@ -68,9 +68,36 @@ body {
 .col-left::-webkit-scrollbar-thumb:hover { background: #aeb1c2; }
 .col-left::-webkit-scrollbar-track, .col-right::-webkit-scrollbar-track { background: transparent; }
 @media (max-width: 860px) {
-  html, body { overflow: auto; }
-  .layout { grid-template-columns: 1fr; }
-  .col-left, .col-right { overflow: visible; }
+  html, body { overflow: auto; height: auto; min-height: 100%; }
+  body { font-size: 13px; -webkit-text-size-adjust: 100%; }
+  .layout { grid-template-columns: 1fr; height: auto; padding: 10px; gap: 10px; }
+  .col-left, .col-right { overflow: visible; min-height: 0; }
+  /* 顶栏精简 */
+  .topbar { padding: 6px 10px; flex-wrap: wrap; gap: 6px; }
+  .brand-name { font-size: 13px; }
+  .badge-offline { display: none; }
+  /* 类型 tabs 单行横滑 */
+  .type-tabs { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 3px; scrollbar-width: none; }
+  .type-tabs::-webkit-scrollbar { display: none; }
+  .type-tab { flex: none; padding: 5px 12px; }
+  /* 触控目标加大 */
+  .field input[type="text"], .field input[type="number"], .field input[type="search"],
+  .field textarea, .field select, .logo-tools input, .logo-tools select { padding: 8px 10px; font-size: 14px; }
+  .check-inline { padding-bottom: 8px; font-size: 13px; }
+  .check-inline input { width: 16px; height: 16px; }
+  .color-input input[type="color"] { width: 40px; height: 36px; }
+  .btn { padding: 9px 16px; font-size: 14px; }
+  .macaron { font-size: 12.5px; padding: 3px 10px 3px 4px; }
+  .macaron .dot { width: 19px; height: 19px; }
+  #typeForms .form-grid { grid-template-columns: 1fr; }
+  .preview-box { min-height: 240px; }
+  .logo-grid { max-height: 210px; }
+  .logo-tools { flex-wrap: wrap; }
+  .logo-tools input[type="search"] { flex: 1 1 140px; }
+  .logo-tools select { width: 104px; }
+  .drop-zone { padding: 18px 8px; font-size: 13px; }
+  .row3 { gap: 10px; }
+  .foot-tips { font-size: 11.5px; padding-bottom: 14px; }
 }
 
 /* ---------- 卡片（紧凑） ---------- */
@@ -159,9 +186,11 @@ input[type="range"] { accent-color: var(--accent); cursor: pointer; height: 22px
 .upload-btn {
   display: inline-flex; align-items: center; padding: 0 11px; border-radius: 7px;
   background: var(--accent); color: #fff; font-size: 12px; cursor: pointer; flex: none;
-  font-weight: 600; user-select: none;
+  font-weight: 600; user-select: none; white-space: nowrap;
 }
 .upload-btn:hover { filter: brightness(1.06); }
+.upload-btn.share { background: #1f9d63; }
+.upload-btn.share:hover { filter: brightness(1.08); }
 
 .logo-grid {
   display: grid; grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));

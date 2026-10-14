@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>二维码 · 条形码生成器</title>
 <link rel="stylesheet" href="css/style.css">
 </head>
@@ -11,7 +11,7 @@
   <div class="brand">
     <span class="brand-mark" id="brandMark"></span>
     <span class="brand-name">二维码 · 条形码生成器</span>
-    <span class="badge-offline" title="所有生成与识别均在本地完成，不上传任何数据">100% 本地离线</span>
+    <span class="badge-offline" title="生成与识别全部在浏览器本地完成；仅「共享logo上传」会按你主动操作联网">本地生成 · 数据不出浏览器</span>
   </div>
   <div class="mode-switch" id="modeSwitch">
     <button data-mode="qr" class="active" type="button">二维码</button>
@@ -20,13 +20,29 @@
 </header>
 
 <main class="layout">
-  <!-- ============ 左列：表单 ============ -->
+  <!-- ============ 左列：内容 + 样式 ============ -->
   <section class="col-left">
 
     <div class="card">
       <div class="card-title">内容 <span class="card-sub">选类型、填内容，右侧实时预览</span></div>
       <div class="type-tabs" id="typeTabs"></div>
       <div id="typeForms"></div>
+
+      <!-- 识图转码：作为内容类型存在（app.js 切换显隐，DOM 常驻以便事件绑定） -->
+      <div id="decodePane" class="hidden">
+        <div class="drop-zone" id="dropZone" tabindex="0">
+          <span class="dz-icon">🖼️</span>
+          <span>点击选择 / 拖拽 / Ctrl+V 粘贴二维码图片</span>
+          <span class="dz-sub">识别出的内容自动填回，任意换肤美化</span>
+        </div>
+        <input type="file" id="decodeFile" accept="image/*" hidden>
+        <div class="decode-result hidden" id="decodeResult">
+          <div class="decode-label">识别结果</div>
+          <div class="decode-text" id="decodeText"></div>
+          <button class="btn primary sm" id="btnUseDecoded" type="button">用此内容重新生成（换肤美化）</button>
+        </div>
+      </div>
+
       <div class="hint-bar hidden" id="typeHint"></div>
     </div>
 
@@ -102,26 +118,6 @@
       </details>
     </div>
 
-    <div class="card" id="logoCard">
-      <div class="card-title">
-        中心 Logo
-        <span class="card-sub">共 100 款预设，可搜索、可上传</span>
-        <span class="logo-current" id="logoCurrent">未使用</span>
-        <button class="mini-btn hidden" id="btnLogoRemove" type="button">移除</button>
-      </div>
-      <div class="logo-tools">
-        <input type="search" id="logoSearch" placeholder="搜索 logo：如 wifi / 购物 / github …">
-        <select id="logoCat"></select>
-        <label class="upload-btn">上传自定义<input type="file" id="logoFile" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden></label>
-      </div>
-      <div class="logo-grid" id="logoGrid"></div>
-      <div class="row3">
-        <label class="field"><span>Logo 大小 <b id="valLogoSize">40%</b></span><input type="range" id="inpLogoSize" min="20" max="60" value="40"></label>
-        <label class="check-inline"><input type="checkbox" id="chkLogoPad"> 白色衬底</label>
-        <label class="check-inline"><input type="checkbox" id="chkLogoHide" checked> 抠去底部码点</label>
-      </div>
-    </div>
-
     <div class="card hidden" id="barcodeCard">
       <div class="card-title">条形码设置</div>
       <div class="row3">
@@ -161,7 +157,7 @@
     </div>
   </section>
 
-  <!-- ============ 右列：预览 ============ -->
+  <!-- ============ 右列：预览 + Logo ============ -->
   <section class="col-right">
     <div class="card preview-card">
       <div class="card-title">预览 <span class="err" id="renderErr"></span></div>
@@ -174,23 +170,29 @@
       </div>
     </div>
 
-    <div class="card">
-      <div class="card-title">以图生图 · 识别已有二维码</div>
-      <div class="drop-zone" id="dropZone" tabindex="0">
-        <span class="dz-icon">🖼️</span>
-        <span>点击选择 / 拖拽 / Ctrl+V 粘贴二维码图片</span>
-        <span class="dz-sub">识别后可重新换肤美化</span>
+    <div class="card" id="logoCard">
+      <div class="card-title">
+        中心 Logo
+        <span class="card-sub" id="logoSub">100 款预设</span>
+        <span class="logo-current" id="logoCurrent">未使用</span>
+        <button class="mini-btn hidden" id="btnLogoRemove" type="button">移除</button>
       </div>
-      <input type="file" id="decodeFile" accept="image/*" hidden>
-      <div class="decode-result hidden" id="decodeResult">
-        <div class="decode-label">识别结果</div>
-        <div class="decode-text" id="decodeText"></div>
-        <button class="btn primary sm" id="btnUseDecoded" type="button">用此内容重新生成（换肤美化）</button>
+      <div class="logo-tools">
+        <input type="search" id="logoSearch" placeholder="搜索 logo：如 wifi / 购物 / github …">
+        <select id="logoCat"></select>
+        <label class="upload-btn" title="只存本机浏览器">本地上传<input type="file" id="logoFile" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden></label>
+        <label class="upload-btn share" title="上传到共享库，所有人可见">共享上传<input type="file" id="logoShareFile" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden></label>
+      </div>
+      <div class="logo-grid" id="logoGrid"></div>
+      <div class="row3">
+        <label class="field"><span>Logo 大小 <b id="valLogoSize">40%</b></span><input type="range" id="inpLogoSize" min="20" max="60" value="40"></label>
+        <label class="check-inline" title="白色衬底自带遮挡效果，将自动关闭抠点以保留圆角"><input type="checkbox" id="chkLogoPad"> 白色衬底</label>
+        <label class="check-inline" title="透明衬底时建议开启：把 logo 底下的码点抠掉，避免透出乱纹"><input type="checkbox" id="chkLogoHide" checked> 抠去底部码点</label>
       </div>
     </div>
 
     <div class="foot-tips">
-      <b>小贴士</b>：浅色码正式印刷前建议实机扫码验证；Logo 不超过码面 40%；WiFi/名片/日程内容码 iOS、安卓相机可直接识别；所有设置本地保存。
+      <b>小贴士</b>：浅色码正式印刷前建议实机扫码验证；Logo 不超过码面 40%；白色衬底会自动关闭「抠点」以保留圆角；WiFi/名片/日程内容码 iOS、安卓相机可直接识别；设置本地保存。
     </div>
   </section>
 </main>
