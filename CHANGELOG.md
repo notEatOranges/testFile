@@ -174,3 +174,15 @@
 - qr-toolbox：brand-mark 渐变方块 → 网址二维码图（icons/icon128.png?v=2，与 favicon 同一引用）；扩展
   弹窗 popup 左上角同步。v1.6.4
 - mock-data-pro：顶栏 dot 渐变 → 身份证.svg（assets/id-card.svg?v=2，与 favicon 同一引用）。v1.0.5
+
+### 2026-10-15（十二）：真修「列表滚动失效」（用户反馈「根本没改！」）
+- 上一轮只修了下拉弹层（fixed 定位），**列表本身**是另一个 bug：mock-pro 的结果表格收在
+  `#resultArea`（renderTable 注入 .table-wrap 的匿名容器）里，该层无任何 flex 约束 → 被内容撑到视口外
+  （904px），body overflow:hidden 锁死页面滚动 → 表格底部裁掉且无处可滚。flex 约束在匿名层断裂。
+- 修复：`#resultArea { flex:1 1 0; min-height:0; display:flex; flex-direction:column }` 传导约束，
+  .table-wrap 恢复 flex 填充。pro v1.0.9。qr-toolbox 结构不同（logoGrid 是 card 直接子级）已验证无此问题；
+  原单文件页 body 可滚不锁死，无此问题。
+- **排查大坑（本轮三次"改了没生效"的真凶）**：Windows 下多个 `python -m http.server` 可同绑 8126 端口
+  （SO_REUSEADDR），请求随机路由到不同目录的旧文件。已用 Get-CimInstance 按 CommandLine 匹配 http.server
+  全部清杀（_kill-httpserver.ps1），后续本地测试固定用 8128 端口。
+- 回归：30 行表格收在卡片内（678px）滚动正常、表头 sticky、底部圆角完整。
