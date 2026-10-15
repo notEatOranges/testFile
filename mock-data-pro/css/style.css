@@ -230,3 +230,7 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover { opacity:
 .cal-act { border: 0; background: transparent; color: var(--accent, #5b5fef); font-size: 12px; cursor: pointer;
   font-family: inherit; padding: 3px 8px; border-radius: 6px; }
 .cal-act:hover { background: #eef0ff; }
+
+button { -webkit-tap-highlight-color: transparent; }
+.mode-switch button:focus { outline: none; }
+.mode-switch button:focus-visible { outline: 2px solid var(--accent, #5b5fef); outline-offset: 2px; }

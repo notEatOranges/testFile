@@ -40,9 +40,6 @@ body {
   font-size: 10.5px; color: #3d8b5f; background: #e8f6ee;
   border: 1px solid #cfe9da; border-radius: 999px; padding: 1px 8px;
 }
-.mp-entry { color: var(--accent); text-decoration: none; font-size: 12px; font-weight: 600;
-  border: 1px solid var(--accent); background: #eef0ff; border-radius: 999px; padding: 5px 13px; white-space: nowrap; }
-.mp-entry:hover { background: var(--accent); color: #fff; }
 .mode-switch { display: flex; background: #eceefb; border-radius: 999px; padding: 2px; }
 .mode-switch button {
   border: 0; background: transparent; color: var(--ink-2);
@@ -205,6 +202,15 @@ select option { background: #fff; color: var(--ink); }
 .field-note { font-size: 10.5px; color: #a0a4b3; align-self: flex-end; padding-bottom: 7px; }
 .field b { color: var(--accent); font-weight: 600; }
 input[type="range"] { accent-color: var(--accent); cursor: pointer; height: 22px; }
+
+/* 按钮点击不出现方块高亮；键盘焦点才描边（圆角跟随） */
+button { -webkit-tap-highlight-color: transparent; }
+.mode-switch button:focus { outline: none; }
+.mode-switch button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.type-tab:focus, .btn:focus, .mini-btn:focus, .macaron:focus, .online-btn:focus, .cal-nav:focus, .cal-d:focus, .cal-act:focus { outline: none; }
+.type-tab:focus-visible, .btn:focus-visible, .mini-btn:focus-visible, .macaron:focus-visible,
+.online-btn:focus-visible, .cal-nav:focus-visible, .cal-d:focus-visible, .cal-act:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 8px; }
 
 /* ---------- 类型 tabs ---------- */
 .type-tabs { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 8px; }

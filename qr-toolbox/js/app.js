@@ -871,6 +871,7 @@
   function bindControls() {
     $('modeSwitch').addEventListener('click', function (e) {
       var b = e.target.closest('button'); if (!b) return;
+      if (b.dataset.mode === 'mp') { location.href = 'mp.html'; return; }  // 独立页路由
       state.mode = b.dataset.mode; persist(); setModeUI();
     });
 
