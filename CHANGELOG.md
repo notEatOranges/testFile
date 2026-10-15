@@ -88,3 +88,8 @@
   app.js（onlineSearch/onlineClear/在线模式渲染）、style.css。Worker 已部署（版本 71d64137）。
 - **测试**：线上代理 curl（wifi→40 个带 svg）；本地回归：搜索 40 项 0 破图 → 点击应用（presetId=if:
   material-symbols:wifi + rawSvg 缓存 + active 态）→ 马卡龙换色重染 → jsQR 解码成功 → 清除返回本地库（16 项）。
+
+### 2026-10-15：两页面补 favicon（用户反馈「都没有 icon 标志」）
+- qr-toolbox：head 加 icon/apple-touch-icon 引用 icons/icon128.png（复用扩展图标）
+- mock-data-generator.html：assets/mock-icon.png 入库（自 chrome-plugins 扩展图标复制）+ head 引用
+- 纯增量，不改逻辑；扩展形态 tab 图标本就来自 manifest，不受影响
