@@ -169,3 +169,8 @@
 - **原单文件页**（mock-data-generator.html）：用系统原生 select 弹层（无自绘组件），不受此 bug 影响；
   省市区可搜下拉本就在可滚容器内展开正常，无需处理。
 - 回归：条码格式 20 项弹层 fixed + 330px 自适应 + 底边视口内 + 可滚；mock 国家 13 项正常。
+
+### 2026-10-15（十一）：顶栏左上角图标与 favicon 统一（用户令「用和页签 favicon 一样的图」）
+- qr-toolbox：brand-mark 渐变方块 → 网址二维码图（icons/icon128.png?v=2，与 favicon 同一引用）；扩展
+  弹窗 popup 左上角同步。v1.6.4
+- mock-data-pro：顶栏 dot 渐变 → 身份证.svg（assets/id-card.svg?v=2，与 favicon 同一引用）。v1.0.5

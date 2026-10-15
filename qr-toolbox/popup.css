@@ -6,9 +6,7 @@ body {
   padding: 12px;
 }
 .head { display: flex; align-items: center; gap: 7px; margin-bottom: 10px; }
-.mark { width: 16px; height: 16px; border-radius: 4px; flex: none;
-  background: conic-gradient(from 90deg at 30% 30%, #23252e 25%, #fff 0 40%, #23252e 0 65%, #fff 0 80%, #23252e 0);
-  border: 1.5px solid #23252e; }
+.mark { width: 17px; height: 17px; border-radius: 4px; flex: none; object-fit: cover; }
 .head b { font-size: 13.5px; flex: 1; }
 .open-full { color: #5b5fef; text-decoration: none; font-size: 12px; white-space: nowrap; }
 .open-full:hover { text-decoration: underline; }

@@ -28,8 +28,8 @@ body {
   border-bottom: 1px solid var(--line);
 }
 .topbar h1 { font-size: 15px; font-weight: 700; letter-spacing: .3px; display: flex; align-items: center; gap: 9px; }
-.topbar h1 .dot { width: 19px; height: 19px; border-radius: 6px; flex: none;
-  background: linear-gradient(135deg, #5b5fef 0 40%, #22a06b 40% 75%, #e6962e 75%); }
+.topbar h1 .dot { width: 20px; height: 20px; border-radius: 5px; flex: none;
+  object-fit: cover; }
 .topbar .sub { font-size: 11px; color: #a0a4b3; font-weight: 400; margin-left: 2px; }
 .topbar .badge { font-size: 10.5px; color: #3d8b5f; background: #e8f6ee; border: 1px solid #cfe9da;
   border-radius: 999px; padding: 1.5px 9px; }

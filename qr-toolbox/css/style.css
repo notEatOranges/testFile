@@ -33,9 +33,8 @@ body {
   border-bottom: 1px solid var(--line);
 }
 .brand { display: flex; align-items: center; gap: 8px; }
-.brand-mark { width: 21px; height: 21px; border-radius: 6px; flex: none;
-  background: conic-gradient(from 90deg at 30% 30%, #23252e 25%, #fff 0 40%, #23252e 0 65%, #fff 0 80%, #23252e 0);
-  border: 2px solid #23252e; }
+.brand-mark { width: 22px; height: 22px; border-radius: 6px; flex: none;
+  object-fit: cover; border: 1px solid rgba(35,37,46,.15); }
 .brand-name { font-size: 14px; font-weight: 700; letter-spacing: .3px; }
 .badge-offline {
   font-size: 10.5px; color: #3d8b5f; background: #e8f6ee;
