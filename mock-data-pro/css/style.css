@@ -133,8 +133,9 @@ body {
 .result-table { border-collapse: collapse; width: 100%; font-size: 12px; }
 .result-table th { position: sticky; top: 0; background: #f6f7fc; color: var(--ink-2); font-weight: 600;
   padding: 7px 10px; text-align: left; white-space: nowrap; border-bottom: 1px solid var(--line); z-index: 2; }
-.result-table td { padding: 6px 10px; border-bottom: 1px solid #f0f1f6; white-space: nowrap;
-  max-width: 220px; overflow: hidden; text-overflow: ellipsis; }
+/* 所有列单行完整展示（不换行不截断），表格超宽时横向滚动 */
+.result-table td { padding: 6px 10px; border-bottom: 1px solid #f0f1f6; white-space: nowrap; }
+.result-table { min-width: max-content; }
 .result-table tr:hover td { background: #f8f9fe; }
 .copy-cell { cursor: copy; }
 .copy-cell:hover { color: var(--accent); }

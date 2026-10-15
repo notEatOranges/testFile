@@ -186,3 +186,9 @@
   （SO_REUSEADDR），请求随机路由到不同目录的旧文件。已用 Get-CimInstance 按 CommandLine 匹配 http.server
   全部清杀（_kill-httpserver.ps1），后续本地测试固定用 8128 端口。
 - 回归：30 行表格收在卡片内（678px）滚动正常、表头 sticky、底部圆角完整。
+
+### 2026-10-15（十三）：列表内容全部展示（用户令「所有内容都展示出来尤其地址」+「不要换行」）
+- 上一版尝试的「长内容换行」被否（用户令不要换行）→ 终版：**所有列单行完整展示**——去掉 nowrap+ellipsis+
+  max-width 截断，列随内容自然撑宽（table min-width:max-content），表格超宽时 .table-wrap 横向滚动查看，
+  地址/单位名/邮箱等长内容一字不落。v1.1.1
+- 回归：30 行地址零截断（scrollWidth==clientWidth）、单行 nowrap、横向滚动可达地址列。
