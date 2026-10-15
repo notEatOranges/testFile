@@ -4,14 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>二维码 · 条形码生成器</title>
-<link rel="icon" type="image/png" href="icons/icon128.png?v=1.8.1">
-<link rel="apple-touch-icon" href="icons/icon128.png?v=1.8.1">
-<link rel="stylesheet" href="css/style.css?v=1.8.1">
+<link rel="icon" type="image/png" href="icons/icon128.png?v=1.9.0">
+<link rel="apple-touch-icon" href="icons/icon128.png?v=1.9.0">
+<link rel="stylesheet" href="css/style.css?v=1.9.0">
 </head>
 <body>
 <header class="topbar">
   <div class="brand">
-    <img class="brand-mark" src="icons/icon128.png?v=1.8.1" alt="logo">
+    <img class="brand-mark" src="icons/icon128.png?v=1.9.0" alt="logo">
     <span class="brand-name"><span class="bn-main">二维码</span><span class="bn-sub"> · 条形码生成器</span></span>
     <span class="badge-offline" title="生成与识别全部在浏览器本地完成；仅「共享logo上传」会按你主动操作联网">本地生成</span>
   </div>
@@ -207,6 +207,16 @@
         <span id="onlineInfo">在线结果</span>
         <button type="button" id="btnOnlineClear">✕ 返回本地库</button>
       </div>
+      <div class="share-name-row hidden" id="shareNameRow">
+        <span>名称</span>
+        <input type="text" id="shareNameInput" maxlength="24" placeholder="共享库展示名">
+        <button class="btn sm" id="btnShareNameOk" type="button">上传/改名</button>
+        <button class="btn sm" id="btnShareNameCancel" type="button">取消</button>
+      </div>
+      <div class="share-key-row">
+        <span>共享口令</span>
+        <input type="password" id="shareKeyInput" autocomplete="off" placeholder="共享上传/改名用，填一次即可">
+      </div>
       <div class="logo-grid" id="logoGrid"></div>
       <div class="row3">
         <label class="field"><span>Logo 大小 <b id="valLogoSize">40%</b></span><input type="range" id="inpLogoSize" min="20" max="60" value="40"></label>
@@ -223,12 +233,12 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="vendor/qr-code-styling.js?v=1.8.1"></script>
-<script src="vendor/jsQR.js?v=1.8.1"></script>
-<script src="vendor/JsBarcode.js?v=1.8.1"></script>
-<script src="js/logos.js?v=1.8.1"></script>
-<script src="js/logos-index.js?v=1.8.1"></script>
-<script src="js/calendar.js?v=1.8.1"></script>
-<script src="js/app.js?v=1.8.1"></script>
+<script src="vendor/qr-code-styling.js?v=1.9.0"></script>
+<script src="vendor/jsQR.js?v=1.9.0"></script>
+<script src="vendor/JsBarcode.js?v=1.9.0"></script>
+<script src="js/logos.js?v=1.9.0"></script>
+<script src="js/logos-index.js?v=1.9.0"></script>
+<script src="js/calendar.js?v=1.9.0"></script>
+<script src="js/app.js?v=1.9.0"></script>
 </body>
 </html>

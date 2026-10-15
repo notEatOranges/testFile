@@ -808,58 +808,75 @@
         rebuildLogoCats(); drawLogoGrid();
       }).catch(function () { /* 离线时静默 */ });
   }
-  function shareKey(promptIfMissing) {
-    var key = '';
-    try { key = localStorage.getItem('qrtb.shareKey') || ''; } catch (e) {}
-    if (!key && promptIfMissing) {
-      key = (window.prompt('共享操作需要口令（见 NEC8_KEYs/keys/qr-logos-vault.md）：') || '').trim();
-      if (key) { try { localStorage.setItem('qrtb.shareKey', key); } catch (e) {} }
-    }
-    return key;
+  function shareKey() {  // 只读内联输入框/本地存储，绝不弹框
+    try { return localStorage.getItem('qrtb.shareKey') || ''; } catch (e) { return ''; }
+  }
+  function askShareKey() {
+    toast('请先在 Logo 卡填写共享口令');
+    var k = $('shareKeyInput');
+    if (k) { k.focus(); k.style.borderColor = 'var(--accent)'; setTimeout(function () { k.style.borderColor = ''; }, 1600); }
   }
   function shareFetch(url, opts) {
     opts = opts || {};
     var headers = opts.headers || {};
-    headers['X-Key'] = shareKey(true);
-    if (!headers['X-Key']) return Promise.reject(new Error('no-key'));
+    headers['X-Key'] = shareKey();
+    if (!headers['X-Key']) { askShareKey(); return Promise.reject(new Error('no-key')); }
     opts.headers = headers;
     return fetch(url, opts).then(function (r) {
       if (r.status === 401) {
         try { localStorage.removeItem('qrtb.shareKey'); } catch (e) {}
-        toast('口令不对，已清除，重试会再询问');
+        var inp = $('shareKeyInput'); if (inp) inp.value = '';
+        askShareKey();
         return null;
       }
       return r.ok ? r.json() : null;
     });
   }
+  var pendingShare = null;   // {type:'upload',file} 或 {type:'rename',item}
+  function showShareName(prefill) {
+    $('shareNameRow').classList.remove('hidden');
+    $('shareNameInput').value = prefill || '';
+    $('shareNameInput').focus();
+  }
   function uploadSharedLogo(file) {
     if (file.size > 400 * 1024) { toast('图片超过 400KB，请压缩后再共享'); return; }
-    var defName = file.name.replace(/\.[^.]+$/, '').slice(0, 24);
-    var name = (window.prompt('给这个 logo 起个名字（展示在共享库列表）：', defName || '共享Logo') || '').trim().slice(0, 24);
-    if (!name) return;
-    var reader = new FileReader();
-    reader.onload = function () {
-      shareFetch(SHARE_API + '/logos', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name, dataUrl: reader.result })
-      }).then(function (j) {
-        if (!j) { toast('共享上传失败'); return; }
-        toast('已提交到 git 仓库，Pages 构建约 1~2 分钟后所有人可见');
-      }).catch(function () { toast('网络异常，共享上传失败'); });
-    };
-    reader.readAsDataURL(file);
+    pendingShare = { type: 'upload', file: file };
+    showShareName(file.name.replace(/\.[^.]+$/, '').slice(0, 24) || '共享Logo');
   }
   function renameSharedLogo(it) {
-    var name = (window.prompt('把「' + it.n + '改名为：', it.n) || '').trim().slice(0, 24);
-    if (!name || name === it.n) return;
-    shareFetch(SHARE_API + '/logos/' + it.id.slice(2), {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name: name })
-    }).then(function (j) {
-      toast(j ? '已改名，1~2 分钟后生效' : '改名失败');
-    }).catch(function () { toast('网络异常，改名失败'); });
+    pendingShare = { type: 'rename', item: it };
+    showShareName(it.n);
+  }
+  function shareNameConfirm() {
+    var name = ($('shareNameInput').value || '').trim().slice(0, 24);
+    if (!pendingShare || !name) { toast('先填名称'); return; }
+    if (pendingShare.type === 'rename') {
+      var it = pendingShare.item;
+      if (name === it.n) { $('shareNameRow').classList.add('hidden'); return; }
+      shareFetch(SHARE_API + '/logos/' + it.id.slice(2), {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: name })
+      }).then(function (j) {
+        toast(j ? '已改名，1~2 分钟后生效' : '改名失败');
+      }).catch(function () { toast('网络异常，改名失败'); });
+    } else {
+      var file = pendingShare.file;
+      var reader = new FileReader();
+      reader.onload = function () {
+        shareFetch(SHARE_API + '/logos', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: name, dataUrl: reader.result })
+        }).then(function (j) {
+          if (!j) { toast('共享上传失败'); return; }
+          toast('已提交到 git 仓库，Pages 构建约 1~2 分钟后所有人可见');
+        }).catch(function () { toast('网络异常，共享上传失败'); });
+      };
+      reader.readAsDataURL(file);
+    }
+    pendingShare = null;
+    $('shareNameRow').classList.add('hidden');
   }
 
   /* ================= 模式切换 & 绑定 ================= */
@@ -1062,6 +1079,19 @@
     bindControls(); restoreUI(); updateLogoUI(); setModeUI();
     loadSharedLogos();
     enhanceAllSelects(document);
+    (function () {
+      var k = $('shareKeyInput');
+      if (!k) return;
+      try { k.value = localStorage.getItem('qrtb.shareKey') || ''; } catch (e) {}
+      k.addEventListener('input', function () {
+        try { localStorage.setItem('qrtb.shareKey', this.value.trim()); } catch (e) {}
+      });
+    })();
+    $('btnShareNameOk').addEventListener('click', shareNameConfirm);
+    $('btnShareNameCancel').addEventListener('click', function () {
+      pendingShare = null;
+      $('shareNameRow').classList.add('hidden');
+    });
   });
 
   /* ================= 下拉框组件（桌面自绘弹层；触屏保留原生滚轮体验） ================= */

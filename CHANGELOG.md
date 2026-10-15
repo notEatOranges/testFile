@@ -275,3 +275,18 @@
   （解码 QR 图 → 换皮肤 → 回读内容一致全链路实测）。v1.9.0（mp.js 1.0.4 / mp.css 1.0.4）
 - 修：解码模式下参数卡副标题仍显示「葵花码」——副标题改为按模式切换。
 - 技术边界说明：葵花码内编码的是微信 ticket URL，由微信服务器解析，任何工具都无法从码图还原 scene。
+
+### 2026-10-15（廿五）：设计系统 npm 包 nec-ui + 口令全面内联化（用户令「按钮输入框搞好看、封装成 npm、补 skills、别弹框要输入」）
+- **新增 nec-ui 包**（`nec-ui/`，随 testFile 仓库 Pages 发布）：设计 tokens（--nui-*）、卡片、按钮
+  （primary/ok/danger/ghost/sm）、**全类型输入框**（含 password/date/email 等，select 自绘箭头）、
+  勾选/颜色/行布局、模式切换/标签页/提示条/toast/拖放区/滚动条；组件脚本 `NUI.toast` /
+  `NUI.enhanceSelect`（自绘下拉，fixed 不裁切）/ `NUI.calendar.scan`（自绘日历），加载自动扫描。
+  引用三方式：Pages CDN / 仓库相对路径 / npm file:（npm publish 需账号，结构已就绪）。
+- **mp.html 接入**（nec-ui 在 mp.css 之后作为升级层）：小程序应用卡控件全部 nui 化（select→自绘下拉、
+  按钮→nui-btn、password→统一字段样式），彻底告别老古董样式。
+- **口令全面内联化（去 prompt）**：mp 工作台新增「服务口令」内联输入框（存 localStorage，输入即存、
+  change 即刷新应用列表；401 时清空并高亮该框——不再有任何 prompt 弹框）；主页共享 logo 的口令与
+  共享命名/改名 prompt 同步改为页面内联行（share-key-row / share-name-row）。
+- **新 skill `nec-ui`**（本机 %USERPROFILE%\.zcode\skills\ + VM103 ~/.zcode/skills/ 双份）：以后任何会话
+  写网页 UI 自动引用 nec-ui 规范（禁裸控件、禁 prompt、?v= bump、测试端口唯一等坑位全收录）。
+- qr v1.9.0（全部资源 ?v= 统一）

@@ -1,0 +1,10 @@
+{
+  "name": "nec-ui",
+  "version": "1.0.0",
+  "description": "Orange 的网页设计系统：设计 tokens + 按钮/输入框（全类型）/卡片/自绘下拉/日历/toast 公共组件。2026-10-15 抽取自 qr-toolbox 实战样式。",
+  "style": "dist/nec-ui.css",
+  "main": "dist/nec-ui.js",
+  "files": ["dist", "README.md"],
+  "keywords": ["ui", "design-system", "css", "components"],
+  "license": "MIT"
+}

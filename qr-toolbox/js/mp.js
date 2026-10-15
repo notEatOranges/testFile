@@ -13,24 +13,25 @@
 
   function toast(m) { var t = $('toast'); t.textContent = m; t.classList.add('show');
     clearTimeout(toast._t); toast._t = setTimeout(function () { t.classList.remove('show'); }, 2400); }
-  function getKey(force) {
-    var k = '';
-    try { k = localStorage.getItem('mpc.key') || ''; } catch (e) {}
-    if (!k || force) {
-      k = (window.prompt('小程序码服务口令（见 NEC8_KEYs/keys/mpcode-vault.md）：') || '').trim();
-      if (k) { try { localStorage.setItem('mpc.key', k); } catch (e) {} }
-    }
-    return k;
+  function getKey() {
+    try { return localStorage.getItem('mpc.key') || ''; } catch (e) { return ''; }
+  }
+  function askKey() {  // 缺口令：不弹框，高亮页面内的口令输入框
+    toast('请先在「小程序应用」卡填写服务口令');
+    var k = $('mpKey');
+    if (k) { k.focus(); k.style.borderColor = 'var(--nui-accent, #5b5fef)'; setTimeout(function () { k.style.borderColor = ''; }, 1600); }
   }
   function api(path, data) {
     return fetch(API + path, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Key': getKey(false) },
+      headers: { 'Content-Type': 'application/json', 'X-Key': getKey() },
       body: JSON.stringify(data)
     }).then(function (r) {
       if (r.status === 401) {
         try { localStorage.removeItem('mpc.key'); } catch (e) {}
-        throw new Error('口令不对，已清除，请重试再输入');
+        var inp = $('mpKey'); if (inp) inp.value = '';
+        askKey();
+        throw new Error('口令不对，请在「小程序应用」卡重新填写');
       }
       return r.json();
     }).then(function (j) {
@@ -64,6 +65,7 @@
         if (appsList.some(function (a) { return a.name === cur; })) sel.value = cur;
       }
       syncValidMark();
+      if (sel._nuiSync) sel._nuiSync();
     }).catch(function (e) { toast('应用列表加载失败：' + e.message + '，可点「刷新」重试'); });
   }
   function syncValidMark() {
@@ -93,7 +95,7 @@
         $('a_secret').value = '';
         toast(j.added ? '已添加「' + name + '」' : '已更新「' + name + '」');
         return loadApps();
-      }).then(function () { $('appSel').value = name; syncValidMark(); })
+      }).then(function () { $('appSel').value = name; syncValidMark(); if ($('appSel')._nuiSync) $('appSel')._nuiSync(); })
       .catch(function (e) { toast(e.message); });
   });
   $('btnAppDel').addEventListener('click', function () {
@@ -447,6 +449,15 @@
 
   /* ---------- 启动 ---------- */
   setMode('wxacode');
+  (function () {
+    var k = $('mpKey');
+    if (!k) return;
+    k.value = getKey();
+    k.addEventListener('input', function () {
+      try { localStorage.setItem('mpc.key', this.value.trim()); } catch (e) {}
+    });
+    k.addEventListener('change', function () { if (this.value.trim()) loadApps(); });
+  })();
   loadApps();
 
   /* 调试句柄 */
