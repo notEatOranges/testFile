@@ -6,7 +6,7 @@
 <title>二维码 · 条形码生成器</title>
 <link rel="icon" type="image/png" href="icons/icon128.png">
 <link rel="apple-touch-icon" href="icons/icon128.png">
-<link rel="stylesheet" href="css/style.css?v=1.4.0">
+<link rel="stylesheet" href="css/style.css?v=1.4.1">
 </head>
 <body>
 <header class="topbar">
@@ -188,9 +188,12 @@
       <div class="logo-tools">
         <input type="search" id="logoSearch" placeholder="搜索 logo：如 wifi / 购物 / github …">
         <button class="online-btn" id="btnOnlineSearch" type="button" title="接入在线图标库（Iconify 聚合，无需登录），搜到即可直接用">在线搜</button>
+      </div>
+      <div class="logo-actions">
         <select id="logoCat"></select>
+        <span class="actions-gap"></span>
         <label class="upload-btn" title="只存本机浏览器">本地上传<input type="file" id="logoFile" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden></label>
-        <label class="upload-btn share" title="上传到共享库，所有人可见">共享上传<input type="file" id="logoShareFile" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden></label>
+        <label class="upload-btn share" title="上传到 git 共享库，所有人可见；双击共享图标可改名">共享上传<input type="file" id="logoShareFile" accept="image/png,image/jpeg,image/webp,image/svg+xml" hidden></label>
       </div>
       <div class="online-bar hidden" id="onlineBar">
         <span id="onlineInfo">在线结果</span>
@@ -212,11 +215,11 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="vendor/qr-code-styling.js?v=1.4.0"></script>
-<script src="vendor/jsQR.js?v=1.4.0"></script>
-<script src="vendor/JsBarcode.js?v=1.4.0"></script>
-<script src="js/logos.js?v=1.4.0"></script>
-<script src="js/logos-index.js?v=1.4.0"></script>
-<script src="js/app.js?v=1.4.0"></script>
+<script src="vendor/qr-code-styling.js?v=1.4.1"></script>
+<script src="vendor/jsQR.js?v=1.4.1"></script>
+<script src="vendor/JsBarcode.js?v=1.4.1"></script>
+<script src="js/logos.js?v=1.4.1"></script>
+<script src="js/logos-index.js?v=1.4.1"></script>
+<script src="js/app.js?v=1.4.1"></script>
 </body>
 </html>

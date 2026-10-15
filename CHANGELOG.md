@@ -93,3 +93,8 @@
 - qr-toolbox：head 加 icon/apple-touch-icon 引用 icons/icon128.png（复用扩展图标）
 - mock-data-generator.html：assets/mock-icon.png 入库（自 chrome-plugins 扩展图标复制）+ head 引用
 - 纯增量，不改逻辑；扩展形态 tab 图标本就来自 manifest，不受影响
+
+### 2026-10-15（二）：Logo 卡工具行重排（用户反馈「上传按钮没必要跟搜索挤一块，看不清」）
+- 原单行 5 元素（搜索框/在线搜/分类/本地上传/共享上传）挤到「共享上传」被截断 → 拆两行：
+  行1=搜索框+在线搜（搜索动作）；行2=分类下拉+本地上传+共享上传（浏览与添加动作）
+- v1.4.1
