@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>小程序码工作台</title>
 <link rel="icon" type="image/png" href="icons/icon128.png?v=2">
-<link rel="stylesheet" href="css/mp.css?v=1.0.2">
+<link rel="stylesheet" href="css/mp.css?v=1.0.3">
 </head>
 <body>
 <header class="topbar">
@@ -24,6 +24,30 @@
 <main class="layout">
   <!-- 左列：生成参数 -->
   <section class="col-left">
+    <div class="card">
+      <div class="card-title">小程序应用 <span class="sub">AppID/secret 存服务器，口令保护</span></div>
+      <div class="row2">
+        <label class="field"><span>当前应用</span><select id="appSel"></select></label>
+        <label class="chk big"><input type="checkbox" id="appValid" disabled> 有效</label>
+      </div>
+      <div class="actions" style="margin-bottom:8px">
+        <button class="btn sm2" id="btnAppAdd" type="button">添加/更新</button>
+        <button class="btn sm2 danger" id="btnAppDel" type="button">删除</button>
+        <button class="btn sm2" id="btnAppReload" type="button">刷新</button>
+      </div>
+      <div id="appForm" class="hidden">
+        <div class="row2">
+          <label class="field"><span>名称</span><input type="text" id="a_name" placeholder="如：我的小程序"></label>
+          <label class="field"><span>AppID</span><input type="text" id="a_appid" placeholder="wx 开头"></label>
+        </div>
+        <label class="field"><span>secret（编辑已有应用时留空=保留原值）</span><input type="password" id="a_secret" autocomplete="new-password"></label>
+        <div class="actions" style="margin-bottom:8px">
+          <button class="btn primary" id="btnAppSave" type="button">保存到服务器</button>
+          <button class="btn" id="btnAppCancel" type="button">取消</button>
+        </div>
+      </div>
+    </div>
+
     <div class="card">
       <div class="card-title" id="paramTitle">小程序码参数 <span class="sub">葵花码，微信官方样式</span></div>
       <div id="formWxacode">
@@ -148,6 +172,6 @@
 <div class="toast" id="toast"></div>
 
 <script src="vendor/qr-code-styling.js?v=1.8.0"></script>
-<script src="js/mp.js?v=1.0.1"></script>
+<script src="js/mp.js?v=1.0.2"></script>
 </body>
 </html>

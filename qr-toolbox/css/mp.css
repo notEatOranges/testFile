@@ -93,3 +93,6 @@ input[type="range"] { accent-color: var(--accent); width: 100%; cursor: pointer;
 button { -webkit-tap-highlight-color: transparent; }
 .mode-switch button:focus { outline: none; }
 .mode-switch button:focus-visible { outline: 2px solid var(--accent, #5b5fef); outline-offset: 2px; }
+.btn.sm2 { padding: 5px 12px; font-size: 12px; flex: none; }
+.btn.danger { color: #d64545; border-color: #f0cfcf; }
+.btn.danger:hover { background: #fdf1f1; }

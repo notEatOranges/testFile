@@ -39,6 +39,73 @@
     });
   }
 
+  /* ---------- 小程序应用管理 ---------- */
+  var appsList = [];
+  function loadApps() {
+    return fetch(API + '/api/apps', { headers: { 'X-Key': getKey(false) } }).then(function (r) {
+      if (r.status === 401) { try { localStorage.removeItem('mpc.key'); } catch (e) {} throw new Error('口令不对'); }
+      return r.json();
+    }).then(function (list) {
+      appsList = list || [];
+      var sel = $('appSel');
+      var cur = sel.value;
+      sel.innerHTML = '';
+      if (!appsList.length) {
+        var o = document.createElement('option');
+        o.value = ''; o.textContent = '（无应用，点「添加/更新」）';
+        sel.appendChild(o);
+      } else {
+        appsList.forEach(function (a) {
+          var o = document.createElement('option');
+          o.value = a.name;
+          o.textContent = a.name + '（' + a.appid + (a.valid ? '' : ' · 未配置') + '）';
+          sel.appendChild(o);
+        });
+        if (appsList.some(function (a) { return a.name === cur; })) sel.value = cur;
+      }
+      syncValidMark();
+    }).catch(function (e) { toast('应用列表加载失败：' + e.message + '，可点「刷新」重试'); });
+  }
+  function syncValidMark() {
+    var a = appsList.filter(function (x) { return x.name === $('appSel').value; })[0];
+    $('appValid').checked = !!(a && a.valid);
+  }
+  $('appSel').addEventListener('change', syncValidMark);
+  $('btnAppReload').addEventListener('click', function () { loadApps().then(function () { toast('已刷新'); }); });
+  $('btnAppAdd').addEventListener('click', function () {
+    var cur = appsList.filter(function (x) { return x.name === $('appSel').value; })[0];
+    $('appForm').classList.remove('hidden');
+    $('a_name').value = cur ? cur.name : '';
+    $('a_appid').value = cur ? cur.appid : '';
+    $('a_secret').value = '';
+  });
+  $('btnAppCancel').addEventListener('click', function () { $('appForm').classList.add('hidden'); });
+  $('btnAppSave').addEventListener('click', function () {
+    var name = $('a_name').value.trim();
+    var appid = $('a_appid').value.trim();
+    var secret = $('a_secret').value;
+    var exists = appsList.some(function (x) { return x.name === name; });
+    if (!name || !appid) { toast('名称和 AppID 必填'); return; }
+    if (!secret && !exists) { toast('新应用需要填 secret'); return; }
+    api('/api/apps', { name: name, appid: appid, secret: secret || '•••保留原值•••' })
+      .then(function (j) {
+        $('appForm').classList.add('hidden');
+        $('a_secret').value = '';
+        toast(j.added ? '已添加「' + name + '」' : '已更新「' + name + '」');
+        return loadApps();
+      }).then(function () { $('appSel').value = name; syncValidMark(); })
+      .catch(function (e) { toast(e.message); });
+  });
+  $('btnAppDel').addEventListener('click', function () {
+    var name = $('appSel').value;
+    if (!name) { toast('没有可删除的应用'); return; }
+    if (!window.confirm('确定删除应用「' + name + '」？')) return;
+    api('/api/apps/delete', { name: name }).then(function (j) {
+      toast('已删除，剩余 ' + j.total + ' 个');
+      loadApps();
+    }).catch(function (e) { toast(e.message); });
+  });
+
   /* ---------- 模式切换 ---------- */
   var HINTS = {
     wxacode: '生成的是官方「小程序码」，需在 mp.weixin.qq.com 用小程序 AppID 调用（服务端已代填）。',
@@ -86,6 +153,7 @@
     toast('请求微信接口生成中…');
     api('/api/wxacode', {
       scene: scene,
+      app: $('appSel').value,
       page: $('f_page').value.trim(),
       env_version: $('f_env').value,
       width: parseInt($('f_width').value) || 430,
@@ -176,6 +244,7 @@
     $('btnGenLink').disabled = true;
     toast('请求微信接口生成中…');
     api(mode === 'scheme' ? '/api/scheme' : '/api/urllink', {
+      app: $('appSel').value,
       path: $('l_path').value.trim(),
       query: $('l_query').value.trim(),
       env_version: $('l_env').value,
@@ -299,6 +368,7 @@
 
   /* ---------- 启动 ---------- */
   setMode('wxacode');
+  loadApps();
 
   /* 调试句柄 */
   window.__mpdbg = {
