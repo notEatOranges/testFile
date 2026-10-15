@@ -358,3 +358,12 @@ input[type="range"] { accent-color: var(--accent); cursor: pointer; height: 22px
   box-shadow: 0 5px 16px rgba(0,0,0,.25); max-width: 80vw;
 }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ---------- 日期/日期时间输入美化 ---------- */
+input[type="date"], input[type="datetime-local"] { min-height: 28px; color-scheme: light; }
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  cursor: pointer; opacity: .5; transition: opacity .15s, filter .15s; padding: 2px;
+}
+input[type="date"]::-webkit-calendar-picker-indicator:hover,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
