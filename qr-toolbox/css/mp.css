@@ -96,3 +96,11 @@ button { -webkit-tap-highlight-color: transparent; }
 .btn.sm2 { padding: 5px 12px; font-size: 12px; flex: none; }
 .btn.danger { color: #d64545; border-color: #f0cfcf; }
 .btn.danger:hover { background: #fdf1f1; }
+/* ---------- 解码 ---------- */
+.drop-zone { display: flex; flex-direction: column; align-items: center; gap: 4px;
+  border: 1.5px dashed #c3c7dd; border-radius: 10px; padding: 18px 10px; text-align: center;
+  color: var(--ink-2, #6b7080); cursor: pointer; transition: all .15s; font-size: 12.5px; }
+.drop-zone:hover, .drop-zone.dragover { border-color: var(--accent, #5b5fef); background: #f2f3fe; color: var(--accent, #5b5fef); }
+.dz-icon { font-size: 20px; }
+.decode-result { margin-top: 10px; }
+.decode-result .link-out { min-height: 20px; }

@@ -110,23 +110,27 @@
   var HINTS = {
     wxacode: '生成的是官方「小程序码」，需在 mp.weixin.qq.com 用小程序 AppID 调用（服务端已代填）。',
     scheme: 'URL Scheme：微信外拉起小程序的 weixin:// 短串。生成后可直接出二维码，微信扫一扫进入。',
-    urllink: 'URL Link：https://wxaurl.cn/xx 短链。生成后可直接出二维码，微信扫码进入。'
+    urllink: 'URL Link：https://wxaurl.cn/xx 短链。生成后可直接出二维码，微信扫码进入。',
+    decode: '解码：上传小程序码/二维码图片，本地识别内容；Scheme/Link/链接可一键重新出码换样式。'
   };
   function setMode(m) {
     mode = m;
     var btns = $('modeSwitch').querySelectorAll('button');
     for (var i = 0; i < btns.length; i++) btns[i].classList.toggle('active', btns[i].dataset.mode === m);
     $('formWxacode').classList.toggle('hidden', m !== 'wxacode');
-    $('formLink').classList.toggle('hidden', m === 'wxacode');
+    $('formLink').classList.toggle('hidden', m === 'wxacode' || m === 'decode');
+    $('formDecode').classList.toggle('hidden', m !== 'decode');
     $('beauWxacode').classList.toggle('hidden', m !== 'wxacode');
     $('beauLink').classList.toggle('hidden', m === 'wxacode');
     $('paramTitle').childNodes[0].nodeValue =
-      m === 'wxacode' ? '小程序码参数 ' : (m === 'scheme' ? 'URL Scheme 参数 ' : 'URL Link 参数 ');
+      m === 'wxacode' ? '小程序码参数 ' : (m === 'scheme' ? 'URL Scheme 参数 ' : (m === 'urllink' ? 'URL Link 参数 ' : '解码结果 '));
     $('modeHint').textContent = HINTS[m];
     $('beauSub').textContent = m === 'wxacode' ? '海报合成' : '二维码样式';
+    var SUBS = { wxacode: '葵花码，微信官方样式', scheme: '微信外拉起小程序', urllink: '短链，微信扫码直进', decode: '本地识别，不上传图片' };
+    $('paramTitle').querySelector('.sub').textContent = SUBS[m] || '';
     // 葵花码画布仅在已生成图片后显示；占位文字反之
     $('poster').classList.toggle('hidden', m !== 'wxacode' || !codeImg);
-    $('ph').classList.toggle('hidden', m === 'wxacode' && !!codeImg);
+    $('ph').classList.toggle('hidden', (m === 'wxacode' && !!codeImg) || (m === 'decode' && !!linkStr));
     $('qrBox').classList.toggle('hidden', m === 'wxacode');
     if (m !== 'wxacode') renderLinkQr();
     else renderPoster();
@@ -278,7 +282,7 @@
       if (!linkStr && mode !== 'wxacode') {
         box.innerHTML = '';
         var ph = document.createElement('div'); ph.className = 'placeholder';
-        ph.textContent = '先点「生成链接并出码」'; box.appendChild(ph);
+        ph.textContent = mode === 'decode' ? '解码成功后自动出码' : '先点「生成链接并出码」'; box.appendChild(ph);
       }
       return;
     }
@@ -348,6 +352,81 @@
     if (this.value === 'upload') $('q_logoFile').click();
   });
 
+  /* ---------- 解码 ---------- */
+  function classifyMp(s) {
+    if (/^https?:\/\/weixin\.qq\.com\/q\//i.test(s)) return { type: 'wxaticket', label: '微信小程序码（葵花码）' };
+    if (/^weixin:\/\/dl\/business\//i.test(s)) return { type: 'scheme', label: 'URL Scheme' };
+    if (/^https:\/\/wxaurl\.cn\//i.test(s)) return { type: 'urllink', label: 'URL Link' };
+    if (/^#小程序:\/\//.test(s)) return { type: 'share', label: '微信分享口令' };
+    if (/^https?:\/\/./i.test(s)) return { type: 'url', label: '普通链接（可能配置了跳转小程序）' };
+    return { type: 'text', label: '文本' };
+  }
+  var decodeStr = '';
+  function showDecode(s) {
+    var c = classifyMp(s);
+    decodeStr = s;
+    $('decType').textContent = c.label;
+    $('decText').textContent = s;
+    var note = $('decNote');
+    if (c.type === 'wxaticket') {
+      note.textContent = '葵花码里编码的是微信 ticket，由微信服务器解析，scene/页面路径无法从码中还原；如需同款码请用原 scene 在「小程序码」模式重新生成。';
+      note.classList.remove('hidden');
+    } else {
+      note.classList.add('hidden');
+    }
+    $('decResult').classList.remove('hidden');
+    linkStr = s;
+    renderLinkQr();
+  }
+  function handleDecodeFile(file) {
+    if (!file || !/^image\//.test(file.type)) { toast('请选择图片文件'); return; }
+    var rd = new FileReader();
+    rd.onload = function () {
+      var img = new Image();
+      img.onload = function () {
+        var cv = document.createElement('canvas');
+        cv.width = img.naturalWidth || img.width; cv.height = img.naturalHeight || img.height;
+        var ctx = cv.getContext('2d'); ctx.drawImage(img, 0, 0);
+        var id = ctx.getImageData(0, 0, cv.width, cv.height);
+        var code = jsQR(id.data, cv.width, cv.height, { inversionAttempts: 'attemptBoth' });
+        if (!code || !code.data) { toast('未识别出二维码，请确保图片清晰完整'); return; }
+        showDecode(code.data);
+        toast('解码成功');
+      };
+      img.onerror = function () { toast('图片加载失败'); };
+      img.src = rd.result;
+    };
+    rd.readAsDataURL(file);
+  }
+  $('decZone').addEventListener('click', function () { $('decFile').click(); });
+  $('decFile').addEventListener('change', function () {
+    if (this.files && this.files[0]) handleDecodeFile(this.files[0]);
+    this.value = '';
+  });
+  ['dragover', 'dragenter'].forEach(function (ev) {
+    $('decZone').addEventListener(ev, function (e) { e.preventDefault(); this.classList.add('dragover'); });
+  });
+  ['dragleave', 'drop'].forEach(function (ev) {
+    $('decZone').addEventListener(ev, function (e) { e.preventDefault(); this.classList.remove('dragover'); });
+  });
+  $('decZone').addEventListener('drop', function (e) {
+    if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) handleDecodeFile(e.dataTransfer.files[0]);
+  });
+  document.addEventListener('paste', function (e) {
+    if (mode !== 'decode') return;
+    var items = e.clipboardData && e.clipboardData.items; if (!items) return;
+    for (var i = 0; i < items.length; i++) {
+      if (items[i].type && items[i].type.indexOf('image') === 0) {
+        var f = items[i].getAsFile(); if (f) { handleDecodeFile(f); e.preventDefault(); }
+        return;
+      }
+    }
+  });
+  $('btnDecUse').addEventListener('click', function () {
+    if (!decodeStr) return;
+    toast('已按解码内容出码，可在右侧换样式美化');
+  });
+
   /* ---------- 下载 ---------- */
   $('btnDown').addEventListener('click', function () {
     var a = document.createElement('a');
@@ -358,8 +437,8 @@
       a.href = cv.toDataURL('image/png');
     } else {
       var c = $('qrBox').querySelector('canvas');
-      if (!c || !linkStr) { toast('还没有生成链接二维码'); return; }
-      a.download = (mode === 'scheme' ? 'scheme' : 'urllink') + '-qr.png';
+      if (!c || !linkStr) { toast('还没有可下载的二维码'); return; }
+      a.download = (mode === 'scheme' ? 'scheme' : (mode === 'decode' ? 'decoded' : 'urllink')) + '-qr.png';
       a.href = c.toDataURL('image/png');
     }
     a.click();
