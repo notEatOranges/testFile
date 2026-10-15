@@ -1082,7 +1082,9 @@ function getAddressInfo() {
 function randomAddrInfo() {
   const C = COUNTRIES[currentCountry];
   if (C.regionSystem === 'cn-gbt2260') {
-    const prov = pick(ADDR_DATA);
+    // 默认随机地址排除港澳台（省级 34 选 1 抽中港澳台会导致身份证留空，用户感知为"偶发生成失败"）；
+    // 在自定义里显式选择港澳台省份仍按原逻辑生成（身份证留空 + toast 提示）
+    const prov = pick(ADDR_DATA.filter(p => p.p !== '台湾省' && p.p !== '香港特别行政区' && p.p !== '澳门特别行政区'));
     const city = pick(prov.cities);
     const dist = pick(city.ds);
     return { l1: prov.p, l2: city.c, l3: dist.n, code3: dist.code, iso: null, zip: null, area: null };
