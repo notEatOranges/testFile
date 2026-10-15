@@ -136,9 +136,24 @@ body {
   outline: none; width: 100%; transition: border-color .15s, box-shadow .15s;
 }
 .field textarea { resize: vertical; min-height: 52px; }
-.field input:focus, .field textarea:focus, .field select:focus, .logo-tools input:focus, .logo-tools select:focus {
+.field input:focus, .field textarea:focus, .field select:focus, .logo-tools input:focus, .logo-tools select:focus,
+.logo-actions select:focus {
   border-color: var(--accent); box-shadow: 0 0 0 2px rgba(91, 95, 239, .13); background: #fff;
 }
+
+/* ---------- 下拉框统一美化（去原生外观，自绘箭头） ---------- */
+select {
+  appearance: none; -webkit-appearance: none; -moz-appearance: none;
+  padding-right: 26px !important; cursor: pointer;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6.5' viewBox='0 0 10 6.5'%3E%3Cpath fill='%23808698' d='M.35 0h9.3c.3 0 .47.34.28.57L5.28 6.35a.36.36 0 0 1-.56 0L.07.57C-.12.34.05 0 .35 0z'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: right 9px center !important;
+  background-size: 9px 6px !important;
+  text-overflow: ellipsis;
+}
+select:hover { border-color: #c9cdea; }
+select:focus { background-color: #fff; }
+select option { background: #fff; color: var(--ink); }
 .row3 { display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
 .row3:last-child { margin-bottom: 0; }
 .check-inline { display: flex; align-items: center; gap: 5px; font-size: 11.5px; color: var(--ink-2);

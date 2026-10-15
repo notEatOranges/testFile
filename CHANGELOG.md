@@ -98,3 +98,10 @@
 - 原单行 5 元素（搜索框/在线搜/分类/本地上传/共享上传）挤到「共享上传」被截断 → 拆两行：
   行1=搜索框+在线搜（搜索动作）；行2=分类下拉+本地上传+共享上传（浏览与添加动作）
 - v1.4.1
+
+### 2026-10-15（三）：下拉框统一美化（用户反馈「下拉框样式搞好看点」）
+- 全站 select 去 Windows 原生外观（appearance:none）+ 自绘 SVG 细箭头（右侧内嵌、随主题灰），
+  padding-right 26 防文字压箭头，hover/focus 与输入框同款描边阴影，option 底色统一白
+- 踩坑：select{} 的 background-image 会被 .field select 的 background 简写（#fbfbfe）整组覆盖成 none
+  （特异性+简写重置），箭头消失；background-image/position/size 加 !important 后稳定
+- v1.4.3
