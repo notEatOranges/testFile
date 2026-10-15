@@ -6,7 +6,7 @@
 <title>二维码 · 条形码生成器</title>
 <link rel="icon" type="image/png" href="icons/icon128.png?v=2">
 <link rel="apple-touch-icon" href="icons/icon128.png?v=2">
-<link rel="stylesheet" href="css/style.css?v=1.5.2">
+<link rel="stylesheet" href="css/style.css?v=1.6.2">
 </head>
 <body>
 <header class="topbar">
@@ -34,6 +34,10 @@
     <div class="card">
       <div class="card-title">内容 <span class="card-sub">选类型、填内容，右侧实时预览</span></div>
       <div class="type-tabs" id="typeTabs"></div>
+      <div class="quick-parse" id="quickParse">
+        <textarea id="quickParseInput" rows="1" placeholder="粘贴快捷串或二维码内容，如：SSID=我家WiFi，密码=12345678，加密=WPA"></textarea>
+        <button class="online-btn" id="btnQuickParse" type="button" title="解析键值串填充字段；标准内容串（WIFI:/名片/网址等）自动识别类型">解析</button>
+      </div>
       <div id="typeForms"></div>
 
       <!-- 识图转码：作为内容类型存在（app.js 切换显隐，DOM 常驻以便事件绑定） -->
@@ -215,11 +219,11 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="vendor/qr-code-styling.js?v=1.5.2"></script>
-<script src="vendor/jsQR.js?v=1.5.2"></script>
-<script src="vendor/JsBarcode.js?v=1.5.2"></script>
-<script src="js/logos.js?v=1.5.2"></script>
-<script src="js/logos-index.js?v=1.5.2"></script>
-<script src="js/app.js?v=1.5.2"></script>
+<script src="vendor/qr-code-styling.js?v=1.6.2"></script>
+<script src="vendor/jsQR.js?v=1.6.2"></script>
+<script src="vendor/JsBarcode.js?v=1.6.2"></script>
+<script src="js/logos.js?v=1.6.2"></script>
+<script src="js/logos-index.js?v=1.6.2"></script>
+<script src="js/app.js?v=1.6.2"></script>
 </body>
 </html>

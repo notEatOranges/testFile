@@ -146,3 +146,17 @@
   旧默认值加载时自动清空（用户令「不要把这个网址作为默认值」）。v1.5.2
 - **书签图标不更新说明**：线上 favicon 已是新图标（身份证/网址二维码），但 Chrome 书签的 favicon 在收藏时
   固化、页面换图标不自动刷新——需删除书签重新收藏一次；为此 favicon URL 加 ?v=2 确保重收藏必拿新图。
+
+### 2026-10-15（九）：快捷粘贴解析 + 内容串解码（用户需求「各类型支持粘贴字符串生成 + 解码功能」）
+- 内容卡新增「解析」框（按类型提示格式）：两种能力——
+  ① 中文键值串快捷填充：如 WiFi 类型粘 `SSID=我家WiFi，密码=12345678，加密=WPA，隐藏=是`、名片粘
+  `姓名=张三，公司=XX，手机=138...`，字段别名宽容（中英文键名、全半角分隔）；
+  ② 标准内容串解码：粘贴 WIFI:/BEGIN:VCARD/BEGIN:VCALENDAR/mailto:/geo:/tel:/SMSTO:/网址 自动识别类型
+  并反解析填字段（WIFI 转义还原、VCARD 行解析、DTSTART→本地时间、mailto 百分号解码），即"内容串→人类可读"
+  的解码能力。v1.6.2
+- 踩坑：① 解析框最初用 input[type=text]——浏览器规范会剥掉粘贴内容里的换行，多行名片/日程串必碎，
+  改单行样式 textarea；② 本地测试端口被多个历史 http.server 进程同绑（Windows SO_REUSEADDR），请求随机
+  路由到不同目录的旧文件，症状"改了不生效"极具迷惑性——换新端口即刻全绿；③ heredoc 传 python 修 JS 正则
+  时反斜杠被吃（\ → \.），正则类修改必须走 Edit 工具。
+- 回归：WIFI 标准串（pass\;123→pass;123）、vCard 多行、VCALENDAR（DTSTART→datetime-local）、
+  mailto/geo/tel/SMSTO/url、名片/WiFi/日程中文 KV 全部通过。

@@ -160,6 +160,8 @@
     });
     var cur = TYPES.filter(function (t) { return t.k === state.type; })[0] || TYPES[0];
     $('typeHint').textContent = cur.hint; $('typeHint').classList.remove('hidden');
+    $('quickParse').classList.toggle('hidden', state.type === 'decode' || state.mode !== 'qr');
+    $('quickParseInput').placeholder = KV_PLACEHOLDER[state.type] || '粘贴内容解析填充';
   }
 
   function renderForm() {
@@ -462,6 +464,168 @@
     if (state.logo.src && state.ec !== 'H') {
       state.ec = 'H'; $('selEc').value = 'H';
     }
+  }
+
+
+  /* ================= 快捷粘贴解析（编码 KV 串 + 标准内容串双向解码） ================= */
+  var KV_MAP = {
+    wifi: { ssid: ['ssid', '名称', '网络', '网络名称', 'wifi名', 'wifi名称'],
+            password: ['密码', 'password', 'pass', 'pw'],
+            enc: ['加密', '加密方式', 'encryption', '安全', 'security'],
+            hidden: ['隐藏', '隐藏网络', 'hidden'] },
+    vcard: { name: ['姓名', '名字', 'name'], org: ['公司', '单位', 'org', 'organization'],
+             title: ['职位', '职称', '岗位', 'title'], tel: ['手机', '手机号', '电话', 'tel', 'phone'],
+             email: ['邮箱', 'email', 'mail', '电子邮件'], url: ['网址', '主页', '个人主页', 'url', '网站', '链接'],
+             addr: ['地址', '住址', 'addr', 'address'], note: ['备注', 'note', '说明'] },
+    event: { title: ['标题', '日程', '主题', '事件', 'summary'],
+             loc: ['地点', '位置', '场所', 'location'],
+             start: ['开始', '开始时间', 'start', '起始'], end: ['结束', '结束时间', 'end'],
+             desc: ['描述', '说明', 'description', '内容'] },
+    email: { to: ['收件人', '收件人邮箱', '邮箱', 'to', 'email'], subject: ['主题', '标题', 'subject'],
+             body: ['正文', '内容', 'body'] },
+    geo: { lat: ['纬度', 'lat', 'latitude'], lng: ['经度', 'lng', 'lon', 'longitude'],
+           raw: ['位置', '坐标', 'position', 'location'] },
+    tel: { num: ['号码', '电话', '手机', '手机号', 'tel', 'phone'] },
+    sms: { num: ['号码', '电话', '手机', '手机号', 'tel', 'phone'], body: ['内容', '短信', '正文', 'body', '信息'] },
+    url: { url: ['网址', '地址', 'url', '链接', 'link', '网站'] }
+  };
+  var KV_PLACEHOLDER = {
+    wifi: '粘贴：SSID=我家WiFi，密码=12345678，加密=WPA（也认 WIFI:T:… 标准串）',
+    vcard: '粘贴：姓名=张三，公司=XX科技，手机=138…（也认 BEGIN:VCARD 名片串）',
+    event: '粘贴：标题=周会，地点=会议室A，开始=2026-01-01 09:00（也认 VCALENDAR 串）',
+    email: '粘贴：收件人=a@b.com，主题=你好（也认 mailto: 链接）',
+    geo: '粘贴：纬度=39.9042，经度=116.4074 或 位置=39.9042,116.4074（也认 geo: 串）',
+    tel: '粘贴：号码=+8613800000000（也认 tel: 串）',
+    sms: '粘贴：号码=10086，内容=查询余额（也认 SMSTO: 串）',
+    url: '粘贴：网址=https://example.com 或任意链接',
+    text: '粘贴 WIFI:/名片/网址/geo:/SMSTO: 等内容串可自动识别为对应类型',
+    decode: ''
+  };
+  function normKey(s) { return String(s || '').trim().toLowerCase().replace(/[\s：:]/g, ''); }
+  function unesc(s) { return String(s || '').replace(/\\([;,:\\])/g, '$1'); }
+  function parseKV(str, type) {
+    var map = KV_MAP[type];
+    if (!map) return null;
+    var out = {};
+    String(str).split(/[，,；;\n]+/).forEach(function (part) {
+      var m = part.match(/^([^=：:=]{1,12})[=：:]\s*(.+)$/);
+      if (!m) return;
+      var key = normKey(m[1]);
+      var val = m[2].trim().replace(/^["'「]|["'」]$/g, '');
+      Object.keys(map).forEach(function (f) {
+        if (map[f].indexOf(key) >= 0 && out[f] === undefined) out[f] = val;
+      });
+    });
+    return Object.keys(out).length ? out : null;
+  }
+  function icalToLocal(v) {
+    var m = String(v).match(/^(\d{4})(\d{2})(\d{2})T?(\d{2})?(\d{2})?/);
+    if (!m) return '';
+    return m[1] + '-' + m[2] + '-' + m[3] + (m[4] ? 'T' + m[4] + ':' + (m[5] || '00') : '');
+  }
+  function parseStandard(str) {
+    var s = String(str).trim();
+    var mw = s.match(/^WIFI:\s*([\s\S]*?)\s*;?\s*$/i);
+    if (mw) {
+      var v = { enc: 'WPA/WPA2', ssid: '', password: '', hidden: false };
+      var VAL = /((?:\\.|[^;])*)/;
+      var t = mw[1].match(new RegExp('T:' + VAL.source, 'i'));
+      var ss = mw[1].match(new RegExp('S:' + VAL.source, 'i'));
+      var pp = mw[1].match(new RegExp('P:' + VAL.source, 'i'));
+      var hh = mw[1].match(/H:(true|false)/i);
+      if (t) { var te = unesc(t[1]).toUpperCase(); v.enc = te === 'WEP' ? 'WEP' : (te === 'NOPASS' ? '无密码' : 'WPA/WPA2'); }
+      if (ss) v.ssid = unesc(ss[1]);
+      if (pp) v.password = unesc(pp[1]);
+      if (hh) v.hidden = hh[1] === 'true';
+      if (v.ssid) return { type: 'wifi', values: v };
+    }
+    if (/^BEGIN:VCARD/i.test(s)) {
+      var v2 = {}, fn = '';
+      s.split(/\r?\n/).forEach(function (line) {
+        var mm = line.match(/^(FN|ORG|TITLE|TEL[^:]*|EMAIL[^:]*|URL|ADR[^:]*|NOTE|N):([\s\S]*)$/);
+        if (!mm) return;
+        var val = unesc(mm[2].trim());
+        if (mm[1] === 'FN') fn = val;
+        else if (mm[1] === 'N') { if (!fn) v2.name = val.replace(/;+$/, ''); }
+        else if (mm[1] === 'ORG') v2.org = val;
+        else if (mm[1] === 'TITLE') v2.title = val;
+        else if (mm[1].indexOf('TEL') === 0) v2.tel = v2.tel || val;
+        else if (mm[1].indexOf('EMAIL') === 0) v2.email = v2.email || val;
+        else if (mm[1] === 'URL') v2.url = v2.url || val;
+        else if (mm[1].indexOf('ADR') === 0) v2.addr = val.replace(/^;+/, '');
+        else if (mm[1] === 'NOTE') v2.note = val;
+      });
+      if (fn) v2.name = fn;
+      if (v2.name) return { type: 'vcard', values: v2 };
+    }
+    if (/^BEGIN:VCALENDAR/i.test(s)) {
+      var v3 = {};
+      s.split(/\r?\n/).forEach(function (line) {
+        var mm = line.match(/^(SUMMARY|LOCATION|DESCRIPTION|DTSTART|DTEND)[^:]*:([\s\S]*)$/);
+        if (!mm) return;
+        var val = unesc(mm[2].trim()).replace(/\\n/g, '\n');
+        if (mm[1] === 'SUMMARY') v3.title = val;
+        else if (mm[1] === 'LOCATION') v3.loc = val;
+        else if (mm[1] === 'DESCRIPTION') v3.desc = val;
+        else if (mm[1] === 'DTSTART') v3.start = icalToLocal(val);
+        else if (mm[1] === 'DTEND') v3.end = icalToLocal(val);
+      });
+      if (v3.title) return { type: 'event', values: v3 };
+    }
+    var me = s.match(/^mailto:([^?]+)(\?subject=([^&]*))?(?:&body=([\s\S]*))?$/i);
+    if (me) {
+      var v4 = { to: decodeURIComponent(me[1]) };
+      try {
+        if (me[3]) v4.subject = decodeURIComponent(me[3]);
+        if (me[4]) v4.body = decodeURIComponent(me[4]);
+      } catch (e) {}
+      return { type: 'email', values: v4 };
+    }
+    var mg = s.match(/^geo:([\d.+-]+),([\d.+-]+)/i);
+    if (mg) return { type: 'geo', values: { lat: mg[1], lng: mg[2] } };
+    var mt = s.match(/^tel:(.+)$/i);
+    if (mt) return { type: 'tel', values: { num: mt[1] } };
+    var ms = s.match(/^SMSTO:([^:]*):([\s\S]*)$/i);
+    if (ms) return { type: 'sms', values: { num: ms[1], body: ms[2] || '' } };
+    if (/^https?:\/\/./.test(s)) return { type: 'url', values: { url: s } };
+    return null;
+  }
+  function typeName(k) {
+    var hit = TYPES.filter(function (x) { return x.k === k; })[0];
+    return hit ? hit.label : k;
+  }
+  function quickParseAction() {
+    var raw = $('quickParseInput').value.trim();
+    if (!raw) { toast('先粘贴内容再解析'); return; }
+    var std = parseStandard(raw);
+    if (std) {
+      state.mode = 'qr';
+      state.type = std.type;
+      Object.keys(std.values).forEach(function (k) {
+        if (state.values[std.type][k] !== undefined) state.values[std.type][k] = std.values[k];
+      });
+      setModeUI(); renderTypeTabs(); renderForm(); persist(); schedule();
+      toast('已识别为「' + typeName(std.type) + '」并填充字段');
+      return;
+    }
+    var kv = parseKV(raw, state.type);
+    if (!kv) { toast('没能解析，试试 WIFI:/网址 等标准串，或检查字段名'); return; }
+    if (kv.enc !== undefined) {
+      var e = kv.enc.toLowerCase();
+      kv.enc = /wep/.test(e) ? 'WEP' : (/无|nopass|none/.test(e) ? '无密码' : 'WPA/WPA2');
+    }
+    if (kv.hidden !== undefined) kv.hidden = /^(true|1|是|y|yes|√)$/i.test(kv.hidden);
+    if (kv.raw !== undefined) {
+      var g = kv.raw.split(/[,，\s]+/);
+      if (g.length >= 2 && !isNaN(parseFloat(g[0])) && !isNaN(parseFloat(g[1]))) {
+        if (kv.lat === undefined) kv.lat = g[0];
+        if (kv.lng === undefined) kv.lng = g[1];
+      }
+      delete kv.raw;
+    }
+    Object.keys(kv).forEach(function (k) { state.values[state.type][k] = kv[k]; });
+    renderForm(); persist(); schedule();
+    toast('已按「' + typeName(state.type) + '」填充 ' + Object.keys(kv).length + ' 个字段');
   }
 
   /* ================= 渲染 ================= */
@@ -776,6 +940,11 @@
     $('chkBcText').addEventListener('change', function () { state.bc.showText = this.checked; persist(); schedule(); });
 
     /* 导出 */
+    $('btnQuickParse').addEventListener('click', quickParseAction);
+    $('quickParseInput').addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); quickParseAction(); }
+    });
+
     $('btnDownload').addEventListener('click', download);
     $('btnCopy').addEventListener('click', copyImage);
 
