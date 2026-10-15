@@ -13,7 +13,7 @@
       vcard: { name: '', org: '', title: '', tel: '', email: '', url: '', addr: '', note: '' },
       event: { title: '', loc: '', start: '', end: '', desc: '' },
       email: { to: '', subject: '', body: '' },
-      geo: { lat: '', lng: '' }, tel: { num: '' }, sms: { num: '', body: '' }
+      tel: { num: '' }, sms: { num: '', body: '' }, mp: { mpUrl: '' }
     };
   };
   var state = {
@@ -73,6 +73,7 @@
     { k: 'geo', label: '位置', hint: '扫码打开地图定位；纬度/经度可从地图分享链接里复制。' },
     { k: 'tel', label: '电话', hint: '扫码拉起拨号盘。' },
     { k: 'sms', label: '短信', hint: '扫码拉起短信编辑（SMSTO 格式，安卓/iOS 兼容）。' },
+    { k: 'mp', label: '小程序', hint: '「扫普通链接二维码打开小程序」：先在 mp.weixin.qq.com → 设置 → 扫普通链接二维码打开小程序，添加「URL 前缀 → 小程序页面」规则并放校验文件，审核通过后下方填入匹配前缀的链接生成二维码，微信扫码即直达。圆形小程序码需服务端 API（AppID+secret），网页无法直接生成；已有 URL Link/Scheme 可粘到「文本」出码。' },
     { k: 'decode', label: '📷 识图转码', hint: '以图生图：上传已有二维码图片 → 本地识别 → 自动重新出码，可任意换肤美化再导出。' }
   ];
   var F = { // 字段快捷定义
@@ -84,6 +85,7 @@
   };
   var TYPE_FIELDS = {
     decode: [],
+    mp: [F.t('mpUrl', '跳转链接（匹配已配置的 URL 前缀）', 'https://your-domain.com/mp/page')],
     text: [{ k: 'text', label: '文本内容', type: 'textarea', ph: '输入任意文本、网址、JSON……' }],
     url: [F.t('url', '网址', 'https://example.com')],
     wifi: [F.t('ssid', '网络名称 SSID', '例如：Orange-5G'), F.t('password', '密码', '无密码可留空'),
@@ -142,6 +144,8 @@
       case 'sms':
         if (!(v.num || '').trim()) return '';
         return 'SMSTO:' + v.num.trim() + ':' + (v.body || '');
+      case 'mp':
+        return (v.mpUrl || '').trim();
       case 'decode':
         return (state.values.text && state.values.text.text) || '';
     }
@@ -487,7 +491,8 @@
            raw: ['位置', '坐标', 'position', 'location'] },
     tel: { num: ['号码', '电话', '手机', '手机号', 'tel', 'phone'] },
     sms: { num: ['号码', '电话', '手机', '手机号', 'tel', 'phone'], body: ['内容', '短信', '正文', 'body', '信息'] },
-    url: { url: ['网址', '地址', 'url', '链接', 'link', '网站'] }
+    url: { url: ['网址', '地址', 'url', '链接', 'link', '网站'] },
+    mp: { mpUrl: ['链接', '网址', 'url', '跳转', '小程序链接', '跳转链接'] }
   };
   var KV_PLACEHOLDER = {
     wifi: '粘贴：SSID=我家WiFi，密码=12345678，加密=WPA（也认 WIFI:T:… 标准串）',
@@ -498,6 +503,7 @@
     tel: '粘贴：号码=+8613800000000（也认 tel: 串）',
     sms: '粘贴：号码=10086，内容=查询余额（也认 SMSTO: 串）',
     url: '粘贴：网址=https://example.com 或任意链接',
+    mp: '粘贴你在小程序后台配置的跳转链接（普通链接二维码模式）',
     text: '粘贴 WIFI:/名片/网址/geo:/SMSTO: 等内容串可自动识别为对应类型',
     decode: ''
   };
