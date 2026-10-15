@@ -164,7 +164,7 @@
     });
     var cur = TYPES.filter(function (t) { return t.k === state.type; })[0] || TYPES[0];
     $('typeHint').textContent = cur.hint; $('typeHint').classList.remove('hidden');
-    $('quickParse').classList.toggle('hidden', state.type === 'decode' || state.mode !== 'qr');
+    $('quickParse').classList.toggle('hidden', state.type === 'decode' || state.type === 'text' || state.mode !== 'qr');
     $('quickParseInput').placeholder = KV_PLACEHOLDER[state.type] || '粘贴内容解析填充';
   }
 
