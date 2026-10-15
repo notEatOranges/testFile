@@ -225,3 +225,16 @@
 ### 2026-10-15（十八）：文本类型不再显示解析框（用户令「文本不需要解析」）
 - 解析框仅在 WiFi/名片/日程/邮件/位置/电话/短信/小程序/网址 等结构化类型显示；文本与识图转码类型隐藏
   （文本直接填「文本内容」即可）。v1.7.4
+
+### 2026-10-15（十九）：小程序码服务端生成上线（用户令「葵花码/URL Scheme/URL Link 加服务器功能，服务器用 NEC8，做成独立页面，美化要精细」）
+- **服务端**（NEC8/VM103）：Node 零依赖服务 mpcode（docker 容器，127.0.0.1:8795，源码=qr-toolbox/mp-server/server.js，
+  服务器侧 ~/mpcode/），access_token 内存缓存（提前 5 分钟刷新），口令鉴权（X-Key，密钥档案=keys/mpcode-vault.md）。
+  接口：/api/wxacode（getwxacodeunlimit 葵花码）、/api/scheme、/api/urllink。经 cloudflared 新增 ingress 暴露
+  **https://mp.1996818.xyz**（config.yml.bak-mpcode-20261015 可回滚；CNAME→隧道，proxied）。
+- **前端独立页** mp.html（主页顶栏「小程序生成」入口路由跳转）：三模式——小程序码（scene/page/版本/尺寸/自动配色/
+  线条色/透明底）；URL Scheme；URL Link（path/query/版本/有效期→生成链接→本地出码）。
+- **美化**：葵花码=canvas 海报合成（背景色/双色渐变/背景图上传、码托盘圆形/圆角方/无+大小、阴影、码大小、
+  主副标题+字号+颜色、海报尺寸三档）；链接码=qr-code-styling 全样式（5 种码点、定位角、纯色/渐变、背景色、
+  微信图标 logo/上传、大小与留白）。
+- **待用户**：在 NEC8 ~/mpcode/config.json 填入小程序 AppID/secret（600 权限）后 `docker restart mpcode` 即全通；
+  已验证：health/鉴权 401/真口令正确报「未配置 AppID」。前端交互（模式切换/美化面板/错误通路）全通过。

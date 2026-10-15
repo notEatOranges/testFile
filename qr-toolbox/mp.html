@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>小程序码工作台</title>
+<link rel="icon" type="image/png" href="icons/icon128.png?v=2">
+<link rel="stylesheet" href="css/mp.css?v=1.0.0">
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <a class="back" href="index.html">‹ 生成器</a>
+    <b class="title">小程序码工作台</b>
+    <span class="badge">服务端生成 · 密钥不出服务器</span>
+  </div>
+  <div class="mode-switch" id="modeSwitch">
+    <button data-mode="wxacode" class="active" type="button">小程序码</button>
+    <button data-mode="scheme" type="button">URL Scheme</button>
+    <button data-mode="urllink" type="button">URL Link</button>
+  </div>
+</header>
+
+<main class="layout">
+  <!-- 左列：生成参数 -->
+  <section class="col-left">
+    <div class="card">
+      <div class="card-title" id="paramTitle">小程序码参数 <span class="sub">葵花码，微信官方样式</span></div>
+      <div id="formWxacode">
+        <div class="field"><span>scene 码内容 <b id="sceneCount">0/32</b></span>
+          <input type="text" id="f_scene" maxlength="32" placeholder="如：id=123&type=a（≤32 可见字符）"></div>
+        <div class="row2">
+          <label class="field"><span>页面路径 page（留空=主页）</span>
+            <input type="text" id="f_page" placeholder="pages/index/index"></label>
+          <label class="field"><span>版本</span>
+            <select id="f_env"><option value="release" selected>正式</option><option value="trial">体验</option><option value="develop">开发</option></select></label>
+        </div>
+        <div class="row2">
+          <label class="field"><span>码尺寸 px（280~1280）</span><input type="number" id="f_width" value="430" min="280" max="1280"></label>
+          <div class="field"><span>颜色</span>
+            <div class="checks">
+              <label class="chk"><input type="checkbox" id="f_auto"> 自动配色</label>
+              <label class="chk"><input type="checkbox" id="f_hyaline"> 透明底</label>
+            </div></div>
+        </div>
+        <label class="field"><span>线条颜色（未开自动配色时生效）</span>
+          <span class="color-inline"><input type="color" id="f_line" value="#000000"><input type="text" id="f_linehex" value="#000000" maxlength="7"></span></label>
+        <button class="btn primary" id="btnGenCode" type="button">生成小程序码</button>
+      </div>
+      <div id="formLink" class="hidden">
+        <div class="row2">
+          <label class="field"><span>页面路径 path</span><input type="text" id="l_path" placeholder="pages/index/index"></label>
+          <label class="field"><span>版本</span>
+            <select id="l_env"><option value="release" selected>正式</option><option value="trial">体验</option><option value="develop">开发</option></select></label>
+        </div>
+        <label class="field"><span>参数 query（如 a=1&b=2）</span><input type="text" id="l_query" placeholder="a=1&b=2"></label>
+        <div class="row2">
+          <label class="field"><span>有效期</span>
+            <select id="l_expire"><option value="0" selected>长期有效</option><option value="30">30 天</option><option value="7">7 天</option><option value="1">1 天</option></select></label>
+          <div class="field"><span>生成的链接</span><div class="link-out" id="linkOut">—</div></div>
+        </div>
+        <button class="btn primary" id="btnGenLink" type="button">生成链接并出码</button>
+      </div>
+      <div class="hint" id="modeHint">生成的是官方「小程序码」，需在 mp.weixin.qq.com 用小程序 AppID 调用（服务端已代填）。</div>
+    </div>
+  </section>
+
+  <!-- 右列：美化 + 预览 -->
+  <section class="col-right">
+    <div class="card">
+      <div class="card-title">美化 <span class="sub" id="beauSub">海报合成</span></div>
+
+      <!-- 葵花码海报美化 -->
+      <div id="beauWxacode">
+        <div class="group-title">背景</div>
+        <div class="row2">
+          <label class="field"><span>背景色</span><span class="color-inline"><input type="color" id="b_bg1" value="#f3f4f9"></span></label>
+          <label class="chk big"><input type="checkbox" id="b_grad"> 渐变</label>
+          <label class="field"><span>渐变至</span><span class="color-inline"><input type="color" id="b_bg2" value="#c44fe0"></span></label>
+        </div>
+        <label class="field"><span>背景图（上传后铺满）</span><label class="upload">上传背景图<input type="file" id="b_bgimg" accept="image/*" hidden></label></label>
+        <div class="group-title">码托盘（白底衬托）</div>
+        <div class="row2">
+          <label class="field"><span>形状</span>
+            <select id="b_tray"><option value="round">圆形</option><option value="rounded">圆角方</option><option value="none">无</option></select></label>
+          <label class="field"><span>大小 <b id="v_tray">62%</b></span><input type="range" id="b_traySize" min="45" max="85" value="62"></label>
+        </div>
+        <div class="row2">
+          <label class="field"><span>码大小 <b id="v_code">78%</b></span><input type="range" id="b_codeSize" min="55" max="95" value="78"></label>
+          <label class="chk big"><input type="checkbox" id="b_shadow" checked> 卡片阴影</label>
+        </div>
+        <div class="group-title">文字</div>
+        <div class="row2">
+          <label class="field"><span>主标题</span><input type="text" id="b_t1" placeholder="扫码进入小程序"></label>
+          <label class="field"><span>字号 <b id="v_t1s">44</b></span><input type="range" id="b_t1s" min="24" max="72" value="44"></label>
+        </div>
+        <div class="row2">
+          <label class="field"><span>副标题</span><input type="text" id="b_t2" placeholder="长按或微信扫码"></label>
+          <label class="field"><span>颜色</span><span class="color-inline"><input type="color" id="b_t2c" value="#6b7080"></span></label>
+        </div>
+        <div class="row2">
+          <label class="field"><span>海报尺寸</span>
+            <select id="b_size"><option value="800">800×1000</option><option value="960" selected>960×1200</option><option value="1200">1200×1500</option></select></label>
+          <label class="field"><span>标题颜色</span><span class="color-inline"><input type="color" id="b_t1c" value="#23252e"></span></label>
+        </div>
+      </div>
+
+      <!-- 链接二维码美化 -->
+      <div id="beauLink" class="hidden">
+        <div class="row2">
+          <label class="field"><span>码点形状</span>
+            <select id="q_dots"><option value="square" selected>经典方块</option><option value="dots">圆点</option><option value="rounded">圆角</option><option value="classy">优雅</option><option value="classy-rounded">优雅圆角</option></select></label>
+          <label class="field"><span>定位角</span>
+            <select id="q_cs"><option value="square" selected>方块</option><option value="dot">圆点</option><option value="extra-rounded">圆润</option></select></label>
+        </div>
+        <div class="row2">
+          <label class="field"><span>码颜色</span><span class="color-inline"><input type="color" id="q_fg" value="#000000"></span></label>
+          <label class="chk big"><input type="checkbox" id="q_grad"> 渐变</label>
+          <label class="field"><span>渐变至</span><span class="color-inline"><input type="color" id="q_fg2" value="#5b5fef"></span></label>
+        </div>
+        <div class="row2">
+          <label class="field"><span>背景色</span><span class="color-inline"><input type="color" id="q_bg" value="#ffffff"></span></label>
+          <label class="field"><span>Logo</span>
+            <select id="q_logo"><option value="none">无</option><option value="wechat" selected>微信图标</option><option value="upload">上传…</option></select></label>
+        </div>
+        <div class="row2">
+          <label class="field"><span>Logo 大小 <b id="q_lsz">22%</b></span><input type="range" id="q_logoSize" min="10" max="35" value="22"></label>
+          <label class="field"><span>留白 <b id="q_mg">12</b></span><input type="range" id="q_margin" min="0" max="40" value="12"></label>
+        </div>
+        <input type="file" id="q_logoFile" accept="image/*" hidden>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">预览 <span class="err" id="err"></span></div>
+      <div class="preview-box">
+        <canvas id="poster" width="960" height="1200" class="hidden"></canvas>
+        <div id="qrBox"></div>
+        <div class="placeholder" id="ph">填好左侧参数后生成</div>
+      </div>
+      <div class="actions">
+        <button class="btn primary" id="btnDown" type="button">下载 PNG</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script src="vendor/qr-code-styling.js?v=1.8.0"></script>
+<script src="js/mp.js?v=1.0.0"></script>
+</body>
+</html>
