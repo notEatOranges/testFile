@@ -62,22 +62,6 @@
         <button class="btn primary" id="btnGenLink" type="button">生成链接并出码</button>
       </div>
       <div class="hint" id="modeHint">生成的是官方「小程序码」，需在 mp.weixin.qq.com 用小程序 AppID 调用（服务端已代填）。</div>
-    </div>
-  </section>
-
-  <!-- 右列：预览 + 美化 -->
-  <section class="col-right">
-    <div class="card">
-      <div class="card-title">预览 <span class="err" id="err"></span></div>
-      <div class="preview-box">
-        <canvas id="poster" width="960" height="1200" class="hidden"></canvas>
-        <div id="qrBox"></div>
-        <div class="placeholder" id="ph">填好左侧参数后生成</div>
-      </div>
-      <div class="actions">
-        <button class="btn primary" id="btnDown" type="button">下载 PNG</button>
-      </div>
-    </div>
 
     <div class="card">
       <div class="card-title">美化 <span class="sub" id="beauSub">海报合成</span></div>
@@ -140,6 +124,22 @@
           <label class="field"><span>留白 <b id="q_mg">12</b></span><input type="range" id="q_margin" min="0" max="40" value="12"></label>
         </div>
         <input type="file" id="q_logoFile" accept="image/*" hidden>
+      </div>
+    </div>
+    </div>
+  </section>
+
+  <!-- 右列：预览 + 美化 -->
+  <section class="col-right">
+    <div class="card">
+      <div class="card-title">预览 <span class="err" id="err"></span></div>
+      <div class="preview-box">
+        <canvas id="poster" width="960" height="1200" class="hidden"></canvas>
+        <div id="qrBox"></div>
+        <div class="placeholder" id="ph">填好左侧参数后生成</div>
+      </div>
+      <div class="actions">
+        <button class="btn primary" id="btnDown" type="button">下载 PNG</button>
       </div>
     </div>
   </section>
