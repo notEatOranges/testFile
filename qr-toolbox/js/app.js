@@ -7,7 +7,7 @@
   var LS_KEY = 'qrtb.state.v3';
   var DEFAULT_VALUES = function () {
     return {
-      text: { text: 'https://1996818.xyz' },
+      text: { text: '' },
       url: { url: 'https://' },
       wifi: { ssid: '', password: '', enc: 'WPA/WPA2', hidden: false },
       vcard: { name: '', org: '', title: '', tel: '', email: '', url: '', addr: '', note: '' },
@@ -30,6 +30,10 @@
     var saved = JSON.parse(localStorage.getItem(LS_KEY) || 'null');
     if (saved) { deepMerge(state, saved); }
   } catch (e) { /* 忽略坏数据 */ }
+  // 清理历史默认值：早期版本把 https://1996818.xyz 存为默认文本，按用户令不再作为默认
+  (function () {
+    if (state.values.text && state.values.text.text === 'https://1996818.xyz') state.values.text.text = '';
+  })();
   // 防御：任何类型的 values 必须是「字段名->值」对象，坏结构回退默认
   (function () {
     var dv = DEFAULT_VALUES();
