@@ -1100,7 +1100,16 @@
       e.stopPropagation();
       var isOpen = list.classList.contains('open');
       closeAllDd();
-      if (!isOpen) { build(); sync(); list.classList.add('open'); }
+      if (!isOpen) {
+        build(); sync();
+        // fixed 定位：脱离任何 overflow 祖先的裁切，弹层永不截断
+        var rect = btn.getBoundingClientRect();
+        list.style.left = rect.left + 'px';
+        list.style.top = (rect.bottom + 4) + 'px';
+        list.style.width = rect.width + 'px';
+        list.style.maxHeight = Math.max(160, window.innerHeight - rect.bottom - 16) + 'px';
+        list.classList.add('open');
+      }
     });
     wrap.appendChild(btn);
     wrap.appendChild(list);
@@ -1114,6 +1123,8 @@
   }
   document.addEventListener('click', closeAllDd);
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeAllDd(); });
+  window.addEventListener('scroll', closeAllDd, true);   // fixed 弹层不随页面滚，滚动即收起
+  window.addEventListener('resize', closeAllDd);
 
   /* 调试/自检句柄 */
   window.__qrtb = { state: state, buildContent: buildContent, render: render };

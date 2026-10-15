@@ -1534,6 +1534,8 @@ document.getElementById('resultArea').addEventListener('click', function(e){
   function closeAll() { document.querySelectorAll('.dd-list.open').forEach(function (x) { x.classList.remove('open'); }); }
   document.addEventListener('click', closeAll);
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeAll(); });
+  window.addEventListener('scroll', closeAll, true);
+  window.addEventListener('resize', closeAll);
   document.querySelectorAll('select').forEach(function (sel) {
     var wrap = document.createElement('div'); wrap.className = 'dd';
     sel.parentNode.insertBefore(wrap, sel); wrap.appendChild(sel);
@@ -1549,6 +1551,11 @@ document.getElementById('resultArea').addEventListener('click', function(e){
       var isOpen = list.classList.contains('open');
       closeAll();
       if (isOpen) return;
+      var rect0 = btn.getBoundingClientRect();
+      list.style.left = rect0.left + 'px';
+      list.style.top = (rect0.bottom + 4) + 'px';
+      list.style.width = rect0.width + 'px';
+      list.style.maxHeight = Math.max(160, window.innerHeight - rect0.bottom - 16) + 'px';
       list.innerHTML = '';
       for (var i = 0; i < sel.options.length; i++) {
         (function (o) {

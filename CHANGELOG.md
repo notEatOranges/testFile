@@ -160,3 +160,12 @@
   时反斜杠被吃（\ → \.），正则类修改必须走 Edit 工具。
 - 回归：WIFI 标准串（pass\;123→pass;123）、vCard 多行、VCALENDAR（DTSTART→datetime-local）、
   mailto/geo/tel/SMSTO/url、名片/WiFi/日程中文 KV 全部通过。
+
+### 2026-10-15（十）：修下拉弹层被裁切且滚不动（用户反馈「列表内容超出去了还不能滚动，必须修复」）
+- **根因**：弹层 absolute 定位挂在 .dd 内，向上被带 overflow 的祖先（右栏 overflow:hidden / 左栏 overflow-y:auto）
+  裁切——贴近视口底部的下拉（如条码格式 20 项）下半被截断，滚轮事件落不到弹层上=「超出去还滚不动」。
+- **修复**：弹层打开时 JS 按按钮 getBoundingClientRect 动态 **fixed 定位**（彻底脱离任何 overflow 祖先），
+  宽=按钮宽、maxHeight=视口剩余高度（最小 160）、页面滚动/缩放即自动收起。qr v1.6.3 / mock-pro v1.0.4 同步。
+- **原单文件页**（mock-data-generator.html）：用系统原生 select 弹层（无自绘组件），不受此 bug 影响；
+  省市区可搜下拉本就在可滚容器内展开正常，无需处理。
+- 回归：条码格式 20 项弹层 fixed + 330px 自适应 + 底边视口内 + 可滚；mock 国家 13 项正常。

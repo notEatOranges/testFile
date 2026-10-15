@@ -148,9 +148,9 @@ body {
   transition: border-color .15s, box-shadow .15s; }
 .dd-btn:hover { border-color: #c9cdea; }
 .dd.open .dd-btn, .dd-btn:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(91,95,239,.13); background-color: #fff; }
-.dd-list { display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0; background: #fff;
+.dd-list { display: none; position: fixed; background: #fff;
   border: 1px solid #e3e5f0; border-radius: 10px; box-shadow: 0 10px 28px rgba(35,37,46,.16);
-  padding: 4px; max-height: 248px; overflow-y: auto; z-index: 60; }
+  padding: 4px; overflow-y: auto; z-index: 60; }
 .dd-list.open { display: block; }
 .dd-list::-webkit-scrollbar { width: 8px; }
 .dd-list::-webkit-scrollbar-thumb { border-radius: 99px; border: 2.5px solid transparent;
