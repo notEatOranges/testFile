@@ -226,7 +226,7 @@
         $('inpFgColor').value = m.fg; $('inpFgHex').value = m.fg;
         $('inpBgColor').value = m.bg; $('inpBgHex').value = m.bg;
         $('chkTransparent').checked = false;
-        persist(); schedule();
+        persist(); schedule(); retintLogo();
       });
       row.appendChild(b);
     });
@@ -236,45 +236,98 @@
   function renderLogoPicker() {
     rebuildLogoCats();
     drawLogoGrid();
+    bindGridAutoLoad();
     $('logoSearch').addEventListener('input', drawLogoGrid);
     $('logoCat').addEventListener('change', drawLogoGrid);
   }
+  /* 全量 logo 池：精选100（内嵌）+ 集合9900（文件化索引）+ 共享（git 库） */
+  function logoPool() {
+    var all = (window.LOGO_PRESETS || []).concat(window.LOGO_EXTRA || []);
+    (window.LOGO_SHARED || []).forEach(function (s) { all.push(s); });
+    return all;
+  }
+  function logoSrc(it) {
+    if (it.d) return it.d;
+    if (it.sh) return 'shared-logos/' + it.f;   // 共享库（git 存储）
+    return 'logos/' + it.f;                     // 内置集合文件
+  }
+  var GRID_BATCH = 120;
+  var gridState = { list: [], drawn: 0 };
   function rebuildLogoCats() {
+    var pool = logoPool();
     var cats = ['全部'];
-    (window.LOGO_PRESETS || []).forEach(function (it) { if (cats.indexOf(it.c) < 0) cats.push(it.c); });
+    pool.forEach(function (it) { if (cats.indexOf(it.c) < 0) cats.push(it.c); });
     var sel = $('logoCat');
     var cur = sel.value || '全部';
     sel.innerHTML = '';
     cats.forEach(function (c) { var o = document.createElement('option'); o.value = o.textContent = c; sel.appendChild(o); });
     sel.value = cats.indexOf(cur) >= 0 ? cur : '全部';
-    var n = (window.LOGO_PRESETS || []).length;
     var shared = 0;
-    (window.LOGO_PRESETS || []).forEach(function (it) { if (it.c === '用户共享') shared++; });
-    $('logoSub').textContent = shared ? (n - shared) + ' 款预设 + ' + shared + ' 款共享' : n + ' 款预设';
+    pool.forEach(function (it) { if (it.sh) shared++; });
+    var base = pool.length - shared;
+    $('logoSub').textContent = shared ? (base.toLocaleString() + ' 款内置 + ' + shared + ' 款共享') : base.toLocaleString() + ' 款内置';
   }
   function drawLogoGrid() {
     var q = $('logoSearch').value.trim().toLowerCase();
     var cat = $('logoCat').value;
-    var grid = $('logoGrid'); grid.innerHTML = '';
-    var list = (window.LOGO_PRESETS || []).filter(function (it) {
+    var pool = logoPool();
+    var list = pool.filter(function (it) {
       if (cat !== '全部' && it.c !== cat) return false;
       if (!q) return true;
-      return (it.n + ',' + it.a + ',' + it.id).toLowerCase().indexOf(q) >= 0;
+      return (it.n + ',' + (it.a || '') + ',' + it.id).toLowerCase().indexOf(q) >= 0;
     });
+    gridState.list = list; gridState.drawn = 0;
+    var grid = $('logoGrid'); grid.innerHTML = '';
     if (!list.length) {
       var e = document.createElement('div'); e.className = 'placeholder';
       e.style.cssText = 'grid-column:1/-1;text-align:center;padding:20px 0';
       e.textContent = '没有匹配的 logo，试试上传自定义'; grid.appendChild(e); return;
     }
-    list.forEach(function (it) {
-      var d = document.createElement('div');
-      d.className = 'logo-item' + (state.logo.name === it.n && state.logo.presetId === it.id ? ' active' : '');
-      var img = document.createElement('img'); img.src = it.d; img.alt = it.n; img.loading = 'lazy';
-      var sp = document.createElement('span'); sp.textContent = it.n;
-      d.title = it.n + '（' + it.c + '）';
-      d.appendChild(img); d.appendChild(sp);
-      d.addEventListener('click', function () { applyLogo(it.d, it.n, it.id); });
-      grid.appendChild(d);
+    appendLogoBatch();
+    grid.scrollTop = 0;
+  }
+  function appendLogoBatch() {
+    var grid = $('logoGrid');
+    var list = gridState.list;
+    if (gridState.drawn >= list.length) return;
+    var end = Math.min(list.length, gridState.drawn + GRID_BATCH);
+    for (var i = gridState.drawn; i < end; i++) {
+      (function (it) {
+        var d = document.createElement('div');
+        d.className = 'logo-item' + (state.logo.presetId === it.id ? ' active' : '');
+        d.setAttribute('data-id', it.id);
+        var img = document.createElement('img'); img.src = logoSrc(it); img.alt = it.n; img.loading = 'lazy';
+        var sp = document.createElement('span'); sp.textContent = it.n;
+        d.title = it.n + '（' + it.c + '）';
+        d.appendChild(img); d.appendChild(sp);
+        d.addEventListener('click', function () { applyLogo(logoSrc(it), it.n, it.id); });
+        if (it.sh) d.addEventListener('dblclick', function () { renameSharedLogo(it); });
+        grid.appendChild(d);
+      })(list[i]);
+    }
+    gridState.drawn = end;
+    var more = grid.querySelector('.logo-more');
+    if (more) more.remove();
+    if (gridState.drawn < list.length) {
+      more = document.createElement('div');
+      more.className = 'logo-more';
+      more.textContent = '上滑或点击加载更多（已显示 ' + gridState.drawn + '/' + list.length + '）';
+      more.addEventListener('click', function () { appendLogoBatch(); });
+      grid.appendChild(more);
+    }
+  }
+  function bindGridAutoLoad() {
+    var grid = $('logoGrid'), ticking = false;
+    grid.addEventListener('scroll', function () {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(function () {
+        ticking = false;
+        if (gridState.drawn < gridState.list.length &&
+            grid.scrollTop + grid.clientHeight >= grid.scrollHeight - 90) {
+          appendLogoBatch();
+        }
+      });
     });
   }
   function roundRectPath(ctx, x, y, w, h, r) {
@@ -297,19 +350,68 @@
     img.onerror = function () { toast('该图片无法解析，请换一张'); };
     img.src = src;
   }
+  /* SVG 预设 logo 染色：跟随「码颜色」（渐变时用起始色），图标与码面浑然一体 */
+  function tintSvg(svgText, color) {
+    return svgText
+      .replace(/currentColor/g, color)
+      .replace(/#111111/gi, color)
+      .replace(/#000(?![0-9a-fA-F])/g, color);
+  }
+  function isSvgSrc(src) {
+    return /\.svg(\?|$)/.test(src) || /^data:image\/svg\+xml/.test(src);
+  }
+  function decodeDataSvg(dataUrl) {
+    try {
+      var b64 = dataUrl.replace(/^data:image\/svg\+xml;base64,/, '');
+      return decodeURIComponent(escape(atob(b64)));
+    } catch (e) { return null; }
+  }
+  function prepareLogoSrc(src, cb) {
+    if (!isSvgSrc(src)) { cb(src, null); return; }
+    var done = function (svgText) {
+      if (!svgText) { cb(src, null); return; }
+      var color = state.grad.on ? state.grad.c1 : state.fg;
+      var tinted = tintSvg(svgText, color);
+      state.logo.rawSvg = svgText;                    // 保留原始文本供换色重染
+      cb('data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(tinted))), null);
+    };
+    var local = decodeDataSvg(src);
+    if (local !== null && local !== undefined) { done(local); return; }
+    if (window.fetch) {
+      fetch(src).then(function (r) { return r.ok ? r.text() : null; })
+        .then(function (t) { done(t); })
+        .catch(function () { cb(src, null); });
+    } else cb(src, null);
+  }
+  function retintLogo() {
+    if (!state.logo.rawSvg || !state.logo.src) return;
+    var color = state.grad.on ? state.grad.c1 : state.fg;
+    var tinted = tintSvg(state.logo.rawSvg, color);
+    var url = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(tinted)));
+    rasterize(url, state.logo.pad, function (png) { state.logo.src = png; schedule(); persist(); });
+  }
   function applyLogo(src, name, presetId) {
-    state.logo.raw = src;
-    rasterize(src, state.logo.pad, function (png) {
-      state.logo.src = png; state.logo.name = name || '自定义 Logo'; state.logo.presetId = presetId || null;
-      updateLogoUI(); maybeBumpEc(); persist(); schedule();
-      toast('已应用 logo：' + state.logo.name);
+    state.logo.raw = src; state.logo.rawSvg = null;
+    prepareLogoSrc(src, function (prepared) {
+      rasterize(prepared, state.logo.pad, function (png) {
+        state.logo.src = png; state.logo.name = name || '自定义 Logo'; state.logo.presetId = presetId || null;
+        updateLogoUI(); maybeBumpEc(); persist(); schedule();
+        toast('已应用 logo：' + state.logo.name);
+      });
     });
+  }
+  function updateLogoActive() {
+    var act = state.logo.presetId;
+    var items = document.querySelectorAll('#logoGrid .logo-item');
+    for (var i = 0; i < items.length; i++) {
+      items[i].classList.toggle('active', !!act && items[i].getAttribute('data-id') === act);
+    }
   }
   function updateLogoUI() {
     var el = $('logoCurrent'), rm = $('btnLogoRemove');
     if (state.logo.src) { el.textContent = '当前：' + state.logo.name; rm.classList.remove('hidden'); }
     else { el.textContent = '未使用'; rm.classList.add('hidden'); }
-    drawLogoGrid();
+    updateLogoActive();
   }
   function maybeBumpEc() {
     if (state.logo.src && state.ec !== 'H') {
@@ -478,48 +580,70 @@
     if (document.querySelector('.col-right')) document.querySelector('.col-right').scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  /* ================= 共享 logo（Cloudflare Worker + KV） ================= */
+  /* ================= 共享 logo（git 仓库存储：Worker 代理 commit，读取走静态 shared-logos/） ================= */
   var SHARE_API = 'https://logos.1996818.xyz';
   function loadSharedLogos() {
     if (!window.fetch) return;
-    fetch(SHARE_API + '/logos').then(function (r) { return r.ok ? r.json() : null; }).then(function (items) {
-      if (!items || !items.length) return;
-      window.LOGO_PRESETS = (window.LOGO_PRESETS || []).filter(function (it) { return it.c !== '用户共享'; });
-      items.forEach(function (it) {
-        window.LOGO_PRESETS.push({ id: 'u_' + it.id, n: it.n, c: '用户共享', a: '共享,上传,custom', d: it.d });
-      });
-      rebuildLogoCats(); drawLogoGrid();
-    }).catch(function () { /* 离线/接口不可用时静默用预设 */ });
+    fetch('shared-logos/index.json', { cache: 'no-cache' }).then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (items) {
+        window.LOGO_SHARED = (items || []).map(function (it) {
+          return { id: 'u_' + it.id, n: it.n, c: '用户共享', a: '共享,上传,custom', f: it.id + '.' + it.ext, sh: 1 };
+        });
+        rebuildLogoCats(); drawLogoGrid();
+      }).catch(function () { /* 离线时静默 */ });
+  }
+  function shareKey(promptIfMissing) {
+    var key = '';
+    try { key = localStorage.getItem('qrtb.shareKey') || ''; } catch (e) {}
+    if (!key && promptIfMissing) {
+      key = (window.prompt('共享操作需要口令（见 NEC8_KEYs/keys/qr-logos-vault.md）：') || '').trim();
+      if (key) { try { localStorage.setItem('qrtb.shareKey', key); } catch (e) {} }
+    }
+    return key;
+  }
+  function shareFetch(url, opts) {
+    opts = opts || {};
+    var headers = opts.headers || {};
+    headers['X-Key'] = shareKey(true);
+    if (!headers['X-Key']) return Promise.reject(new Error('no-key'));
+    opts.headers = headers;
+    return fetch(url, opts).then(function (r) {
+      if (r.status === 401) {
+        try { localStorage.removeItem('qrtb.shareKey'); } catch (e) {}
+        toast('口令不对，已清除，重试会再询问');
+        return null;
+      }
+      return r.ok ? r.json() : null;
+    });
   }
   function uploadSharedLogo(file) {
     if (file.size > 400 * 1024) { toast('图片超过 400KB，请压缩后再共享'); return; }
-    var key = '';
-    try { key = localStorage.getItem('qrtb.shareKey') || ''; } catch (e) {}
-    if (!key) {
-      key = (window.prompt('首次共享需要输入共享口令（向仓库管理员索取）：') || '').trim();
-      if (!key) return;
-      try { localStorage.setItem('qrtb.shareKey', key); } catch (e) {}
-    }
+    var defName = file.name.replace(/\.[^.]+$/, '').slice(0, 24);
+    var name = (window.prompt('给这个 logo 起个名字（展示在共享库列表）：', defName || '共享Logo') || '').trim().slice(0, 24);
+    if (!name) return;
     var reader = new FileReader();
     reader.onload = function () {
-      fetch(SHARE_API + '/logos', {
+      shareFetch(SHARE_API + '/logos', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Key': key },
-        body: JSON.stringify({ name: file.name.replace(/\.[^.]+$/, '').slice(0, 24) || '共享Logo', dataUrl: reader.result })
-      }).then(function (r) {
-        if (r.status === 401) {
-          try { localStorage.removeItem('qrtb.shareKey'); } catch (e) {}
-          toast('共享口令不对，已清除，重试会再询问');
-          return null;
-        }
-        return r.ok ? r.json() : null;
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: name, dataUrl: reader.result })
       }).then(function (j) {
         if (!j) { toast('共享上传失败'); return; }
-        toast('已上传到共享库，所有人可见');
-        loadSharedLogos();
+        toast('已提交到 git 仓库，Pages 构建约 1~2 分钟后所有人可见');
       }).catch(function () { toast('网络异常，共享上传失败'); });
     };
     reader.readAsDataURL(file);
+  }
+  function renameSharedLogo(it) {
+    var name = (window.prompt('把「' + it.n + '改名为：', it.n) || '').trim().slice(0, 24);
+    if (!name || name === it.n) return;
+    shareFetch(SHARE_API + '/logos/' + it.id.slice(2), {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: name })
+    }).then(function (j) {
+      toast(j ? '已改名，1~2 分钟后生效' : '改名失败');
+    }).catch(function () { toast('网络异常，改名失败'); });
   }
 
   /* ================= 模式切换 & 绑定 ================= */
@@ -555,6 +679,7 @@
         if (from !== 'color') c.value = v;
         if (from !== 'hex') hx.value = v.toLowerCase();
         persist(); schedule();
+        if (key === 'fg') retintLogo();
       }
       c.addEventListener('input', function () { set(c.value, 'color'); });
       hx.addEventListener('change', function () { set(hx.value.trim(), 'hex'); });
@@ -564,10 +689,10 @@
     $('chkTransparent').addEventListener('change', function () { state.transparent = this.checked; persist(); schedule(); });
 
     /* 渐变 */
-    $('chkGrad').addEventListener('change', function () { state.grad.on = this.checked; persist(); schedule(); });
+    $('chkGrad').addEventListener('change', function () { state.grad.on = this.checked; persist(); schedule(); retintLogo(); });
     $('selGradType').addEventListener('change', function () { state.grad.type = this.value; persist(); schedule(); });
     bindRange('inpGradRot', 'valGradRot', function (v) { state.grad.rot = v; });
-    $('inpGrad1').addEventListener('input', function () { state.grad.c1 = this.value; $('inpGrad1Hex').value = this.value; persist(); schedule(); });
+    $('inpGrad1').addEventListener('input', function () { state.grad.c1 = this.value; $('inpGrad1Hex').value = this.value; persist(); schedule(); retintLogo(); });
     $('inpGrad1Hex').addEventListener('change', function () {
       if (/^#[0-9a-fA-F]{6}$/.test(this.value)) { state.grad.c1 = this.value.toLowerCase(); $('inpGrad1').value = state.grad.c1; persist(); schedule(); }
     });

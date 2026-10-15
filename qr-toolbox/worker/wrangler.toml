@@ -12,7 +12,3 @@ compatibility_date = "2026-01-01"
 routes = [
   { pattern = "logos.1996818.xyz/*", zone_name = "1996818.xyz" }
 ]
-
-[[kv_namespaces]]
-binding = "QR_LOGOS"
-id = "c8b9e123c74e4f1ca82372970c76f12d"

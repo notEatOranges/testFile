@@ -4,18 +4,24 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>二维码 · 条形码生成器</title>
-<link rel="stylesheet" href="css/style.css?v=1.1.0">
+<link rel="stylesheet" href="css/style.css?v=1.3.1">
 </head>
 <body>
 <header class="topbar">
   <div class="brand">
     <span class="brand-mark" id="brandMark"></span>
-    <span class="brand-name">二维码 · 条形码生成器</span>
-    <span class="badge-offline" title="生成与识别全部在浏览器本地完成；仅「共享logo上传」会按你主动操作联网">本地生成 · 数据不出浏览器</span>
+    <span class="brand-name"><span class="bn-main">二维码</span><span class="bn-sub"> · 条形码生成器</span></span>
+    <span class="badge-offline" title="生成与识别全部在浏览器本地完成；仅「共享logo上传」会按你主动操作联网">本地生成</span>
   </div>
   <div class="mode-switch" id="modeSwitch">
-    <button data-mode="qr" class="active" type="button">二维码</button>
-    <button data-mode="barcode" type="button">条形码</button>
+    <button data-mode="qr" class="active" type="button" title="二维码">
+      <svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M0 0h7v7H0V0zm2 2v3h3V2H2zM9 0h7v7H9V0zm2 2v3h3V2h-3zM0 9h7v7H0V9zm2 2v3h3v-3H2zM9 9h2v2H9V9zm3 0h2v2h-2V9zm2 2h2v2h-2v-2zM9 13h2v2H9v-2zm3 1h3v2h-3v-2z"/></svg>
+      <span class="txt">二维码</span>
+    </button>
+    <button data-mode="barcode" type="button" title="条形码">
+      <svg viewBox="0 0 16 16" width="15" height="15" aria-hidden="true"><path fill="currentColor" d="M0 2h2v12H0V2zm3 0h1v12H3V2zm2 0h2v12H5V2zm3 0h1v12H8V2zm2 0h3v12h-3V2zm4 0h1v12h-1V2z"/></svg>
+      <span class="txt">条形码</span>
+    </button>
   </div>
 </header>
 
@@ -199,10 +205,11 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="vendor/qr-code-styling.js?v=1.1.0"></script>
-<script src="vendor/jsQR.js?v=1.1.0"></script>
-<script src="vendor/JsBarcode.js?v=1.1.0"></script>
-<script src="js/logos.js?v=1.1.0"></script>
-<script src="js/app.js?v=1.1.0"></script>
+<script src="vendor/qr-code-styling.js?v=1.3.1"></script>
+<script src="vendor/jsQR.js?v=1.3.1"></script>
+<script src="vendor/JsBarcode.js?v=1.3.1"></script>
+<script src="js/logos.js?v=1.3.1"></script>
+<script src="js/logos-index.js?v=1.3.1"></script>
+<script src="js/app.js?v=1.3.1"></script>
 </body>
 </html>
