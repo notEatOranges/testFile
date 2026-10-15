@@ -73,7 +73,43 @@
     .toast.show { opacity: 1; }
 
     .empty { text-align: center; color: #aaa; padding: 32px 0; font-size: 14px; }
-  </style>
+  
+/* ---------- 自定义日历/日期时间弹层 ---------- */
+.cal { position: relative; display: flex; flex-direction: column; flex: 1; min-width: 0; width: 100%; }
+.cal input { padding-right: 26px !important; }
+.cal input::-webkit-calendar-picker-indicator { display: none !important; }
+.cal-icon { position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+  border: 0; background: transparent; color: #808698; cursor: pointer; padding: 3px; line-height: 0;
+  border-radius: 5px; }
+.cal-icon:hover { color: var(--accent, #5b5fef); background: #eef0ff; }
+.cal-pop { display: none; position: fixed; width: 258px; background: #fff; border: 1px solid #e3e5f0;
+  border-radius: 12px; box-shadow: 0 12px 32px rgba(35, 37, 46, .18); padding: 10px; z-index: 70;
+  font-size: 12.5px; color: var(--ink, #23252e); user-select: none; }
+.cal-pop.open { display: block; }
+.cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.cal-title { font-size: 13px; font-weight: 700; }
+.cal-nav { border: 1px solid var(--line, #e6e8f0); background: #fff; color: var(--ink-2, #6b7080);
+  width: 24px; height: 24px; border-radius: 7px; cursor: pointer; font-size: 14px; line-height: 1; }
+.cal-nav:hover { color: var(--accent, #5b5fef); border-color: var(--accent, #5b5fef); }
+.cal-week { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; color: #a0a4b3;
+  font-size: 11px; margin-bottom: 2px; }
+.cal-week span { padding: 3px 0; }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+.cal-d { border: 0; background: transparent; font-family: inherit; font-size: 12px;
+  color: var(--ink, #23252e); height: 28px; border-radius: 7px; cursor: pointer; }
+.cal-d:hover { background: #f0f1fb; }
+.cal-d.dim { color: #c2c5d1; }
+.cal-d.today { box-shadow: inset 0 0 0 1px var(--accent, #5b5fef); color: var(--accent, #5b5fef); }
+.cal-d.sel { background: var(--accent, #5b5fef); color: #fff; font-weight: 700; }
+.cal-time { display: flex; align-items: center; gap: 5px; margin-top: 7px; color: var(--ink-2, #6b7080); font-size: 12px; }
+.cal-time select { flex: 1; border: 1px solid var(--line, #e6e8f0); border-radius: 7px; padding: 3px 4px;
+  background: #fbfbfe; font-family: inherit; font-size: 12px; color: var(--ink, #23252e); outline: none; }
+.cal-foot { display: flex; margin-top: 8px; }
+.cal-spring { flex: 1; }
+.cal-act { border: 0; background: transparent; color: var(--accent, #5b5fef); font-size: 12px; cursor: pointer;
+  font-family: inherit; padding: 3px 8px; border-radius: 6px; }
+.cal-act:hover { background: #eef0ff; }
+</style>
 </head>
 <body>
 <div class="container">
@@ -1672,6 +1708,142 @@ buildAddrSelects();
 bindPostcodeInput();
 bindLocateInput();
 generate();
+</script>
+<script>
+/* 自绘日历/日期时间弹层 —— 替换浏览器原生控件（桌面精确指针；触屏保留原生体验） */
+(function () {
+  'use strict';
+  if (!window.matchMedia || !window.matchMedia('(pointer: fine)').matches) return;
+  var pop = null, curInput = null, view = null;
+
+  function pad2(n) { return (n < 10 ? '0' : '') + n; }
+  function fmtDate(d) { return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
+  function parseVal(v) {
+    var m = String(v || '').match(/^(\d{4})-(\d{2})-(\d{2})/);
+    return m ? new Date(+m[1], +m[2] - 1, +m[3]) : null;
+  }
+  function close() { if (pop) pop.classList.remove('open'); curInput = null; }
+
+  function ensurePop() {
+    if (pop) return pop;
+    pop = document.createElement('div');
+    pop.className = 'cal-pop';
+    pop.addEventListener('click', function (e) { e.stopPropagation(); });
+    document.body.appendChild(pop);
+    document.addEventListener('click', close);
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
+    window.addEventListener('scroll', close, true);
+    window.addEventListener('resize', close);
+    return pop;
+  }
+
+  function open(input) {
+    curInput = input;
+    var base = parseVal(input.value) || new Date();
+    view = { y: base.getFullYear(), m: base.getMonth() };
+    var p = ensurePop();
+    build(p, input);
+    p.style.left = '0px'; p.style.top = '0px'; p.classList.add('open');
+    var r = input.getBoundingClientRect();
+    var ph = p.offsetHeight;
+    p.style.left = Math.max(8, Math.min(r.left, window.innerWidth - 276)) + 'px';
+    p.style.top = (r.bottom + 6 + ph > window.innerHeight - 8 ? Math.max(8, r.top - ph - 6) : r.bottom + 6) + 'px';
+  }
+
+  function build(p, input) {
+    var isDT = input.type === 'datetime-local';
+    var val = parseVal(input.value);
+    var today = new Date();
+    var html = '<div class="cal-head"><button type="button" class="cal-nav" data-a="prev">\u2039</button>' +
+      '<b class="cal-title">' + view.y + '\u5e74' + (view.m + 1) + '\u6708</b>' +
+      '<button type="button" class="cal-nav" data-a="next">\u203a</button></div><div class="cal-week">';
+    ['\u4e00', '\u4e8c', '\u4e09', '\u56db', '\u4e94', '\u516d', '\u65e5'].forEach(function (w) { html += '<span>' + w + '</span>'; });
+    html += '</div><div class="cal-grid">';
+    var off = (new Date(view.y, view.m, 1).getDay() + 6) % 7;  // 周一为首页
+    var start = new Date(view.y, view.m, 1 - off);
+    for (var i = 0; i < 42; i++) {
+      var d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i);
+      var cls = 'cal-d' + (d.getMonth() !== view.m ? ' dim' : '') +
+        (fmtDate(d) === fmtDate(today) ? ' today' : '') +
+        (val && fmtDate(d) === fmtDate(val) ? ' sel' : '');
+      html += '<button type="button" class="' + cls + '" data-d="' + fmtDate(d) + '">' + d.getDate() + '</button>';
+    }
+    html += '</div>';
+    if (isDT) {
+      var tv = input.value.match(/T(\d{2}):(\d{2})/);
+      var hh = tv ? tv[1] : '09', mm = tv ? tv[2] : '00';
+      html += '<div class="cal-time"><span>\u65f6\u95f4</span><select class="cal-hh">';
+      for (var h = 0; h < 24; h++) { var H = pad2(h); html += '<option' + (H === hh ? ' selected' : '') + '>' + H + '</option>'; }
+      html += '</select>:<select class="cal-mm">';
+      for (var mi = 0; mi < 60; mi++) { var M = pad2(mi); html += '<option' + (M === mm ? ' selected' : '') + '>' + M + '</option>'; }
+      html += '</select></div>';
+    }
+    html += '<div class="cal-foot"><button type="button" class="cal-act" data-a="clear">\u6e05\u9664</button>' +
+      '<span class="cal-spring"></span>' +
+      '<button type="button" class="cal-act" data-a="now">\u6b64\u523b</button></div>';
+    p.innerHTML = html;
+
+    p.querySelector('.cal-head').addEventListener('click', function (e) {
+      var b = e.target.closest('button'); if (!b) return;
+      if (b.dataset.a === 'prev') { view.m--; if (view.m < 0) { view.m = 11; view.y--; } }
+      else { view.m++; if (view.m > 11) { view.m = 0; view.y++; } }
+      build(p, input);
+    });
+    p.querySelector('.cal-grid').addEventListener('click', function (e) {
+      var b = e.target.closest('.cal-d'); if (!b || !b.dataset.d) return;
+      setValue(input, b.dataset.d, isDT);
+      close();
+    });
+    p.querySelector('.cal-foot').addEventListener('click', function (e) {
+      var b = e.target.closest('button'); if (!b) return;
+      if (b.dataset.a === 'clear') { input.value = ''; fire(input); }
+      else { var n = new Date(); setValue(input, fmtDate(n), isDT, n); }
+      close();
+    });
+  }
+
+  function setValue(input, dateStr, isDT, now) {
+    if (isDT) {
+      var hSel = pop.querySelector('.cal-hh'), mSel = pop.querySelector('.cal-mm');
+      var tv = input.value.match(/T(\d{2}):(\d{2})/);
+      var hh = hSel ? hSel.value : (now ? pad2(now.getHours()) : (tv ? tv[1] : '09'));
+      var mm = mSel ? mSel.value : (now ? pad2(now.getMinutes()) : (tv ? tv[2] : '00'));
+      input.value = dateStr + 'T' + hh + ':' + mm;
+    } else input.value = dateStr;
+    fire(input);
+  }
+  function fire(input) {
+    ['input', 'change'].forEach(function (ev) { input.dispatchEvent(new Event(ev, { bubbles: true })); });
+  }
+
+  function scan(root) {
+    (root || document).querySelectorAll('input[type="date"], input[type="datetime-local"]').forEach(function (input) {
+      if (input.getAttribute('data-cal')) return;
+      input.setAttribute('data-cal', '1');
+      var wrapEl = document.createElement('span');
+      wrapEl.className = 'cal';
+      input.parentNode.insertBefore(wrapEl, input);
+      wrapEl.appendChild(input);
+      var icon = document.createElement('button');
+      icon.type = 'button'; icon.className = 'cal-icon'; icon.title = '\u9009\u62e9\u65e5\u671f';
+      icon.innerHTML = '<svg viewBox="0 0 16 16" width="13" height="13"><path fill="currentColor" d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z"/></svg>';
+      wrapEl.appendChild(icon);
+      function toggle(e) {
+        e.preventDefault(); e.stopPropagation();
+        if (curInput === input && pop && pop.classList.contains('open')) close();
+        else open(input);
+      }
+      icon.addEventListener('click', toggle);
+      input.addEventListener('click', toggle);
+      input.addEventListener('input', function () { if (pop && pop.classList.contains('open') && curInput === input) close(); });
+    });
+  }
+
+  window.CalPicker = { scan: scan };
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { scan(document); });
+  else scan(document);
+})();
+
 </script>
 </body>
 </html>

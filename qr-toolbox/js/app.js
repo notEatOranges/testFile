@@ -211,6 +211,7 @@
     });
     box.appendChild(grid);
     enhanceAllSelects(box);
+    if (window.CalPicker) window.CalPicker.scan(box);
   }
 
   /* ================= 马卡龙配色 ================= */
