@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>测试数据生成器 · Pro</title>
+<link rel="icon" type="image/png" href="../assets/mock-icon.png">
+<link rel="stylesheet" href="css/style.css?v=1.0.0">
+</head>
+<body>
+<header class="topbar">
+  <h1><span class="dot"></span>测试数据生成器<span class="sub">仅供开发学习使用</span></h1>
+  <div class="links">
+    <span class="badge">100% 本地生成</span>
+    <a href="https://1996818.xyz/testFile/qr-toolbox/" target="_blank" rel="noopener">二维码工具 →</a>
+  </div>
+</header>
+<div class="container">
+
+  <div class="main-layout">
+    <div class="left-panel">
+      <div class="card">
+        <div class="card-title">生成选项</div>
+        <div class="batch-row">
+          <label>国家/地区</label>
+          <select id="countrySelect"></select>
+        </div>
+        <div class="batch-row">
+          <label>数量</label>
+          <select id="batchCount">
+            <option value="1">1 条</option>
+            <option value="5">5 条</option>
+            <option value="10">10 条</option>
+            <option value="20">20 条</option>
+            <option value="30" selected>30 条</option>
+            <option value="50">50 条</option>
+            <option value="100">100 条</option>
+            <option value="200">200 条</option>
+          </select>
+        </div>
+        <div class="checkbox-group" id="fieldChecks"></div>
+        <div class="btns">
+          <button class="btn btn-primary" id="btnGenerate">生成数据</button>
+          <button class="btn btn-success" id="btnExport">导出 CSV</button>
+          <button class="btn btn-outline" id="btnClear">清空</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">自定义设置（留空随机）</div>
+        <div class="settings-row">
+          <div class="setting-item">
+            <label>性别</label>
+            <select id="customGender">
+              <option value="">随机</option>
+              <option value="男">男</option>
+              <option value="女">女</option>
+            </select>
+          </div>
+        </div>
+        <div class="settings-row">
+          <div class="setting-item">
+            <label>出生日期</label>
+            <input type="date" id="customBirthday">
+          </div>
+          <span class="or-sep">或</span>
+          <div class="setting-item">
+            <label>年龄</label>
+            <input type="number" id="customAge" min="1" max="120" placeholder="岁" style="width:80px">
+          </div>
+        </div>
+        <div class="settings-row">
+          <div class="setting-item">
+            <label id="lblL1">省份</label>
+            <div class="ss" id="ssProvince"></div>
+          </div>
+          <div class="setting-item">
+            <label id="lblL2">城市</label>
+            <div class="ss" id="ssCity"></div>
+          </div>
+          <div class="setting-item">
+            <label id="lblL3">区县</label>
+            <div class="ss" id="ssDistrict"></div>
+          </div>
+          <div class="setting-item">
+            <label id="lblPostcode">邮政编码</label>
+            <input type="text" id="customPostcode" placeholder="留空随机" style="min-width:120px">
+          </div>
+        </div>
+        <div class="settings-row" id="locateWrap">
+          <div class="setting-item">
+            <label>按区划码定位</label>
+            <input type="text" id="locateCode" placeholder="输入6位码，如 320211" maxlength="6" inputmode="numeric" style="min-width:160px">
+          </div>
+        </div>
+        <div class="settings-tip" id="addrPreview">未选择地址（将随机生成）</div>
+      </div>
+    </div>
+
+    <div class="right-panel">
+      <div class="card">
+        <div class="card-title">生成结果 <span id="resultCount" style="color:#999;font-weight:400;font-size:13px"></span></div>
+        <div id="resultArea"><div class="empty">点击「生成数据」开始</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+
+<script src="js/app.js?v=1.0.0" defer></script>
+</body>
+</html>

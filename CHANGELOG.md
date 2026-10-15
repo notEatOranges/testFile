@@ -105,3 +105,15 @@
 - 踩坑：select{} 的 background-image 会被 .field select 的 background 简写（#fbfbfe）整组覆盖成 none
   （特异性+简写重置），箭头消失；background-image/position/size 加 !important 后稳定
 - v1.4.3
+
+### 2026-10-15（四）：下拉组件化（弹层卡片）+ 数据生成器 Pro 工程版（用户反馈两项）
+
+- **qr-toolbox v1.5.0**：原生 select 弹层浏览器无法用 CSS 定制 → 自绘 Dropdown 组件全站替换
+  （.dd 按钮承载闭合态，弹层=圆角卡片+阴影+悬停高亮+选中态+Esc/外点关闭；选中后同步隐藏 select 的值并
+  dispatch change，**全部现有监听零改动**；renderForm 动态表单/restoreUI 回显均已接线；
+  触屏 pointer:coarse 自动跳过保留原生滚轮）。
+- **mock-data-pro/ 工程版上线**（原单文件 mock-data-generator.html 保留不动）：同一套 qr 设计语言重写样式
+  （顶栏+卡片+渐变主按钮+新表格 hover/sticky 表头+省市区可搜下拉同款），body 取自本地化版（无内联事件），
+  css/js 外链 defer 拆分（重复访问走缓存）；js 加同款 Dropdown 组件（3 个下拉）。在线
+  https://1996818.xyz/testFile/mock-data-pro/
+- 回归：qr 7 个下拉组件化+弹层交互+动态表单覆盖；mock-pro 30 条自动生成、下拉联动数量（5 条）、0 原生 select 可见。

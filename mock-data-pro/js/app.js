@@ -1,0 +1,1572 @@
+
+// ─── 字段定义（共性字段；证件列由 computeFields 按国家动态追加）───
+const BASE_FIELDS = [
+  { key: 'name',         label: '姓名' },
+  { key: 'gender',       label: '性别' },
+  { key: 'birthday',     label: '生日' },
+  { key: 'ethnicity',    label: '民族' },
+  { key: 'phone',        label: '手机号' },
+  { key: 'landline',     label: '固定电话' },
+  { key: 'postcode',     label: '邮政编码' },
+  { key: 'provinceCode', label: '省/州码' },
+  { key: 'cityCode',     label: '市/区码' },
+  { key: 'bankName',     label: '银行名称' },
+  { key: 'bankCard',     label: '银行卡号' },
+  { key: 'creditCode',   label: '统一信用代码' },
+  { key: 'company',      label: '单位名称' },
+  { key: 'email',        label: '邮箱' },
+  { key: 'address',      label: '详细地址' },
+];
+
+// ─── 国外地区数据（ISO 3166-2 + 城市 + 邮编前缀 zip + 电话区号 area）───
+const FOREIGN_REGIONS = {
+  US: [
+    {name:'加利福尼亚',iso:'US-CA',cities:[{name:'洛杉矶',zip:'900',area:'213'},{name:'旧金山',zip:'941',area:'415'},{name:'圣地亚哥',zip:'921',area:'619'},{name:'圣何塞',zip:'951',area:'408'}]},
+    {name:'纽约',iso:'US-NY',cities:[{name:'纽约市',zip:'100',area:'212'},{name:'布法罗',zip:'142',area:'716'},{name:'罗切斯特',zip:'146',area:'585'}]},
+    {name:'得克萨斯',iso:'US-TX',cities:[{name:'休斯顿',zip:'770',area:'713'},{name:'达拉斯',zip:'752',area:'214'},{name:'奥斯汀',zip:'787',area:'512'}]},
+    {name:'伊利诺伊',iso:'US-IL',cities:[{name:'芝加哥',zip:'606',area:'312'},{name:'奥罗拉',zip:'605',area:'630'}]},
+    {name:'佛罗里达',iso:'US-FL',cities:[{name:'迈阿密',zip:'331',area:'305'},{name:'奥兰多',zip:'328',area:'407'}]},
+    {name:'华盛顿',iso:'US-WA',cities:[{name:'西雅图',zip:'981',area:'206'},{name:'斯波坎',zip:'992',area:'509'}]},
+    {name:'马萨诸塞',iso:'US-MA',cities:[{name:'波士顿',zip:'021',area:'617'},{name:'剑桥',zip:'021',area:'617'}]},
+  ],
+  GB: [
+    {name:'英格兰',iso:'GB-ENG',cities:[{name:'伦敦',zip:'SW',area:'020'},{name:'曼彻斯特',zip:'M',area:'0161'},{name:'伯明翰',zip:'B',area:'0121'},{name:'利物浦',zip:'L',area:'0151'},{name:'利兹',zip:'LS',area:'0113'}]},
+    {name:'苏格兰',iso:'GB-SCT',cities:[{name:'爱丁堡',zip:'EH',area:'0131'},{name:'格拉斯哥',zip:'G',area:'0141'}]},
+    {name:'威尔士',iso:'GB-WLS',cities:[{name:'加的夫',zip:'CF',area:'029'},{name:'斯旺西',zip:'SA',area:'1792'}]},
+    {name:'北爱尔兰',iso:'GB-NIR',cities:[{name:'贝尔法斯特',zip:'BT',area:'028'}]},
+  ],
+  JP: [
+    {name:'東京都',iso:'JP-13',cities:[{name:'千代田区',zip:'100',area:'03'},{name:'新宿区',zip:'160',area:'03'},{name:'渋谷区',zip:'150',area:'03'}]},
+    {name:'大阪府',iso:'JP-27',cities:[{name:'大阪市',zip:'530',area:'06'},{name:'堺市',zip:'590',area:'072'}]},
+    {name:'神奈川県',iso:'JP-14',cities:[{name:'横浜市',zip:'220',area:'045'},{name:'川崎市',zip:'210',area:'044'}]},
+    {name:'愛知県',iso:'JP-23',cities:[{name:'名古屋市',zip:'460',area:'052'}]},
+    {name:'北海道',iso:'JP-01',cities:[{name:'札幌市',zip:'060',area:'011'}]},
+    {name:'京都府',iso:'JP-26',cities:[{name:'京都市',zip:'600',area:'075'}]},
+  ],
+  KR: [
+    {name:'首尔特别市',iso:'KR-11',cities:[{name:'江南区',zip:'062',area:'02'},{name:'中区',zip:'045',area:'02'},{name:'松坡区',zip:'055',area:'02'}]},
+    {name:'釜山广域市',iso:'KR-26',cities:[{name:'海云台区',zip:'480',area:'051'}]},
+    {name:'京畿道',iso:'KR-41',cities:[{name:'水原市',zip:'164',area:'031'},{name:'高阳市',zip:'104',area:'031'}]},
+    {name:'仁川广域市',iso:'KR-28',cities:[{name:'延寿区',zip:'220',area:'032'}]},
+    {name:'大邱广域市',iso:'KR-27',cities:[{name:'寿城区',zip:'421',area:'053'}]},
+  ],
+  CA: [
+    {name:'安大略',iso:'CA-ON',cities:[{name:'多伦多',zip:'M',area:'416'},{name:'渥太华',zip:'K',area:'613'},{name:'密西沙加',zip:'L',area:'905'}]},
+    {name:'魁北克',iso:'CA-QC',cities:[{name:'蒙特利尔',zip:'H',area:'514'},{name:'魁北克市',zip:'G',area:'418'}]},
+    {name:'不列颠哥伦比亚',iso:'CA-BC',cities:[{name:'温哥华',zip:'V',area:'604'},{name:'维多利亚',zip:'V',area:'250'}]},
+    {name:'阿尔伯塔',iso:'CA-AB',cities:[{name:'卡尔加里',zip:'T',area:'403'},{name:'埃德蒙顿',zip:'T',area:'780'}]},
+  ],
+  AU: [
+    {name:'新南威尔士',iso:'AU-NSW',cities:[{name:'悉尼',zip:'200',area:'02'},{name:'纽卡斯尔',zip:'230',area:'02'}]},
+    {name:'维多利亚',iso:'AU-VIC',cities:[{name:'墨尔本',zip:'300',area:'03'},{name:'吉朗',zip:'322',area:'03'}]},
+    {name:'昆士兰',iso:'AU-QLD',cities:[{name:'布里斯班',zip:'400',area:'07'},{name:'黄金海岸',zip:'421',area:'07'}]},
+    {name:'西澳大利亚',iso:'AU-WA',cities:[{name:'珀斯',zip:'600',area:'08'}]},
+    {name:'南澳大利亚',iso:'AU-SA',cities:[{name:'阿德莱德',zip:'500',area:'08'}]},
+  ],
+  DE: [
+    {name:'柏林',iso:'DE-BE',cities:[{name:'柏林',zip:'101',area:'030'}]},
+    {name:'拜仁',iso:'DE-BY',cities:[{name:'慕尼黑',zip:'803',area:'089'},{name:'纽伦堡',zip:'904',area:'0911'}]},
+    {name:'黑森',iso:'DE-HE',cities:[{name:'法兰克福',zip:'603',area:'069'}]},
+    {name:'汉堡',iso:'DE-HH',cities:[{name:'汉堡',zip:'200',area:'040'}]},
+    {name:'北莱茵-威斯特法伦',iso:'DE-NW',cities:[{name:'科隆',zip:'506',area:'0221'},{name:'杜塞尔多夫',zip:'402',area:'0211'}]},
+  ],
+  FR: [
+    {name:'法兰西岛',iso:'FR-IDF',cities:[{name:'巴黎',zip:'750',area:'1'},{name:'凡尔赛',zip:'780',area:'1'}]},
+    {name:'普罗旺斯-蓝色海岸',iso:'FR-PAC',cities:[{name:'马赛',zip:'130',area:'4'},{name:'尼斯',zip:'060',area:'4'}]},
+    {name:'奥弗涅-罗讷-阿尔卑斯',iso:'FR-ARA',cities:[{name:'里昂',zip:'690',area:'4'},{name:'格勒诺布尔',zip:'380',area:'4'}]},
+    {name:'新阿基坦',iso:'FR-NAQ',cities:[{name:'波尔多',zip:'330',area:'5'}]},
+  ],
+  SG: [
+    {name:'中央区',iso:'SG-01',cities:[{name:'滨海湾',zip:'018',area:''},{name:'乌节路',zip:'228',area:''}]},
+    {name:'东陵区',iso:'SG-02',cities:[{name:'荷兰村',zip:'278',area:''}]},
+    {name:'西北区',iso:'SG-03',cities:[{name:'兀兰',zip:'730',area:''}]},
+    {name:'东北区',iso:'SG-04',cities:[{name:'实里达',zip:'790',area:''}]},
+    {name:'东南区',iso:'SG-05',cities:[{name:'马林百列',zip:'449',area:''}]},
+  ],
+  MY: [
+    {name:'吉隆坡',iso:'MY-14',cities:[{name:'武吉免登',zip:'55',area:'03'},{name:'蒂蒂旺沙',zip:'50',area:'03'}]},
+    {name:'槟城',iso:'MY-09',cities:[{name:'乔治市',zip:'10',area:'04'},{name:'北海',zip:'12',area:'04'}]},
+    {name:'柔佛',iso:'MY-01',cities:[{name:'新山',zip:'80',area:'07'},{name:'峇株巴辖',zip:'83',area:'07'}]},
+    {name:'雪兰莪',iso:'MY-12',cities:[{name:'莎阿南',zip:'40',area:'03'},{name:'八打灵再也',zip:'46',area:'03'}]},
+    {name:'沙巴',iso:'MY-16',cities:[{name:'亚庇',zip:'88',area:'088'}]},
+    {name:'砂拉越',iso:'MY-13',cities:[{name:'古晋',zip:'93',area:'082'}]},
+  ],
+  TH: [
+    {name:'曼谷',iso:'TH-10',cities:[{name:'挽凯',zip:'10',area:'02'},{name:'汇狂',zip:'10',area:'02'}]},
+    {name:'清迈',iso:'TH-50',cities:[{name:'清迈市',zip:'50',area:'053'}]},
+    {name:'普吉',iso:'TH-83',cities:[{name:'普吉市',zip:'83',area:'076'}]},
+    {name:'春武里',iso:'TH-20',cities:[{name:'芭提雅',zip:'20',area:'038'}]},
+  ],
+  RU: [
+    {name:'莫斯科市',iso:'RU-MOW',cities:[{name:'莫斯科',zip:'101',area:'495'},{name:'泽列诺格勒',zip:'124',area:'495'}]},
+    {name:'圣彼得堡市',iso:'RU-SPE',cities:[{name:'圣彼得堡',zip:'190',area:'812'}]},
+    {name:'莫斯科州',iso:'RU-MOS',cities:[{name:'巴拉希哈',zip:'143',area:'496'}]},
+    {name:'列宁格勒州',iso:'RU-LEN',cities:[{name:'加特契纳',zip:'188',area:'813'}]},
+    {name:'克拉斯诺达尔边疆区',iso:'RU-KDA',cities:[{name:'克拉斯诺达尔',zip:'350',area:'861'}]},
+  ],
+};
+
+// ─── 各国姓名库（罗马音/拉丁字母）───
+const NAME_POOLS = {
+  en: {
+    first:['James','John','Robert','Michael','William','David','Richard','Joseph','Thomas','Charles','Christopher','Daniel','Matthew','Anthony','Mark','Steven','Andrew','Joshua','Kevin','Brian','Mary','Patricia','Jennifer','Linda','Elizabeth','Barbara','Susan','Jessica','Sarah','Karen','Nancy','Lisa','Helen','Sandra','Donna','Carol','Ruth','Sharon','Michelle','Laura','Emily','Kimberly','Emma','Olivia','Sophia','Ava','Isabella','Mia','Charlotte','Amelia','Harper'],
+    last:['Smith','Johnson','Williams','Brown','Jones','Garcia','Miller','Davis','Rodriguez','Martinez','Hernandez','Lopez','Gonzalez','Wilson','Anderson','Thomas','Taylor','Moore','Jackson','Martin','Lee','Perez','Thompson','White','Harris','Sanchez','Clark','Ramirez','Lewis','Robinson','Walker','Young','Allen','King','Wright','Scott','Torres','Nguyen','Hill','Flores','Green','Adams','Nelson','Baker','Hall','Rivera','Campbell','Mitchell','Carter','Roberts'],
+  },
+  fr: {
+    first:['Jean','Pierre','Michel','André','Philippe','Louis','Nicolas','Antoine','Julien','Thomas','Lucas','Hugo','Nathan','Marie','Camille','Julie','Sophie','Emma','Chloé','Léa','Manon','Inès'],
+    last:['Martin','Bernard','Dubois','Thomas','Robert','Richard','Petit','Durand','Leroy','Moreau','Simon','Laurent','Lefebvre','Michel','Garcia','David','Bertrand','Roux','Vincent','Fournier','Girard','Bonnet'],
+  },
+  de: {
+    first:['Lukas','Ben','Jonas','Paul','Leon','Felix','Maximilian','Finn','Elias','Niklas','Tim','Fritz','Hannah','Mia','Emma','Sofia','Lena','Lea','Lina','Marie','Anna','Laura'],
+    last:['Müller','Schmidt','Schneider','Fischer','Weber','Meyer','Wagner','Becker','Schulz','Hoffmann','Schäfer','Koch','Bauer','Richter','Klein','Wolf','Schröder','Neumann','Schwarz','Zimmermann','Braun','Hofmann'],
+  },
+  jp: {
+    first:['Haruto','Yuto','Sota','Yuki','Hiroto','Riku','Ren','Aoi','Yamato','Kaito','Ryosuke','Yui','Hina','Yua','Sara','Yuna','Tsubasa','Hinata','Sakura','Sora'],
+    last:['Sato','Suzuki','Takahashi','Tanaka','Watanabe','Ito','Yamamoto','Nakamura','Kobayashi','Saito','Kato','Yoshida','Yamada','Sasaki','Yamaguchi','Matsumoto','Inoue','Kimura','Hayashi','Shimizu'],
+  },
+  kr: {
+    first:['Minjun','Seojun','Doyun','Hajun','Siyun','Jiho','Junyoung','Seoyeon','Seoyun','Jiwoo','Sooa','Hayoon','Yuna','Minji','Jiyeon','Eunji'],
+    last:['Kim','Lee','Park','Choi','Jung','Kang','Cho','Yoon','Jang','Lim','Han','Oh','Seo','Shin','Baek','Yoo'],
+  },
+  ru: {
+    first:['Ivan','Pavel','Dmitri','Alexei','Sergei','Mikhail','Andrei','Vladimir','Nikolai','Yuri','Anastasia','Maria','Olga','Ekaterina','Natalia','Tatiana','Svetlana','Anna','Daria','Polina'],
+    last:['Ivanov','Petrov','Sidorov','Kuznetsov','Smirnov','Popov','Vasiliev','Mikhailov','Sokolov','Novikov','Fedorov','Morozov','Volkov','Alekseev','Lebedev','Semyonov','Egorov','Pavlov'],
+  },
+  my: {
+    first:['Ahmad','Muhammad','Siti','Nurul','Aishah','Hafiz','Khairul','Fatimah','Rahman','Abdul','Nur','Aminah','Mohd','Rosli','Zainab','Faridah'],
+    last:['bin Abdullah','binti Abdul','bin Rahman','binti Hassan','bin Omar','binti Salleh','bin Ibrahim','binti Amin','bin Yusof','binti Ismail','bin Ali','binti Wahab'],
+  },
+  th: {
+    first:['Somchai','Apichat','Anucha','Prasit','Chai','Anong','Som','Mali','Ploy','Niran','Suda','Pim','Wichai','Boonsong','Malee','Nattaya'],
+    last:['Suwannakiat','Phakdee','Boonmee','Charoenporn','Saetang','Tansakul','Phromma','Rattanakorn','Srikam','Chaisri'],
+  },
+};
+
+// ─── 各国街道词库 ───
+const STREET_POOLS = {
+  en: { streets:['Main','Oak','Pine','Maple','Cedar','Elm','Park','Washington','Lincoln','Jefferson','Madison','Highland','Sunset','Lake','Hill','Spring','River','Church','Broadway','Market'], suffixes:['St','Ave','Rd','Blvd','Dr','Ln','Way'] },
+  gb: { streets:['High','King','Queen','Victoria','Park','Church','Mill','Station','Bridge','Manor','Abbey','Castle','Grove','Churchill'], suffixes:['Street','Road','Lane','Close','Avenue','Way','Grove','Terrace'] },
+  jp: { streets:['Sakura-dori','Chuo-dori','Honmachi','Aoba','Matsu','Take','Momiji','Ginza','Asakusa','Marunouchi'], suffixes:[''] },
+  kr: { streets:['Sejong-daero','Teheran-ro','Gangnam-daero','Itaewon','Myeongdong','Chungmuro','Euljiro','Jongno'], suffixes:[''] },
+  de: { streets:['Hauptstraße','Schlossstraße','Bahnhofstraße','Kirchstraße','Gartenstraße','Lindenstraße','Berliner','Münchner'], suffixes:[''] },
+  fr: { streets:['Rue de la Paix','Avenue des Champs','Rue du Faubourg','Boulevard Saint','Rue de Rivoli','Avenue Montaigne','Rue Saint-Honoré'], suffixes:[''] },
+  sg: { streets:['Raffles Place','Orchard Road','Marina Bay','Shenton Way','Sentosa','Holland Village','Bugis','Chinatown'], suffixes:[''] },
+  my: { streets:['Jalan Bukit Bintang','Jalan Sultan','Jalan Imbi','Jalan Ampang','Jalan Tuanku','Jalan Bangsar','Jalan Klang Lama'], suffixes:[''] },
+  th: { streets:['Sukhumvit Road','Silom Road','Sathon Road','Rama IX','Siam','Phayathai','Phetchaburi','Wireless Road'], suffixes:[''] },
+  ru: { streets:['Tverskaya Street','Arbat Street','Nevsky Prospect','Leninsky Avenue','Kutuzovsky Prospekt','Bolshaya','Myasnitskaya'], suffixes:[''] },
+};
+
+// ─── 数据源 ───
+const SURNAMES = '王李张刘陈杨赵黄周吴徐孙胡朱高林何郭马罗梁宋郑谢韩唐冯于董萧程曹袁邓许傅沈曾彭吕苏卢蒋蔡贾丁魏薛叶阎余潘杜戴夏钟汪田任姜范方石姚谭廖邹熊金陆郝孔白崔康毛邱秦江史顾侯邵孟龙万段雷钱汤尹黎易常武乔贺赖龚文温康施牛樊胡葛邢安齐尹伍余元卜覃岳章潘惠'.split('');
+
+// 名字用字符池随机组合，每个池 80+ 字符，双字名有 6400+ 种组合
+const MALE_NAME_CHARS = '伟强磊军勇杰涛辉鹏飞刚超波宁峰毅坤斌宇浩志博天翔龙锋睿泽昊晨旭健聪俊威亮政达远航凯哲一鸣皓轩鑫彬瑞阳霖恒诚铭晖锐逸源程渊琪楠楷康豪森松柏桐宏德启祥光庆正新成安辰书承润瀚弘奕锦荣家立继维耀昌平利茂鼎泰义信昊'.split('');
+const FEMALE_NAME_CHARS = '芳娜敏静丽艳娟秀英慧巧美婷雪颖琳蕾薇琴珍贞莉兰凤菊淑馨月瑶彤萱妍佳梦欣怡涵雨萍霞燕玲璐璇菲茜媛妮莹珂琦雯婧岚蕊婉容雅芬荷梅露霜虹蝶诗韵柔蓉欢欣妙曼漪漪洁清漪凝碧霄晗昭'.split('');
+
+const ETHNICITIES = ['汉族','蒙古族','回族','藏族','维吾尔族','苗族','彝族','壮族','布依族','朝鲜族','满族','侗族','瑶族','白族','土家族','哈尼族','哈萨克族','傣族','黎族','傈僳族','佤族','畲族','高山族','拉祜族','水族','东乡族','纳西族','景颇族','柯尔克孜族','土族','达斡尔族','仫佬族','羌族','布朗族','撒拉族','毛南族','仡佬族','锡伯族','阿昌族','普米族','塔吉克族','怒族','乌孜别克族','俄罗斯族','鄂温克族','德昂族','保安族','裕固族','京族','塔塔尔族','独龙族','鄂伦春族','赫哲族','门巴族','珞巴族','基诺族'];
+
+const PHONE_PREFIXES = ['130','131','132','133','134','135','136','137','138','139','150','151','152','153','155','156','157','158','159','170','171','172','173','175','176','177','178','180','181','182','183','184','185','186','187','188','189','191','198','199'];
+
+const TEL_AREA_CODES = {
+  '北京市':{'北京市':'010'},'天津市':{'天津市':'022'},'上海市':{'上海市':'021'},'重庆市':{'重庆市':'023'},
+  '河北省':{'石家庄市':'0311','唐山市':'0315','保定市':'0312','廊坊市':'0316'},
+  '山西省':{'太原市':'0351','大同市':'0352','运城市':'0359'},
+  '辽宁省':{'沈阳市':'024','大连市':'0411','鞍山市':'0412'},
+  '吉林省':{'长春市':'0431','吉林市':'0432'},
+  '黑龙江省':{'哈尔滨市':'0451','齐齐哈尔市':'0452','大庆市':'0459'},
+  '江苏省':{'南京市':'025','苏州市':'0512','无锡市':'0510','常州市':'0519','南通市':'0513','徐州市':'0516'},
+  '浙江省':{'杭州市':'0571','宁波市':'0574','温州市':'0577','嘉兴市':'0573'},
+  '安徽省':{'合肥市':'0551','芜湖市':'0553','蚌埠市':'0552'},
+  '福建省':{'福州市':'0591','厦门市':'0592','泉州市':'0595'},
+  '江西省':{'南昌市':'0791','九江市':'0792','赣州市':'0797'},
+  '山东省':{'济南市':'0531','青岛市':'0532','烟台市':'0535','潍坊市':'0536'},
+  '河南省':{'郑州市':'0371','洛阳市':'0379','开封市':'0378'},
+  '湖北省':{'武汉市':'027','宜昌市':'0717','襄阳市':'0710'},
+  '湖南省':{'长沙市':'0731','株洲市':'0733','岳阳市':'0730'},
+  '广东省':{'广州市':'020','深圳市':'0755','东莞市':'0769','佛山市':'0757','珠海市':'0756'},
+  '广西壮族自治区':{'南宁市':'0771','柳州市':'0772','桂林市':'0773'},
+  '海南省':{'海口市':'0898','三亚市':'0899'},
+  '四川省':{'成都市':'028','绵阳市':'0816','德阳市':'0838'},
+  '贵州省':{'贵阳市':'0851','遵义市':'0852'},
+  '云南省':{'昆明市':'0871','大理白族自治州':'0872','曲靖市':'0874'},
+  '西藏自治区':{'拉萨市':'0891','日喀则市':'0892'},
+  '陕西省':{'西安市':'029','咸阳市':'029','宝鸡市':'0917'},
+  '甘肃省':{'兰州市':'0931','天水市':'0938'},
+  '青海省':{'西宁市':'0971','海东市':'0972'},
+  '宁夏回族自治区':{'银川市':'0951','石嘴山市':'0952'},
+  '新疆维吾尔自治区':{'乌鲁木齐市':'0991','克拉玛依市':'0990'},
+  '内蒙古自治区':{'呼和浩特市':'0471','包头市':'0472','鄂尔多斯市':'0477','赤峰市':'0476'},
+  '台湾省':{'台北市':'02','新北市':'02','桃园市':'03','台中市':'04','台南市':'06','高雄市':'07'},
+  '香港特别行政区':{'香港岛':'00852','九龙':'00852','新界':'00852'},
+  '澳门特别行政区':{'澳门半岛':'00853','离岛':'00853'},
+};
+
+const POSTAL_MAP = {
+  '北京市':'100000','天津市':'300000','上海市':'200000','重庆市':'400000',
+  '石家庄市':'050000','唐山市':'063000','保定市':'071000','廊坊市':'065000',
+  '太原市':'030000','大同市':'037000','运城市':'044000',
+  '沈阳市':'110000','大连市':'116000','鞍山市':'114000',
+  '长春市':'130000','吉林市':'132000',
+  '哈尔滨市':'150000','齐齐哈尔市':'161000','大庆市':'163000',
+  '南京市':'210000','苏州市':'215000','无锡市':'214000','常州市':'213000','南通市':'226000','徐州市':'221000',
+  '杭州市':'310000','宁波市':'315000','温州市':'325000','嘉兴市':'314000',
+  '合肥市':'230000','芜湖市':'241000','蚌埠市':'233000',
+  '福州市':'350000','厦门市':'361000','泉州市':'362000',
+  '南昌市':'330000','九江市':'332000','赣州市':'341000',
+  '济南市':'250000','青岛市':'266000','烟台市':'264000','潍坊市':'261000',
+  '郑州市':'450000','洛阳市':'471000','开封市':'475000',
+  '武汉市':'430000','宜昌市':'443000','襄阳市':'441000',
+  '长沙市':'410000','株洲市':'412000','岳阳市':'414000',
+  '广州市':'510000','深圳市':'518000','东莞市':'523000','佛山市':'528000','珠海市':'519000',
+  '南宁市':'530000','柳州市':'545000','桂林市':'541000',
+  '海口市':'570000','三亚市':'572000',
+  '成都市':'610000','绵阳市':'621000','德阳市':'618000',
+  '贵阳市':'550000','遵义市':'563000',
+  '昆明市':'650000','大理白族自治州':'671000','曲靖市':'655000',
+  '拉萨市':'850000','日喀则市':'857000',
+  '西安市':'710000','咸阳市':'712000','宝鸡市':'721000',
+  '兰州市':'730000','天水市':'741000',
+  '西宁市':'810000','海东市':'810600',
+  '银川市':'750000','石嘴山市':'753000',
+  '乌鲁木齐市':'830000','克拉玛依市':'834000',
+  '呼和浩特市':'010000','包头市':'014000','鄂尔多斯市':'017000','赤峰市':'024000',
+  '台北市':'100100','新北市':'220100','桃园市':'330100','台中市':'400100','台南市':'700100','高雄市':'800100',
+  '香港岛':'999077','九龙':'999077','新界':'999077',
+  '澳门半岛':'999078','离岛':'999078',
+};
+
+const BANK_PREFIXES = {
+  '工商银行': '622202', '建设银行': '622700', '农业银行': '622848', '中国银行': '621661',
+  '交通银行': '622260', '招商银行': '622580', '邮储银行': '622188', '兴业银行': '622901',
+  '民生银行': '622619', '浦发银行': '622521', '中信银行': '622690', '光大银行': '622663',
+  '华夏银行': '622630', '平安银行': '622155',
+};
+
+// ─── 地址数据（含身份证地区码，全国31个省级行政区）───
+const ADDR_DATA = [
+  { p:'北京市', cities:[{c:'北京市', ds:[{n:'东城区',code:'110101'},{n:'西城区',code:'110102'},{n:'朝阳区',code:'110105'},{n:'海淀区',code:'110108'},{n:'丰台区',code:'110106'},{n:'石景山区',code:'110107'},{n:'通州区',code:'110112'},{n:'顺义区',code:'110113'},{n:'房山区',code:'110111'},{n:'大兴区',code:'110115'},{n:'昌平区',code:'110114'},{n:'怀柔区',code:'110116'},{n:'平谷区',code:'110117'},{n:'密云区',code:'110118'},{n:'延庆区',code:'110119'}]}] },
+  { p:'天津市', cities:[{c:'天津市',ds:[{n:'和平区',code:'120101'},{n:'河东区',code:'120102'},{n:'河西区',code:'120103'},{n:'南开区',code:'120104'},{n:'河北区',code:'120105'},{n:'红桥区',code:'120106'},{n:'东丽区',code:'120110'},{n:'西青区',code:'120111'},{n:'津南区',code:'120112'},{n:'北辰区',code:'120113'},{n:'武清区',code:'120114'},{n:'宝坻区',code:'120115'},{n:'滨海新区',code:'120116'},{n:'宁河区',code:'120117'},{n:'静海区',code:'120118'},{n:'蓟州区',code:'120119'}]}] },
+  { p:'上海市', cities:[{c:'上海市', ds:[{n:'黄浦区',code:'310101'},{n:'徐汇区',code:'310104'},{n:'长宁区',code:'310105'},{n:'静安区',code:'310106'},{n:'普陀区',code:'310107'},{n:'虹口区',code:'310109'},{n:'杨浦区',code:'310110'},{n:'浦东新区',code:'310115'},{n:'闵行区',code:'310112'},{n:'宝山区',code:'310113'},{n:'嘉定区',code:'310114'},{n:'松江区',code:'310117'},{n:'金山区',code:'310116'},{n:'青浦区',code:'310118'},{n:'奉贤区',code:'310120'},{n:'崇明区',code:'310151'}]}] },
+  { p:'重庆市', cities:[{c:'重庆市',ds:[{n:'渝中区',code:'500103'},{n:'大渡口区',code:'500104'},{n:'江北区',code:'500105'},{n:'沙坪坝区',code:'500106'},{n:'九龙坡区',code:'500107'},{n:'南岸区',code:'500108'},{n:'北碚区',code:'500109'},{n:'渝北区',code:'500112'},{n:'巴南区',code:'500113'},{n:'万州区',code:'500101'},{n:'涪陵区',code:'500102'},{n:'黔江区',code:'500114'},{n:'长寿区',code:'500115'},{n:'江津区',code:'500116'},{n:'合川区',code:'500117'},{n:'永川区',code:'500118'},{n:'大足区',code:'500119'},{n:'璧山区',code:'500120'},{n:'铜梁区',code:'500151'}]}] },
+  { p:'河北省', cities:[
+    {c:'石家庄市',ds:[{n:'长安区',code:'130102'},{n:'桥西区',code:'130104'},{n:'新华区',code:'130105'},{n:'裕华区',code:'130108'},{n:'井陉矿区',code:'130107'},{n:'藁城区',code:'130109'},{n:'鹿泉区',code:'130110'},{n:'栾城区',code:'130111'}]},
+    {c:'唐山市',ds:[{n:'路南区',code:'130202'},{n:'路北区',code:'130203'},{n:'古冶区',code:'130204'},{n:'开平区',code:'130205'},{n:'丰南区',code:'130207'},{n:'丰润区',code:'130208'},{n:'曹妃甸区',code:'130209'}]},
+    {c:'保定市',ds:[{n:'竞秀区',code:'130602'},{n:'莲池区',code:'130606'},{n:'满城区',code:'130607'},{n:'清苑区',code:'130608'},{n:'徐水区',code:'130609'}]},
+    {c:'廊坊市',ds:[{n:'安次区',code:'131002'},{n:'广阳区',code:'131003'}]},
+  ] },
+  { p:'山西省', cities:[
+    {c:'太原市',ds:[{n:'小店区',code:'140105'},{n:'迎泽区',code:'140106'},{n:'杏花岭区',code:'140107'},{n:'尖草坪区',code:'140108'},{n:'万柏林区',code:'140109'},{n:'晋源区',code:'140110'}]},
+    {c:'大同市',ds:[{n:'平城区',code:'140213'},{n:'云冈区',code:'140214'},{n:'新荣区',code:'140212'},{n:'云州区',code:'140215'}]},
+    {c:'运城市',ds:[{n:'盐湖区',code:'140802'}]},
+  ] },
+  { p:'辽宁省', cities:[
+    {c:'沈阳市',ds:[{n:'和平区',code:'210102'},{n:'沈河区',code:'210103'},{n:'大东区',code:'210104'},{n:'皇姑区',code:'210105'},{n:'铁西区',code:'210106'},{n:'苏家屯区',code:'210111'},{n:'浑南区',code:'210112'},{n:'沈北新区',code:'210113'},{n:'于洪区',code:'210114'}]},
+    {c:'大连市',ds:[{n:'中山区',code:'210202'},{n:'西岗区',code:'210203'},{n:'沙河口区',code:'210204'},{n:'甘井子区',code:'210211'},{n:'旅顺口区',code:'210212'},{n:'金州区',code:'210213'}]},
+    {c:'鞍山市',ds:[{n:'铁东区',code:'210302'},{n:'铁西区',code:'210303'},{n:'立山区',code:'210304'},{n:'千山区',code:'210311'}]},
+  ] },
+  { p:'吉林省', cities:[
+    {c:'长春市',ds:[{n:'南关区',code:'220102'},{n:'宽城区',code:'220103'},{n:'朝阳区',code:'220104'},{n:'二道区',code:'220105'},{n:'绿园区',code:'220106'},{n:'双阳区',code:'220112'},{n:'九台区',code:'220113'}]},
+    {c:'吉林市',ds:[{n:'昌邑区',code:'220202'},{n:'龙潭区',code:'220203'},{n:'船营区',code:'220204'},{n:'丰满区',code:'220211'}]},
+  ] },
+  { p:'黑龙江省', cities:[
+    {c:'哈尔滨市',ds:[{n:'道里区',code:'230102'},{n:'南岗区',code:'230103'},{n:'道外区',code:'230104'},{n:'平房区',code:'230108'},{n:'松北区',code:'230109'},{n:'香坊区',code:'230110'},{n:'呼兰区',code:'230111'},{n:'阿城区',code:'230112'},{n:'双城区',code:'230113'}]},
+    {c:'齐齐哈尔市',ds:[{n:'龙沙区',code:'230202'},{n:'建华区',code:'230203'},{n:'铁锋区',code:'230204'},{n:'昂昂溪区',code:'230205'},{n:'富拉尔基区',code:'230206'}]},
+    {c:'大庆市',ds:[{n:'萨尔图区',code:'230602'},{n:'龙凤区',code:'230603'},{n:'让胡路区',code:'230604'},{n:'红岗区',code:'230605'},{n:'大同区',code:'230606'}]},
+  ] },
+  { p:'江苏省', cities:[
+    {c:'南京市',ds:[{n:'玄武区',code:'320102'},{n:'秦淮区',code:'320104'},{n:'建邺区',code:'320105'},{n:'鼓楼区',code:'320106'},{n:'浦口区',code:'320111'},{n:'栖霞区',code:'320113'},{n:'雨花台区',code:'320114'},{n:'江宁区',code:'320115'},{n:'六合区',code:'320116'},{n:'溧水区',code:'320117'},{n:'高淳区',code:'320118'}]},
+    {c:'苏州市',ds:[{n:'虎丘区',code:'320505'},{n:'吴中区',code:'320506'},{n:'相城区',code:'320507'},{n:'姑苏区',code:'320508'},{n:'吴江区',code:'320509'},{n:'昆山市',code:'320583'},{n:'太仓市',code:'320585'},{n:'常熟市',code:'320581'},{n:'张家港市',code:'320582'}]},
+    {c:'无锡市',ds:[{n:'锡山区',code:'320205'},{n:'惠山区',code:'320206'},{n:'滨湖区',code:'320211'},{n:'梁溪区',code:'320213'},{n:'新吴区',code:'320214'},{n:'江阴市',code:'320281'},{n:'宜兴市',code:'320282'}]},
+    {c:'常州市',ds:[{n:'天宁区',code:'320402'},{n:'钟楼区',code:'320404'},{n:'新北区',code:'320411'},{n:'武进区',code:'320412'},{n:'金坛区',code:'320413'},{n:'溧阳市',code:'320481'}]},
+    {c:'南通市',ds:[{n:'崇川区',code:'320602'},{n:'通州区',code:'320612'},{n:'海门区',code:'320684'}]},
+    {c:'徐州市',ds:[{n:'鼓楼区',code:'320302'},{n:'云龙区',code:'320303'},{n:'贾汪区',code:'320305'},{n:'泉山区',code:'320311'},{n:'铜山区',code:'320312'}]},
+  ] },
+  { p:'浙江省', cities:[
+    {c:'杭州市',ds:[{n:'上城区',code:'330102'},{n:'拱墅区',code:'330105'},{n:'西湖区',code:'330106'},{n:'滨江区',code:'330108'},{n:'萧山区',code:'330109'},{n:'余杭区',code:'330110'},{n:'富阳区',code:'330111'},{n:'临平区',code:'330113'},{n:'钱塘区',code:'330114'},{n:'临安区',code:'330112'}]},
+    {c:'宁波市',ds:[{n:'海曙区',code:'330203'},{n:'江北区',code:'330205'},{n:'北仑区',code:'330206'},{n:'镇海区',code:'330211'},{n:'鄞州区',code:'330212'},{n:'奉化区',code:'330213'},{n:'余姚市',code:'330281'},{n:'慈溪市',code:'330282'}]},
+    {c:'温州市',ds:[{n:'鹿城区',code:'330302'},{n:'龙湾区',code:'330303'},{n:'瓯海区',code:'330304'},{n:'洞头区',code:'330305'},{n:'瑞安市',code:'330381'},{n:'乐清市',code:'330382'}]},
+    {c:'嘉兴市',ds:[{n:'南湖区',code:'330402'},{n:'秀洲区',code:'330411'},{n:'海宁市',code:'330481'},{n:'平湖市',code:'330482'},{n:'桐乡市',code:'330483'}]},
+  ] },
+  { p:'安徽省', cities:[
+    {c:'合肥市',ds:[{n:'瑶海区',code:'340102'},{n:'庐阳区',code:'340103'},{n:'蜀山区',code:'340104'},{n:'包河区',code:'340111'},{n:'肥东县',code:'340122'},{n:'肥西县',code:'340123'},{n:'长丰县',code:'340121'},{n:'庐江县',code:'340124'}]},
+    {c:'芜湖市',ds:[{n:'镜湖区',code:'340202'},{n:'弋江区',code:'340203'},{n:'鸠江区',code:'340207'},{n:'湾沚区',code:'340210'},{n:'繁昌区',code:'340212'}]},
+    {c:'蚌埠市',ds:[{n:'龙子湖区',code:'340302'},{n:'蚌山区',code:'340303'},{n:'禹会区',code:'340304'},{n:'淮上区',code:'340311'}]},
+  ] },
+  { p:'福建省', cities:[
+    {c:'福州市',ds:[{n:'鼓楼区',code:'350102'},{n:'台江区',code:'350103'},{n:'仓山区',code:'350104'},{n:'马尾区',code:'350105'},{n:'晋安区',code:'350111'},{n:'长乐区',code:'350112'},{n:'福清市',code:'350181'}]},
+    {c:'厦门市',ds:[{n:'思明区',code:'350203'},{n:'海沧区',code:'350205'},{n:'湖里区',code:'350206'},{n:'集美区',code:'350211'},{n:'同安区',code:'350212'},{n:'翔安区',code:'350213'}]},
+    {c:'泉州市',ds:[{n:'鲤城区',code:'350502'},{n:'丰泽区',code:'350503'},{n:'洛江区',code:'350504'},{n:'晋江市',code:'350582'},{n:'石狮市',code:'350581'},{n:'南安市',code:'350583'}]},
+  ] },
+  { p:'江西省', cities:[
+    {c:'南昌市',ds:[{n:'东湖区',code:'360102'},{n:'西湖区',code:'360103'},{n:'青云谱区',code:'360104'},{n:'青山湖区',code:'360111'},{n:'新建区',code:'360112'},{n:'红谷滩区',code:'360113'}]},
+    {c:'九江市',ds:[{n:'濂溪区',code:'360404'},{n:'浔阳区',code:'360403'},{n:'柴桑区',code:'360405'}]},
+    {c:'赣州市',ds:[{n:'章贡区',code:'360702'},{n:'南康区',code:'360703'},{n:'赣县区',code:'360704'}]},
+  ] },
+  { p:'山东省', cities:[
+    {c:'济南市',ds:[{n:'历下区',code:'370102'},{n:'市中区',code:'370103'},{n:'槐荫区',code:'370104'},{n:'天桥区',code:'370105'},{n:'历城区',code:'370112'},{n:'长清区',code:'370113'},{n:'章丘区',code:'370114'},{n:'济阳区',code:'370115'},{n:'莱芜区',code:'370116'},{n:'钢城区',code:'370117'}]},
+    {c:'青岛市',ds:[{n:'市南区',code:'370202'},{n:'市北区',code:'370203'},{n:'黄岛区',code:'370211'},{n:'崂山区',code:'370212'},{n:'李沧区',code:'370213'},{n:'城阳区',code:'370214'},{n:'即墨区',code:'370215'},{n:'胶州市',code:'370281'},{n:'平度市',code:'370283'},{n:'莱西市',code:'370285'}]},
+    {c:'烟台市',ds:[{n:'芝罘区',code:'370602'},{n:'福山区',code:'370611'},{n:'牟平区',code:'370612'},{n:'莱山区',code:'370613'},{n:'蓬莱区',code:'370614'}]},
+    {c:'潍坊市',ds:[{n:'潍城区',code:'370702'},{n:'寒亭区',code:'370703'},{n:'坊子区',code:'370704'},{n:'奎文区',code:'370705'},{n:'寿光市',code:'370783'},{n:'诸城市',code:'370782'}]},
+  ] },
+  { p:'河南省', cities:[
+    {c:'郑州市',ds:[{n:'中原区',code:'410102'},{n:'二七区',code:'410103'},{n:'管城回族区',code:'410104'},{n:'金水区',code:'410105'},{n:'上街区',code:'410106'},{n:'惠济区',code:'410108'},{n:'中牟县',code:'410122'},{n:'巩义市',code:'410181'},{n:'荥阳市',code:'410182'},{n:'新密市',code:'410183'},{n:'新郑市',code:'410184'},{n:'登封市',code:'410185'}]},
+    {c:'洛阳市',ds:[{n:'老城区',code:'410302'},{n:'西工区',code:'410303'},{n:'瀍河回族区',code:'410304'},{n:'涧西区',code:'410305'},{n:'洛龙区',code:'410311'}]},
+    {c:'开封市',ds:[{n:'龙亭区',code:'410202'},{n:'顺河回族区',code:'410203'},{n:'鼓楼区',code:'410204'},{n:'禹王台区',code:'410205'}]},
+  ] },
+  { p:'湖北省', cities:[
+    {c:'武汉市',ds:[{n:'江岸区',code:'420102'},{n:'江汉区',code:'420103'},{n:'硚口区',code:'420104'},{n:'汉阳区',code:'420105'},{n:'武昌区',code:'420106'},{n:'青山区',code:'420107'},{n:'洪山区',code:'420111'},{n:'东西湖区',code:'420112'},{n:'蔡甸区',code:'420114'},{n:'江夏区',code:'420115'},{n:'黄陂区',code:'420116'},{n:'新洲区',code:'420117'},{n:'汉南区',code:'420113'}]},
+    {c:'宜昌市',ds:[{n:'西陵区',code:'420502'},{n:'伍家岗区',code:'420503'},{n:'点军区',code:'420504'},{n:'猇亭区',code:'420505'},{n:'夷陵区',code:'420506'}]},
+    {c:'襄阳市',ds:[{n:'襄城区',code:'420602'},{n:'樊城区',code:'420606'},{n:'襄州区',code:'420607'}]},
+  ] },
+  { p:'湖南省', cities:[
+    {c:'长沙市',ds:[{n:'芙蓉区',code:'430102'},{n:'天心区',code:'430103'},{n:'岳麓区',code:'430104'},{n:'开福区',code:'430105'},{n:'雨花区',code:'430111'},{n:'望城区',code:'430112'},{n:'长沙县',code:'430121'},{n:'浏阳市',code:'430181'},{n:'宁乡市',code:'430182'}]},
+    {c:'株洲市',ds:[{n:'荷塘区',code:'430202'},{n:'芦淞区',code:'430203'},{n:'石峰区',code:'430204'},{n:'天元区',code:'430211'}]},
+    {c:'岳阳市',ds:[{n:'岳阳楼区',code:'430602'},{n:'云溪区',code:'430603'},{n:'君山区',code:'430611'}]},
+  ] },
+  { p:'广东省', cities:[
+    {c:'广州市',ds:[{n:'荔湾区',code:'440103'},{n:'越秀区',code:'440104'},{n:'海珠区',code:'440105'},{n:'天河区',code:'440106'},{n:'白云区',code:'440111'},{n:'黄埔区',code:'440112'},{n:'番禺区',code:'440113'},{n:'花都区',code:'440114'},{n:'南沙区',code:'440115'},{n:'从化区',code:'440117'},{n:'增城区',code:'440118'}]},
+    {c:'深圳市',ds:[{n:'罗湖区',code:'440303'},{n:'福田区',code:'440304'},{n:'南山区',code:'440305'},{n:'宝安区',code:'440306'},{n:'龙岗区',code:'440307'},{n:'盐田区',code:'440308'},{n:'龙华区',code:'440309'},{n:'坪山区',code:'440310'},{n:'光明区',code:'440311'}]},
+    {c:'东莞市',ds:[{n:'莞城街道',code:'441900'},{n:'南城街道',code:'441903'},{n:'东城街道',code:'441904'},{n:'万江街道',code:'441905'},{n:'虎门镇',code:'441902'},{n:'长安镇',code:'441901'}]},
+    {c:'佛山市',ds:[{n:'禅城区',code:'440604'},{n:'南海区',code:'440605'},{n:'顺德区',code:'440606'},{n:'高明区',code:'440608'},{n:'三水区',code:'440607'}]},
+    {c:'珠海市',ds:[{n:'香洲区',code:'440402'},{n:'斗门区',code:'440403'},{n:'金湾区',code:'440404'}]},
+  ] },
+  { p:'广西壮族自治区', cities:[
+    {c:'南宁市',ds:[{n:'兴宁区',code:'450102'},{n:'青秀区',code:'450103'},{n:'江南区',code:'450105'},{n:'西乡塘区',code:'450107'},{n:'良庆区',code:'450108'},{n:'邕宁区',code:'450109'},{n:'武鸣区',code:'450110'}]},
+    {c:'柳州市',ds:[{n:'城中区',code:'450202'},{n:'鱼峰区',code:'450203'},{n:'柳南区',code:'450204'},{n:'柳北区',code:'450205'},{n:'柳江区',code:'450206'}]},
+    {c:'桂林市',ds:[{n:'秀峰区',code:'450302'},{n:'叠彩区',code:'450303'},{n:'象山区',code:'450304'},{n:'七星区',code:'450305'},{n:'雁山区',code:'450311'},{n:'临桂区',code:'450312'}]},
+  ] },
+  { p:'海南省', cities:[
+    {c:'海口市',ds:[{n:'秀英区',code:'460105'},{n:'龙华区',code:'460106'},{n:'琼山区',code:'460107'},{n:'美兰区',code:'460108'}]},
+    {c:'三亚市',ds:[{n:'海棠区',code:'460202'},{n:'吉阳区',code:'460203'},{n:'天涯区',code:'460204'},{n:'崖州区',code:'460205'}]},
+  ] },
+  { p:'四川省', cities:[
+    {c:'成都市',ds:[{n:'锦江区',code:'510104'},{n:'青羊区',code:'510105'},{n:'金牛区',code:'510106'},{n:'武侯区',code:'510107'},{n:'成华区',code:'510108'},{n:'龙泉驿区',code:'510112'},{n:'青白江区',code:'510113'},{n:'新都区',code:'510114'},{n:'温江区',code:'510115'},{n:'双流区',code:'510116'},{n:'郫都区',code:'510117'},{n:'新津区',code:'510118'}]},
+    {c:'绵阳市',ds:[{n:'涪城区',code:'510703'},{n:'游仙区',code:'510704'},{n:'安州区',code:'510705'}]},
+    {c:'德阳市',ds:[{n:'旌阳区',code:'510603'},{n:'罗江区',code:'510604'},{n:'广汉市',code:'510681'}]},
+  ] },
+  { p:'贵州省', cities:[
+    {c:'贵阳市',ds:[{n:'南明区',code:'520102'},{n:'云岩区',code:'520103'},{n:'花溪区',code:'520111'},{n:'乌当区',code:'520112'},{n:'白云区',code:'520113'},{n:'观山湖区',code:'520115'}]},
+    {c:'遵义市',ds:[{n:'红花岗区',code:'520302'},{n:'汇川区',code:'520303'},{n:'播州区',code:'520304'}]},
+  ] },
+  { p:'云南省', cities:[
+    {c:'昆明市',ds:[{n:'五华区',code:'530102'},{n:'盘龙区',code:'530103'},{n:'官渡区',code:'530111'},{n:'西山区',code:'530112'},{n:'呈贡区',code:'530114'},{n:'晋宁区',code:'530115'}]},
+    {c:'大理白族自治州',ds:[{n:'大理市',code:'532901'}]},
+    {c:'曲靖市',ds:[{n:'麒麟区',code:'530302'},{n:'沾益区',code:'530303'},{n:'马龙区',code:'530304'}]},
+  ] },
+  { p:'西藏自治区', cities:[
+    {c:'拉萨市',ds:[{n:'城关区',code:'540102'},{n:'堆龙德庆区',code:'540103'},{n:'达孜区',code:'540104'}]},
+    {c:'日喀则市',ds:[{n:'桑珠孜区',code:'540202'}]},
+  ] },
+  { p:'陕西省', cities:[
+    {c:'西安市',ds:[{n:'新城区',code:'610102'},{n:'碑林区',code:'610103'},{n:'莲湖区',code:'610104'},{n:'灞桥区',code:'610111'},{n:'未央区',code:'610112'},{n:'雁塔区',code:'610113'},{n:'阎良区',code:'610114'},{n:'临潼区',code:'610115'},{n:'长安区',code:'610116'},{n:'高陵区',code:'610117'},{n:'鄠邑区',code:'610118'}]},
+    {c:'咸阳市',ds:[{n:'秦都区',code:'610402'},{n:'渭城区',code:'610404'}]},
+    {c:'宝鸡市',ds:[{n:'渭滨区',code:'610302'},{n:'金台区',code:'610303'},{n:'陈仓区',code:'610304'}]},
+  ] },
+  { p:'甘肃省', cities:[
+    {c:'兰州市',ds:[{n:'城关区',code:'620102'},{n:'七里河区',code:'620103'},{n:'西固区',code:'620104'},{n:'安宁区',code:'620105'},{n:'红古区',code:'620111'}]},
+    {c:'天水市',ds:[{n:'秦州区',code:'620502'},{n:'麦积区',code:'620503'}]},
+  ] },
+  { p:'青海省', cities:[
+    {c:'西宁市',ds:[{n:'城东区',code:'630102'},{n:'城中区',code:'630103'},{n:'城西区',code:'630104'},{n:'城北区',code:'630105'}]},
+    {c:'海东市',ds:[{n:'乐都区',code:'630202'},{n:'平安区',code:'630203'}]},
+  ] },
+  { p:'宁夏回族自治区', cities:[
+    {c:'银川市',ds:[{n:'兴庆区',code:'640104'},{n:'西夏区',code:'640105'},{n:'金凤区',code:'640106'},{n:'永宁县',code:'640121'},{n:'贺兰县',code:'640122'},{n:'灵武市',code:'640181'}]},
+    {c:'石嘴山市',ds:[{n:'大武口区',code:'640202'},{n:'惠农区',code:'640205'},{n:'平罗县',code:'640221'}]},
+  ] },
+  { p:'新疆维吾尔自治区', cities:[
+    {c:'乌鲁木齐市',ds:[{n:'天山区',code:'650102'},{n:'沙依巴克区',code:'650103'},{n:'新市区',code:'650104'},{n:'水磨沟区',code:'650105'},{n:'头屯河区',code:'650106'},{n:'达坂城区',code:'650107'},{n:'米东区',code:'650109'}]},
+    {c:'克拉玛依市',ds:[{n:'独山子区',code:'650202'},{n:'克拉玛依区',code:'650203'},{n:'白碱滩区',code:'650204'},{n:'乌尔禾区',code:'650205'}]},
+  ] },
+  { p:'内蒙古自治区', cities:[
+    {c:'呼和浩特市',ds:[{n:'新城区',code:'150102'},{n:'回民区',code:'150103'},{n:'玉泉区',code:'150104'},{n:'赛罕区',code:'150105'}]},
+    {c:'包头市',ds:[{n:'东河区',code:'150202'},{n:'昆都仑区',code:'150203'},{n:'青山区',code:'150204'},{n:'九原区',code:'150207'}]},
+    {c:'鄂尔多斯市',ds:[{n:'东胜区',code:'150602'},{n:'康巴什区',code:'150603'}]},
+    {c:'赤峰市',ds:[{n:'红山区',code:'150402'},{n:'元宝山区',code:'150403'},{n:'松山区',code:'150404'}]},
+  ] },
+  { p:'台湾省', cities:[
+    {c:'台北市',ds:[{n:'中正区',code:'710101'},{n:'大同区',code:'710102'},{n:'中山区',code:'710103'},{n:'松山区',code:'710104'},{n:'大安区',code:'710105'},{n:'万华区',code:'710106'},{n:'信义区',code:'710107'},{n:'士林区',code:'710108'},{n:'北投区',code:'710109'},{n:'内湖区',code:'710110'},{n:'南港区',code:'710111'},{n:'文山区',code:'710112'}]},
+    {c:'新北市',ds:[{n:'板桥区',code:'710201'},{n:'三重区',code:'710202'},{n:'中和区',code:'710203'},{n:'永和区',code:'710204'},{n:'新庄区',code:'710205'},{n:'新店区',code:'710206'},{n:'树林区',code:'710207'},{n:'莺歌区',code:'710208'},{n:'三峡区',code:'710209'},{n:'淡水区',code:'710210'},{n:'瑞芳区',code:'710211'},{n:'土城区',code:'710212'},{n:'芦洲区',code:'710213'},{n:'五股区',code:'710214'},{n:'泰山区',code:'710215'},{n:'林口区',code:'710216'}]},
+    {c:'桃园市',ds:[{n:'桃园区',code:'710301'},{n:'中�的区',code:'710302'},{n:'平镇区',code:'710303'},{n:'八德区',code:'710304'},{n:'杨梅区',code:'710305'},{n:'芦竹区',code:'710306'},{n:'大�里区',code:'710307'},{n:'龟山区',code:'710308'}]},
+    {c:'台中市',ds:[{n:'中区',code:'710401'},{n:'东区',code:'710402'},{n:'南区',code:'710403'},{n:'西区',code:'710404'},{n:'北区',code:'710405'},{n:'西屯区',code:'710406'},{n:'南屯区',code:'710407'},{n:'北屯区',code:'710408'},{n:'丰原区',code:'710409'},{n:'大里区',code:'710410'},{n:'太平区',code:'710411'}]},
+    {c:'台南市',ds:[{n:'中西区',code:'710501'},{n:'东区',code:'710502'},{n:'南区',code:'710503'},{n:'北区',code:'710504'},{n:'安平区',code:'710505'},{n:'安南区',code:'710506'},{n:'永康区',code:'710507'}]},
+    {c:'高雄市',ds:[{n:'盐埕区',code:'710601'},{n:'鼓山区',code:'710602'},{n:'左营区',code:'710603'},{n:'楠梓区',code:'710604'},{n:'三民区',code:'710605'},{n:'新兴区',code:'710606'},{n:'前金区',code:'710607'},{n:'苓雅区',code:'710608'},{n:'前镇区',code:'710609'},{n:'小港区',code:'710610'},{n:'凤山区',code:'710611'}]},
+  ] },
+  { p:'香港特别行政区', cities:[
+    {c:'香港岛',ds:[{n:'中西区',code:'810101'},{n:'湾仔区',code:'810102'},{n:'东区',code:'810103'},{n:'南区',code:'810104'}]},
+    {c:'九龙',ds:[{n:'油尖旺区',code:'810201'},{n:'深水埗区',code:'810202'},{n:'九龙城区',code:'810203'},{n:'黄大仙区',code:'810204'},{n:'观塘区',code:'810205'}]},
+    {c:'新界',ds:[{n:'荃湾区',code:'810301'},{n:'屯门区',code:'810302'},{n:'元朗区',code:'810303'},{n:'北区',code:'810304'},{n:'大埔区',code:'810305'},{n:'沙田区',code:'810306'},{n:'西贡区',code:'810307'},{n:'葵青区',code:'810308'},{n:'离岛区',code:'810309'}]},
+  ] },
+  { p:'澳门特别行政区', cities:[
+    {c:'澳门半岛',ds:[{n:'花地玛堂区',code:'820101'},{n:'圣安多尼堂区',code:'820102'},{n:'大堂区',code:'820103'},{n:'望德堂区',code:'820104'},{n:'风顺堂区',code:'820105'}]},
+    {c:'离岛',ds:[{n:'嘉模堂区',code:'820201'},{n:'路氹填海区',code:'820202'},{n:'圣方济各堂区',code:'820203'}]},
+  ] },
+];
+
+const ROADS = ['中山路','人民路','解放路','建设路','和平路','光明路','幸福路','文化路','长江路','黄河路','学府路','科技路','创新路','望江路','花园路','青年路','东风路','朝阳路','迎宾路','长城路','北京路','上海路','天津路','南京路','杭州路','广州路','深圳路','成都路','重庆路','武汉路','西安路','苏州路','无锡路','常州路','宁波路','厦门路','福州路','济南路','青岛路','大连路','沈阳路','哈尔滨路','长春路','郑州路','长沙路','昆明路','贵阳路','南宁路','海口路','合肥路','南昌路','太原路','石家庄路','兰州路','银川路','西宁路','乌鲁木齐路','呼和浩特路','拉萨路','凤凰路','龙腾路','金龙路','银湖路','碧湖路','翠竹路','紫荆路','梧桐路','松柏路','银杏路','桂花路','荷花路','梅花路','兰花路','竹林路','桃园路','杏花路','樱花路','海棠路','丁香路','百合路','茉莉路','牡丹路','芙蓉路','丁香路','百灵路','天鹅路','孔雀路','鸳鸯路','凤凰街','麒麟街','玄武街','青龙街','白虎街','朱雀街','金凤街','银龙街','福临街','财源街','兴隆街','如意街','吉祥街','太平街','永安街','长安街','康乐街','幸福街','和谐街','民主街','自由街','团结街','胜利街','前进街','振兴街','复兴街','新华街','建国街','爱国街','和平街','友谊街'];
+const ROAD_TYPES = ['号','弄','栋','幢','座','单元','室','号楼','大院','小区','花园','广场','大厦','中心'];
+
+const COMPANY_PREFIXES = ['华','中','恒','鑫','盛','博','瑞','嘉','诚','宏','天','金','明','润','信','凯','泰','达','安','永','昌','龙','海','万','锦','聚','鼎','耀','辉','旺','祥','丰','鸿','康','亿','朗','邦','晟','朗','翔','坤','冠','捷','奥','旭','奕','诚','瀚','锐','景','宸','悦','诺','融','邦','领','优','艾','启','辉','威','特','越','锐','冠'];
+const COMPANY_MIDDLES = ['信','达','通','和','利','丰','源','德','宏','成','泰','联','创','盈','捷','科','远','正','新','亚','邦','融','汇','禾','旭','升','晨','邦','禾','益','鑫','邦','裕','嘉','康','思','睿','翔','辉','盛','恒','鼎','邦','诺','拓','朗','越','卓','景','宸','诺','融','领','优','锐','迈','慧','晟','瀚','耀'];
+const COMPANY_SUFFIXES = ['科技有限公司','信息技术有限公司','网络科技有限公司','商贸有限公司','实业有限公司','建设工程有限公司','教育咨询有限公司','文化传媒有限公司','人力资源有限公司','物流有限公司','机械制造有限公司','电子商务有限公司','农业发展有限公司','环保科技有限公司','医疗器械有限公司','食品科技有限公司','能源科技有限公司','智能科技有限公司','数据服务有限公司','工程设计有限公司','新材料科技有限公司','生物医药有限公司','健康管理咨询有限公司','国际贸易有限公司','房地产开发有限公司','物业管理服务有限公司','文化旅游发展有限公司','体育产业有限公司','信息咨询有限公司','广告传媒有限公司','供应链管理有限公司','企业管理咨询有限公司','软件开发有限公司','云计算服务有限公司','物联网科技有限公司','半导体科技有限公司','自动化工程有限公司','装饰工程有限公司','市政工程有限公司','园林景观工程有限公司','通讯技术有限公司','电子科技有限公司','精密仪器有限公司','汽车零部件有限公司','新能源发展有限公司','矿业开发有限公司','水产养殖有限公司','食品加工有限公司','纺织服装有限公司','印刷包装有限公司','模具制造有限公司','光电科技有限公司','生物科技有限公司','环保工程有限公司','消防工程有限公司','安防科技有限公司','化妆品有限公司','进出口贸易有限公司','餐饮管理有限公司','酒店管理有限公司','物业管理有限责任公司'];
+
+const EMAIL_DOMAINS = ['qq.com','163.com','126.com','sina.com','hotmail.com','outlook.com','gmail.com','yahoo.com','foxmail.com','yeah.net','189.cn','aliyun.com','icloud.com','mail.com','protonmail.com'];
+
+// ─── 工具函数 ───
+const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+const randInt = (a, b) => Math.floor(Math.random() * (b - a + 1)) + a;
+const pad2 = n => String(n).padStart(2, '0');
+
+// ─── 校验位辅助（Luhn / Mod-11 加权）───
+// 生成 totalLen 位的 Luhn 合法数字串（末位为校验位）
+function luhnComplete(prefix, totalLen) {
+  let body = prefix;
+  while (body.length < totalLen - 1) body += randInt(0, 9);
+  const rev = body.split('').reverse();
+  let sum = 0;
+  for (let i = 0; i < rev.length; i++) {
+    let d = parseInt(rev[i]);
+    if (i % 2 === 0) { d *= 2; if (d > 9) d -= 9; }
+    sum += d;
+  }
+  return body + String((10 - (sum % 10)) % 10);
+}
+// Mod-11 加权校验位：返回使 Σ digit*weight 成立的字符；返回 null 表示需重试
+function mod11Check(prefixDigits, weights) {
+  let sum = 0;
+  for (let i = 0; i < prefixDigits.length; i++) sum += parseInt(prefixDigits[i]) * weights[i];
+  return (11 - (sum % 11)) % 11;
+}
+function randDigits(n) { let s = ''; for (let i = 0; i < n; i++) s += randInt(0, 9); return s; }
+function randUpper(n) { const A = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'; let s = ''; for (let i = 0; i < n; i++) s += A[randInt(0, 25)]; return s; }
+
+// ─── 国家配置（生成策略 + 证件清单 + 字段开关）───
+// gen 策略对象按 country 派发；namePool/streetPool 指向 NAME_POOLS/STREET_POOLS 的 key，'cn' 表示用中文池
+const COUNTRIES = {
+  CN: {
+    name:'中国', callingCode:'86', regionSystem:'cn-gbt2260', regions: ADDR_DATA,
+    locale:{ l1:'省份', l2:'城市', l3:'区县', postcode:'邮政编码' },
+    postcodeStyle:'numeric', postcodeLen:6,
+    fields:{ ethnicity:true, landline:true, bank:true, creditCode:true },
+    namePool:'cn', streetPool:'cn',
+    idTypes:['cn_resident','cn_passport','hk_permit','tw_permit','hk_mainland','tw_mainland'],
+    defaultIds:['cn_resident','cn_passport'],
+    gen:{ name:genNameCN, phone:genPhoneCN, postcode:genPostcodeCN, address:genAddressCN, company:genCompanyCN, email:genEmailCN },
+  },
+  US: {
+    name:'美国', callingCode:'1', regionSystem:'iso3166-2', regions: FOREIGN_REGIONS.US,
+    locale:{ l1:'州', l2:'城市', l3:null, postcode:'ZIP' },
+    postcodeStyle:'numeric', postcodeLen:5,
+    fields:{ ethnicity:false, landline:false, bank:false, creditCode:false },
+    namePool:'en', streetPool:'en',
+    idTypes:['us_passport','us_ssn'], defaultIds:['us_passport','us_ssn'],
+    emailDomains:['gmail.com','hotmail.com','yahoo.com','icloud.com','outlook.com'],
+    companySuffix:['Inc','LLC','Corp','Co'],
+    gen:{ name:genNameEN, phone:genPhoneNANP, postcode:genPostcodeNumeric, address:genAddressEN, company:genCompanyForeign, email:genEmailForeign },
+  },
+  GB: {
+    name:'英国', callingCode:'44', regionSystem:'iso3166-2', regions: FOREIGN_REGIONS.GB,
+    locale:{ l1:'构成国', l2:'城市', l3:null, postcode:'Postcode' },
+    postcodeStyle:'alpha', postcodeLen:8,
+    fields:{ ethnicity:false, landline:false, bank:false, creditCode:false },
+    namePool:'en', streetPool:'gb',
+    idTypes:['gb_passport','gb_nino'], defaultIds:['gb_passport','gb_nino'],
+    emailDomains:['gmail.com','hotmail.com','yahoo.co.uk','outlook.com','btinternet.com'],
+    companySuffix:['Ltd','Plc','LLP'],
+    gen:{ name:genNameEN, phone:genPhoneGB, postcode:genPostcodeGB, address:genAddressGB, company:genCompanyForeign, email:genEmailForeign },
+  },
+  JP: {
+    name:'日本', callingCode:'81', regionSystem:'iso3166-2', regions: FOREIGN_REGIONS.JP,
+    locale:{ l1:'都道府县', l2:'市区', l3:null, postcode:'邮编' },
+    postcodeStyle:'numeric', postcodeLen:7,
+    fields:{ ethnicity:false, landline:false, bank:false, creditCode:false },
+    namePool:'jp', streetPool:'jp',
+    idTypes:['jp_passport','jp_mynumber'], defaultIds:['jp_passport','jp_mynumber'],
+    emailDomains:['gmail.com','yahoo.co.jp','docomo.ne.jp','ezweb.ne.jp','i.softbank.jp'],
+    companySuffix:['Inc','Corp','K.K.'],
+    gen:{ name:genNameJP, phone:genPhoneJP, postcode:genPostcodeJP, address:genAddressJP, company:genCompanyForeign, email:genEmailForeign },
+  },
+  KR: {
+    name:'韩国', callingCode:'82', regionSystem:'iso3166-2', regions: FOREIGN_REGIONS.KR,
+    locale:{ l1:'广域市/道', l2:'区/市', l3:null, postcode:'邮编' },
+    postcodeStyle:'numeric', postcodeLen:5,
+    fields:{ ethnicity:false, landline:false, bank:false, creditCode:false },
+    namePool:'kr', streetPool:'kr',
+    idTypes:['kr_passport','kr_rrn'], defaultIds:['kr_passport','kr_rrn'],
+    emailDomains:['gmail.com','naver.com','daum.net','hanmail.net'],
+    companySuffix:['Inc','Corp'],
+    gen:{ name:genNameKR, phone:genPhoneKR, postcode:genPostcodeNumeric, address:genAddressKR, company:genCompanyForeign, email:genEmailForeign },
+  },
+  CA: {
+    name:'加拿大', callingCode:'1', regionSystem:'iso3166-2', regions: FOREIGN_REGIONS.CA,
+    locale:{ l1:'省', l2:'城市', l3:null, postcode:'Postcode' },
+    postcodeStyle:'alpha', postcodeLen:7,
+    fields:{ ethnicity:false, landline:false, bank:false, creditCode:false },
+    namePool:'en', streetPool:'en',
+    idTypes:['ca_passport','ca_sin'], defaultIds:['ca_passport','ca_sin'],
+    emailDomains:['gmail.com','hotmail.com','yahoo.ca','rogers.com','bell.net'],
+    companySuffix:['Inc','Ltd','Corp'],
+    gen:{ name:genNameEN, phone:genPhoneNANP, postcode:genPostcodeCA, address:genAddressEN, company:genCompanyForeign, email:genEmailForeign },
+  },
+  AU: {
+    name:'澳大利亚', callingCode:'61', regionSystem:'iso3166-2', regions: FOREIGN_REGIONS.AU,
+    locale:{ l1:'州', l2:'城市', l3:null, postcode:'Postcode' },
+    postcodeStyle:'numeric', postcodeLen:4,
+    fields:{ ethnicity:false, landline:false, bank:false, creditCode:false },
+    namePool:'en', streetPool:'en',
+    idTypes:['au_passport'], defaultIds:['au_passport'],
+    emailDomains:['gmail.com','hotmail.com','yahoo.com.au','bigpond.com','optusnet.com.au'],
+    companySuffix:['Pty Ltd','Ltd'],
+    gen:{ name:genNameEN, phone:genPhoneAU, postcode:genPostcodeNumeric, address:genAddressEN, company:genCompanyForeign, email:genEmailForeign },
+  },
+  DE: {
+    name:'德国', callingCode:'49', regionSystem:'iso3166-2', regions: FOREIGN_REGIONS.DE,
+    locale:{ l1:'联邦州', l2:'城市', l3:null, postcode:'PLZ' },
+    postcodeStyle:'numeric', postcodeLen:5,
+    fields:{ ethnicity:false, landline:false, bank:false, creditCode:false },
+    namePool:'de', streetPool:'de',
+    idTypes:['de_passport'], defaultIds:['de_passport'],
+    emailDomains:['gmail.com','web.de','gmx.de','t-online.de'],
+    companySuffix:['GmbH','AG'],
+    gen:{ name:genNameDE, phone:genPhoneDE, postcode:genPostcodeNumeric, address:genAddressDE, company:genCompanyForeign, email:genEmailForeign },
+  },
+  FR: {
+    name:'法国', callingCode:'33', regionSystem:'iso3166-2', regions: FOREIGN_REGIONS.FR,
+    locale:{ l1:'大区', l2:'城市', l3:null, postcode:'Code postal' },
+    postcodeStyle:'numeric', postcodeLen:5,
+    fields:{ ethnicity:false, landline:false, bank:false, creditCode:false },
+    namePool:'fr', streetPool:'fr',
+    idTypes:['fr_passport','fr_insee'], defaultIds:['fr_passport','fr_insee'],
+    emailDomains:['gmail.com','orange.fr','free.fr','laposte.net','wanadoo.fr'],
+    companySuffix:['SA','SARL','SAS'],
+    gen:{ name:genNameFR, phone:genPhoneFR, postcode:genPostcodeNumeric, address:genAddressFR, company:genCompanyForeign, email:genEmailForeign },
+  },
+  SG: {
+    name:'新加坡', callingCode:'65', regionSystem:'iso3166-2', regions: FOREIGN_REGIONS.SG,
+    locale:{ l1:'地区', l2:'街区', l3:null, postcode:'Postcode' },
+    postcodeStyle:'numeric', postcodeLen:6,
+    fields:{ ethnicity:false, landline:false, bank:false, creditCode:false },
+    namePool:'en', streetPool:'sg',
+    idTypes:['sg_nric','sg_passport'], defaultIds:['sg_nric','sg_passport'],
+    emailDomains:['gmail.com','yahoo.com.sg','singnet.com.sg','starhub.net.sg'],
+    companySuffix:['Pte Ltd'],
+    gen:{ name:genNameEN, phone:genPhoneSG, postcode:genPostcodeNumeric, address:genAddressSG, company:genCompanyForeign, email:genEmailForeign },
+  },
+  MY: {
+    name:'马来西亚', callingCode:'60', regionSystem:'iso3166-2', regions: FOREIGN_REGIONS.MY,
+    locale:{ l1:'州/直辖区', l2:'城市', l3:null, postcode:'Postcode' },
+    postcodeStyle:'numeric', postcodeLen:5,
+    fields:{ ethnicity:false, landline:false, bank:false, creditCode:false },
+    namePool:'my', streetPool:'my',
+    idTypes:['my_mykad','my_passport'], defaultIds:['my_mykad','my_passport'],
+    emailDomains:['gmail.com','yahoo.com','hotmail.com','tm.net.my'],
+    companySuffix:['Sdn Bhd'],
+    gen:{ name:genNameMY, phone:genPhoneMY, postcode:genPostcodeNumeric, address:genAddressMY, company:genCompanyForeign, email:genEmailForeign },
+  },
+  TH: {
+    name:'泰国', callingCode:'66', regionSystem:'iso3166-2', regions: FOREIGN_REGIONS.TH,
+    locale:{ l1:'府', l2:'县/区', l3:null, postcode:'Postcode' },
+    postcodeStyle:'numeric', postcodeLen:5,
+    fields:{ ethnicity:false, landline:false, bank:false, creditCode:false },
+    namePool:'th', streetPool:'th',
+    idTypes:['th_id','th_passport'], defaultIds:['th_id','th_passport'],
+    emailDomains:['gmail.com','hotmail.com','yahoo.com','truemail.com'],
+    companySuffix:['Co Ltd'],
+    gen:{ name:genNameTH, phone:genPhoneTH, postcode:genPostcodeNumeric, address:genAddressTH, company:genCompanyForeign, email:genEmailForeign },
+  },
+  RU: {
+    name:'俄罗斯', callingCode:'7', regionSystem:'iso3166-2', regions: FOREIGN_REGIONS.RU,
+    locale:{ l1:'联邦主体', l2:'城市', l3:null, postcode:'Postal Code' },
+    postcodeStyle:'numeric', postcodeLen:6,
+    fields:{ ethnicity:false, landline:false, bank:false, creditCode:false },
+    namePool:'ru', streetPool:'ru',
+    idTypes:['ru_passport','ru_inn'], defaultIds:['ru_passport','ru_inn'],
+    emailDomains:['gmail.com','mail.ru','yandex.ru','rambler.ru','bk.ru'],
+    companySuffix:['OOO','PAO'],
+    gen:{ name:genNameRU, phone:genPhoneRU, postcode:genPostcodeNumeric, address:genAddressRU, company:genCompanyForeign, email:genEmailForeign },
+  },
+};
+
+// ─── 证件类型注册表（label + gen(ctx)）───
+const ID_TYPE_DEFS = {
+  cn_resident:  { label:'身份证',                      gen: genCNResident },
+  cn_passport:  { label:'中国护照',                    gen: genCNPassport },
+  hk_permit:    { label:'往来港澳通行证',              gen: genHKPermit },
+  tw_permit:    { label:'往来台湾通行证',              gen: genTWPermit },
+  hk_mainland:  { label:'港澳居民来往内地通行证',      gen: genHKMainland },
+  tw_mainland:  { label:'台胞证(台湾居民来往大陆通行证)', gen: genTWMainland },
+  us_passport:  { label:'美国护照',                    gen: genUSPassport },
+  us_ssn:       { label:'美国社会安全号(SSN)',         gen: genUSSSN },
+  gb_passport:  { label:'英国护照',                    gen: genGBPassport },
+  gb_nino:      { label:'英国国民保险号(NINO)',        gen: genGBNINO },
+  jp_passport:  { label:'日本护照',                    gen: genJPPassport },
+  jp_mynumber:  { label:'日本个人编号(MyNumber)',      gen: genJPMyNumber },
+  kr_passport:  { label:'韩国护照',                    gen: genKRPassport },
+  kr_rrn:       { label:'韩国居民登录号',              gen: genKRRRN },
+  ca_passport:  { label:'加拿大护照',                  gen: genCAPassport },
+  ca_sin:       { label:'加拿大社会保险号(SIN)',       gen: genCASIN },
+  au_passport:  { label:'澳大利亚护照',                gen: genAUPassport },
+  de_passport:  { label:'德国护照',                    gen: genDEPassport },
+  fr_passport:  { label:'法国护照',                    gen: genFRPassport },
+  fr_insee:     { label:'法国社保号(INSEE)',           gen: genFRINSEE },
+  sg_nric:      { label:'新加坡 NRIC/FIN',             gen: genSGNRIC },
+  sg_passport:  { label:'新加坡护照',                  gen: genSGPassport },
+  my_mykad:     { label:'马来西亚身份证(MyKad)',       gen: genMYMyKad },
+  my_passport:  { label:'马来西亚护照',                gen: genMYPassport },
+  th_id:        { label:'泰国国民身份证',              gen: genTHID },
+  th_passport:  { label:'泰国护照',                    gen: genTHPassport },
+  ru_passport:  { label:'俄罗斯护照',                  gen: genRUPassport },
+  ru_inn:       { label:'俄罗斯税号(INN)',             gen: genRUINN },
+};
+
+// ─── 可搜索级联地址选择器 ───
+let ssProvince, ssCity, ssDistrict;
+const RANDOM_ITEM = { value: '', label: '随机' };
+
+// ─── 模块状态：当前国家 / 当前地区树 / 共性字段勾选记忆 ───
+let currentCountry = 'CN';
+let currentAddrModel = ADDR_DATA;   // CN 指向 ADDR_DATA；国外指向 COUNTRIES[country].regions
+let userFieldPrefs = {};            // 共性字段勾选跨国家保留
+
+// 通用可搜索下拉：items=[{value,label}]，value='' 代表"随机"
+class SearchSelect {
+  constructor(container, placeholder) {
+    this.container = container;
+    this.value = '';
+    this.items = [];
+    this.onChange = null;
+    container.innerHTML =
+      `<input type="text" class="ss-input" placeholder="${placeholder}" autocomplete="off">
+       <div class="ss-clear" title="清空选择（恢复随机）">×</div>
+       <div class="ss-dropdown"></div>`;
+    this.input = container.querySelector('.ss-input');
+    this.dropdown = container.querySelector('.ss-dropdown');
+    this.clearBtn = container.querySelector('.ss-clear');
+    this._bind();
+  }
+  setItems(items) {
+    this.items = items;
+    if (this.value && !items.some(it => it.value === this.value)) this.setValue('');
+  }
+  setValue(value) {
+    this.value = value;
+    if (value === '') { this.input.value = ''; this._updateClear(); return; }
+    const it = this.items.find(i => i.value === value);
+    this.input.value = it ? it.label : '';
+    this._updateClear();
+  }
+  getValue() { return this.value; }
+  _updateClear() { this.clearBtn.classList.toggle('show', this.value !== ''); }
+  _filtered() {
+    const q = this.input.value.trim().toLowerCase();
+    return q ? this.items.filter(it => it.label.toLowerCase().includes(q)) : this.items;
+  }
+  _render(applyFilter = true) {
+    const list = applyFilter ? this._filtered() : this.items;
+    this.dropdown.innerHTML = list.length
+      ? list.map(it => `<div class="ss-option${it.value === this.value ? ' selected' : ''}" data-value="${it.value}">${it.label}</div>`).join('')
+      : '<div class="ss-empty">无匹配项</div>';
+  }
+  // 打开时全量展示并高亮已选项；过滤只在输入时生效（否则选中后再打开只剩已选一项）
+  _open()  { this._render(false); this.dropdown.classList.add('open'); this.input.select(); }
+  // 关闭时把输入框恢复为已选文案，清掉残留的搜索词
+  _close() {
+    this.dropdown.classList.remove('open');
+    const it = this.value === '' ? null : this.items.find(i => i.value === this.value);
+    this.input.value = it ? it.label : '';
+  }
+  _bind() {
+    this.input.addEventListener('focus', () => this._open());
+    this.input.addEventListener('input', () => {
+      const exact = this.items.find(it => it.label === this.input.value);
+      const next = exact ? exact.value : '';
+      if (next !== this.value) {
+        this.value = next;
+        this._updateClear();
+        if (this.onChange) this.onChange(this.value);
+      }
+      this._render();
+      this.dropdown.classList.add('open');
+    });
+    this.dropdown.addEventListener('click', e => {
+      const opt = e.target.closest('.ss-option');
+      if (!opt) return;
+      this.setValue(opt.dataset.value);
+      this._close();
+      if (this.onChange) this.onChange(this.value);
+    });
+    this.clearBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      this.setValue('');
+      this._close();
+      if (this.onChange) this.onChange('');
+    });
+    this.input.addEventListener('keydown', e => {
+      if (e.key === 'Escape') { this._close(); this.input.blur(); }
+    });
+    document.addEventListener('click', e => {
+      if (!this.container.contains(e.target)) this._close();
+    });
+  }
+}
+
+// ─── 地址层级 items（按 regionSystem 分支：CN 三级 / 国外二级）───
+function addrL1Items() {
+  const C = COUNTRIES[currentCountry];
+  const label = x => C.regionSystem === 'cn-gbt2260' ? x.p : x.name;
+  return [RANDOM_ITEM, ...currentAddrModel.map((x, i) => ({ value: String(i), label: label(x) }))];
+}
+function addrL2Items(l1i) {
+  if (l1i === '') return [RANDOM_ITEM];
+  const C = COUNTRIES[currentCountry];
+  const l1 = currentAddrModel[l1i];
+  const label = c => C.regionSystem === 'cn-gbt2260' ? c.c : c.name;
+  return [RANDOM_ITEM, ...l1.cities.map((c, i) => ({ value: String(i), label: label(c) }))];
+}
+function addrL3Items(l1i, l2i) {
+  if (l1i === '' || l2i === '') return [RANDOM_ITEM];
+  const city = currentAddrModel[l1i].cities[l2i];   // 仅 CN 有 ds
+  return [RANDOM_ITEM, ...city.ds.map((d, i) => ({ value: String(i), label: d.n }))];
+}
+
+function buildAddrSelects() {
+  ssProvince = new SearchSelect(document.getElementById('ssProvince'), '随机（可输入搜索）');
+  ssProvince.onChange = v => onProvinceChange(v);
+  ssCity = new SearchSelect(document.getElementById('ssCity'), '随机（可输入搜索）');
+  ssCity.onChange = v => onCityChange(v);
+  ssDistrict = new SearchSelect(document.getElementById('ssDistrict'), '随机（可输入搜索）');
+  ssDistrict.onChange = () => { autoFillPostcode(); updateAddrPreview(); };
+  rebuildAddressForCountry(currentCountry);   // 初始按当前国家填充
+}
+
+function onProvinceChange(v) {
+  ssCity.setItems(addrL2Items(v));
+  ssDistrict.setItems([RANDOM_ITEM]);
+  ssCity.setValue('');
+  ssDistrict.setValue('');
+  autoFillPostcode();
+  updateAddrPreview();
+}
+
+function onCityChange(v) {
+  const pi = ssProvince.getValue();
+  const C = COUNTRIES[currentCountry];
+  if (C.regionSystem === 'cn-gbt2260' && v !== '' && pi !== '') {
+    ssDistrict.setItems(addrL3Items(pi, v));
+  } else {
+    ssDistrict.setItems([RANDOM_ITEM]);
+  }
+  ssDistrict.setValue('');
+  autoFillPostcode();
+  updateAddrPreview();
+}
+
+// 用户是否手动编辑过邮政编码（编辑后不再随地区联动覆盖）
+let postcodeEdited = false;
+
+// 由当前下拉选择推导一个 areaInfo（供邮编联动/预览；未选满级时 CN 用首区码）
+function currentAreaInfoFromSelection() {
+  const l1i = ssProvince.getValue();
+  if (l1i === '') return null;
+  const C = COUNTRIES[currentCountry];
+  const l1 = currentAddrModel[l1i];
+  const l2i = ssCity.getValue();
+  if (C.regionSystem === 'cn-gbt2260') {
+    if (l2i === '') {
+      // 只选省：借首区码推导省码（6 位码前 2 位 + 0000），避免 getCurrentCodes 拿到 null
+      return { l1: l1.p, l2: null, code3: l1.cities[0].ds[0].code, iso: null, zip: null, area: null };
+    }
+    const city = l1.cities[l2i];
+    return { l1: l1.p, l2: city.c, l3: null, code3: city.ds[0].code, iso: null, zip: null, area: null };
+  }
+  const city = l2i !== '' ? l1.cities[l2i] : l1.cities[0];
+  return { l1: l1.name, l2: city.name, l3: null, code3: null, iso: l1.iso, zip: city.zip, area: city.area };
+}
+
+// 根据所选地区自动填充邮政编码（用户手动编辑过则保留原值）
+function autoFillPostcode() {
+  if (postcodeEdited) return;
+  const ai = currentAreaInfoFromSelection();
+  const input = document.getElementById('customPostcode');
+  if (!ai) { input.value = ''; return; }
+  const C = COUNTRIES[currentCountry];
+  if (C.regionSystem === 'cn-gbt2260') {
+    input.value = POSTAL_MAP[ai.l2] || '';
+  } else {
+    // gen 函数期望 { country, areaInfo } 形状；直接传扁平 ai 会因缺 country 崩溃
+    input.value = C.gen.postcode({ country: currentCountry, areaInfo: ai });
+  }
+}
+
+// 推导省/市/区码：CN 为 GB/T 2260 六位码，国外为 ISO 3166-2
+function getCurrentCodes() {
+  const ai = currentAreaInfoFromSelection();
+  if (!ai) return null;
+  const C = COUNTRIES[currentCountry];
+  if (C.regionSystem === 'cn-gbt2260' && ai.code3) {
+    return { provinceCode: ai.code3.slice(0, 2) + '0000', cityCode: ai.code3.slice(0, 4) + '00', districtCode: ai.code3 };
+  }
+  return { provinceCode: ai.iso || '', cityCode: '', districtCode: '' };
+}
+
+// 显示当前已选地区（含区划代码）与邮编
+function updateAddrPreview() {
+  const preview = document.getElementById('addrPreview');
+  const l1i = ssProvince.getValue();
+  if (l1i === '') { preview.innerHTML = '未选择地址（将随机生成）'; return; }
+  const C = COUNTRIES[currentCountry];
+  const l1 = currentAddrModel[l1i];
+  const l2i = ssCity.getValue();
+  const codes = getCurrentCodes();
+  let text;
+  if (C.regionSystem === 'cn-gbt2260') {
+    text = `${l1.p}（${codes.provinceCode}）`;
+    if (l2i !== '') {
+      const city = l1.cities[l2i];
+      text += ` · ${city.c}（${codes.cityCode}）`;
+      const l3i = ssDistrict.getValue();
+      if (l3i !== '') text += ` · ${city.ds[l3i].n}（${codes.districtCode}）`;
+    }
+  } else {
+    text = `${l1.name}（${codes.provinceCode}）`;
+    if (l2i !== '') text += ` · ${l1.cities[l2i].name}`;
+  }
+  const zip = document.getElementById('customPostcode').value;
+  text += zip ? `，邮编 ${zip}` : '，邮编随机';
+  preview.innerHTML = `<span style="color:#4f46e5">已选：${text}</span>`;
+}
+
+// 输入 6 位行政区划码，定位到对应省/市/区（仅 CN 启用）
+function locateByCode(code) {
+  if (!/^\d{6}$/.test(code)) return false;
+  for (let pi = 0; pi < ADDR_DATA.length; pi++) {
+    const prov = ADDR_DATA[pi];
+    for (let ci = 0; ci < prov.cities.length; ci++) {
+      const city = prov.cities[ci];
+      const di = city.ds.findIndex(d => d.code === code);
+      if (di >= 0) {
+        ssProvince.setValue(String(pi));
+        onProvinceChange(String(pi));
+        ssCity.setValue(String(ci));
+        onCityChange(String(ci));
+        ssDistrict.setValue(String(di));
+        updateAddrPreview();
+        return { p: prov.p, c: city.c, d: city.ds[di].n };
+      }
+    }
+  }
+  return false;
+}
+
+// 国家切换总调度：切换地区树、显隐第三级/定位框、改 label 文案、重置邮编、重填一级
+function rebuildAddressForCountry(country) {
+  currentCountry = country;
+  const C = COUNTRIES[country];
+  currentAddrModel = C.regions;
+  document.getElementById('lblL1').textContent = C.locale.l1;
+  document.getElementById('lblL2').textContent = C.locale.l2;
+  document.getElementById('lblL3').textContent = C.locale.l3 || '';
+  document.getElementById('lblPostcode').textContent = C.locale.postcode;
+  const showL3 = C.regionSystem === 'cn-gbt2260';
+  ssDistrict.container.style.display = showL3 ? '' : 'none';
+  document.getElementById('lblL3').style.visibility = showL3 ? '' : 'hidden';
+  document.getElementById('locateWrap').style.display = showL3 ? '' : 'none';
+  const pcInput = document.getElementById('customPostcode');
+  if (C.postcodeStyle === 'numeric') pcInput.setAttribute('inputmode', 'numeric');
+  else pcInput.removeAttribute('inputmode');
+  pcInput.setAttribute('maxlength', String(C.postcodeLen));
+  postcodeEdited = false;
+  pcInput.value = '';
+  ssProvince.setItems(addrL1Items());
+  ssCity.setItems([RANDOM_ITEM]);
+  ssDistrict.setItems([RANDOM_ITEM]);
+  ssProvince.setValue('');
+  ssCity.setValue('');
+  ssDistrict.setValue('');
+  updateAddrPreview();
+}
+
+function onCountryChange(v) {
+  rebuildAddressForCountry(v);
+  renderFieldCheckboxes(v);   // 刷新字段复选框（证件清单按国家变化）
+}
+
+// 读取当前选择的完整 areaInfo（用于生成；未选则随机）
+function getAddressInfo() {
+  const l1i = ssProvince.getValue();
+  if (l1i === '') return randomAddrInfo();
+  const C = COUNTRIES[currentCountry];
+  const l1 = currentAddrModel[l1i];
+  const l2i = ssCity.getValue();
+  if (C.regionSystem === 'cn-gbt2260') {
+    const city = l2i !== '' ? l1.cities[l2i] : pick(l1.cities);
+    const l3i = ssDistrict.getValue();
+    const dist = l3i !== '' ? city.ds[l3i] : pick(city.ds);
+    return { l1: l1.p, l2: city.c, l3: dist.n, code3: dist.code, iso: null, zip: null, area: null };
+  }
+  const city = l2i !== '' ? l1.cities[l2i] : pick(l1.cities);
+  return { l1: l1.name, l2: city.name, l3: null, code3: null, iso: l1.iso, zip: city.zip, area: city.area };
+}
+
+function randomAddrInfo() {
+  const C = COUNTRIES[currentCountry];
+  if (C.regionSystem === 'cn-gbt2260') {
+    const prov = pick(ADDR_DATA);
+    const city = pick(prov.cities);
+    const dist = pick(city.ds);
+    return { l1: prov.p, l2: city.c, l3: dist.n, code3: dist.code, iso: null, zip: null, area: null };
+  }
+  const state = pick(C.regions);
+  const city = pick(state.cities);
+  return { l1: state.name, l2: city.name, l3: null, code3: null, iso: state.iso, zip: city.zip, area: city.area };
+}
+
+// 读取自定义设置，返回 { birthday:'YYYY-MM-DD'|null, areaCode:'123456'|null, areaInfo:{p,c,d,code}|null, postcode:'123456'|null }
+function getCustomSettings() {
+  const s = { country: currentCountry, gender: null, birthday: null, areaInfo: null, postcode: null };
+
+  // 性别
+  const gInput = document.getElementById('customGender').value;
+  if (gInput) s.gender = gInput;
+
+  // 生日 / 年龄
+  const bInput = document.getElementById('customBirthday').value;
+  const aInput = document.getElementById('customAge').value;
+  if (bInput) {
+    s.birthday = bInput;
+  } else if (aInput && parseInt(aInput) > 0) {
+    const age = parseInt(aInput);
+    const year = new Date().getFullYear() - age;
+    s.birthday = `${year}-${pad2(randInt(1, 12))}-${pad2(randInt(1, 28))}`;
+  }
+
+  // 地址（统一 areaInfo 形状；未选则随机）
+  s.areaInfo = getAddressInfo();
+
+  // 邮政编码（手动输入；CN 6 位数字，国外按各自格式，非空即采用）
+  const pcInput = document.getElementById('customPostcode').value.trim();
+  if (pcInput) s.postcode = pcInput;
+
+  return s;
+}
+
+// ─── 通用生成器 ───
+function genGender() { return pick(['男', '女']); }
+
+function genBirthday(custom) {
+  if (custom) return custom;
+  const y = randInt(1960, 2005);
+  const m = randInt(1, 12);
+  const d = randInt(1, 28);
+  return `${y}-${pad2(m)}-${pad2(d)}`;
+}
+
+function genEthnicity() { return pick(ETHNICITIES); }
+
+// 国外公司词库（英文，搭配各国公司后缀）
+const EN_COMPANY_WORDS = ['Global','Prime','Apex','Nova','Vertex','Summit','Vantage','Pioneer','Stellar','Quantum','Blue','Silver','Iron','Gold','Royal','Crown','Union','Unity','Falcon','Eagle','Tiger','Phoenix','Orion','Atlas','Titan','Nexus','Horizon','Crystal','Meridian','Zenith'];
+
+// ─── 中国（CN）策略 ───
+function genNameCN(ctx) {
+  const surname = pick(SURNAMES);
+  const pool = ctx.gender === '女' ? FEMALE_NAME_CHARS : MALE_NAME_CHARS;
+  const given = Math.random() < 0.1 ? pick(pool) : pick(pool) + pick(pool);
+  return surname + given;
+}
+function genPhoneCN() {
+  return pick(PHONE_PREFIXES) + String(randInt(0, 99999999)).padStart(8, '0');
+}
+function genLandline(ctx) {
+  const ai = ctx.areaInfo;
+  let areaCode;
+  if (ai) {
+    const provMap = TEL_AREA_CODES[ai.l1];
+    if (provMap) areaCode = provMap[ai.l2] || pick(Object.values(provMap));
+  }
+  if (!areaCode) {
+    const prov = pick(Object.keys(TEL_AREA_CODES));
+    areaCode = pick(Object.values(TEL_AREA_CODES[prov]));
+  }
+  const localLen = areaCode.length <= 3 ? 8 : 7;
+  let local = '';
+  for (let i = 0; i < localLen; i++) local += randInt(0, 9);
+  return areaCode + '-' + local;
+}
+function genPostcodeCN(ctx) {
+  const baseZip = POSTAL_MAP[ctx.areaInfo.l2] || pick(Object.values(POSTAL_MAP));
+  return baseZip.slice(0, 4) + String(randInt(0, 99)).padStart(2, '0');
+}
+function genAddressCN(ctx) {
+  const a = ctx.areaInfo;
+  const road = pick(ROADS);
+  const detail = `${road}${randInt(1, 999)}${pick(ROAD_TYPES)}`;
+  return a.l1 + a.l2 + a.l3 + detail;
+}
+// 省级名称转公司前缀用的简称（广东省→广东、壮族自治区→广西、特别行政区→香港）
+function provinceShort(p) {
+  return p.replace(/(省|市|特别行政区)$/, '').replace(/(维吾尔|回族|壮族)?自治区$/, '');
+}
+// 由地区信息派生公司名地名前缀：优先城市名（深圳市→深圳），回退省简称
+function regionShort(areaInfo) {
+  if (areaInfo.l2.endsWith('市')) return areaInfo.l2.slice(0, -1);
+  return provinceShort(areaInfo.l1);
+}
+function genCompanyCN(ctx) {
+  const region = ctx.areaInfo ? regionShort(ctx.areaInfo) : pick(['北京','上海','广州','深圳','南京','杭州','成都','武汉','长沙','济南','郑州','福州','天津','重庆','合肥']);
+  return region + pick(COMPANY_PREFIXES) + pick(COMPANY_MIDDLES) + pick(COMPANY_SUFFIXES);
+}
+function genEmailCN() {
+  const pinyin_surnames = ['wang','li','zhang','liu','chen','yang','zhao','huang','zhou','wu','xu','sun','hu','zhu','gao','lin','he','guo','ma','luo','liang','song','zheng','xie','han','tang','feng','yu','dong','xiao','cheng','cao','yuan','deng','xu','fu','shen','zeng','peng','lv','su','lu','jiang','cai','jia','ding','wei','xue','ye','yan','yu','pan','du','dai','xia','zhong','wang','tian','ren','jiang','fan','fang','shi','yao','tan','liao','zou','xiong','jin','lu','hao','kong','bai','cui','kang','mao','qiu','qin','jiang','shi','gu','hou','shao','meng','long','wan','duan','lei','qian','tang','yin','li','yi','chang','wu','qiao','he','lai','gong','wen','wen','kang','shi','niu','fan','hu','ge','xing','an','qi','yi','wu','yu','yuan','bu','qin','yue','zhang','pan','hui'];
+  return pick(pinyin_surnames) + pick(['wei','fang','na','min','jing','li','yan','jun','xiu','ying','hui','qiao','mei','ting','xue','lin','lei','qin','zhen','lan','feng','ju','shu','xin','yue','yao','tong','xuan','jia','meng','yi','han','yu','ping','xia','ling','lu','fei','qian','yuan','ni','ke','qi','wen','lan','rui','wan','rong','ya','fen','he','lu','hong','shi','yun','xin','miao','jie','xiao','hao','chen','jian','jun','liang','zheng','da','hang','kai','ming','xuan','bin','yang','heng','cheng','qi','nan','sen','song','tong','de','xiang','guang','qing','an','shu','run','yi','jin','jia','ji','yao','chang']) + randInt(10, 999) + '@' + pick(EMAIL_DOMAINS);
+}
+// 身份证主体（18 位 GB/T 2260 加权校验）
+function genIdCardBody(gender, birthday, areaCode) {
+  const area = areaCode || pick([
+    '110101','110102','110105','110106','310101','310104','310115','320102',
+    '320104','320106','440103','440104','440305','440306','330102','330106',
+    '510104','510105','420102','420106','500103','500105','120101','120104'
+  ]);
+  const bd = birthday || `${randInt(1960, 2005)}-${pad2(randInt(1,12))}-${pad2(randInt(1,28))}`;
+  const [y, m, d] = bd.split('-');
+  const seq = String(randInt(0, 99)).padStart(2, '0') + (gender === '男' ? String(randInt(0, 4) * 2 + 1) : String(randInt(0, 4) * 2));
+  const base = area + y + m + d + seq;
+  const weights = [7,9,10,5,8,4,2,1,6,3,7,9,10,5,8,4,2];
+  const checkChars = '10X98765432';
+  let sum = 0;
+  for (let i = 0; i < 17; i++) sum += parseInt(base[i]) * weights[i];
+  return base + checkChars[sum % 11];
+}
+
+// ─── 银行卡 / 统一信用代码（中国特有，保留）───
+function genBankCard() {
+  const bank = pick(Object.keys(BANK_PREFIXES));
+  const prefix = BANK_PREFIXES[bank];
+  const len = pick([16, 19]);
+  let digits = prefix;
+  while (digits.length < len - 1) digits += randInt(0, 9);
+  let sum = 0;
+  for (let i = 0; i < digits.length; i++) {
+    let d = parseInt(digits[digits.length - 1 - i]);
+    if (i % 2 === 0) { d *= 2; if (d > 9) d -= 9; }
+    sum += d;
+  }
+  digits += (10 - (sum % 10)) % 10;
+  return { name: bank, card: digits };
+}
+function genCreditCode() {
+  const chars = '0123456789ABCDEFGHJKLMNPQRTUWXY';
+  const dept = pick(['1','5','9']);
+  const cat = chars[randInt(0, chars.length - 1)];
+  const adminArea = String(randInt(110000, 659999));
+  let body = '';
+  for (let i = 0; i < 9; i++) body += chars[randInt(0, chars.length - 1)];
+  const base = dept + cat + adminArea + body;
+  const weights = [1,3,9,27,19,26,16,17,20,29,25,13,8,24,10,30,28];
+  let sum = 0;
+  for (let i = 0; i < 17; i++) sum += chars.indexOf(base[i]) * weights[i];
+  const check = 31 - (sum % 31);
+  return base + chars[check % 31];
+}
+
+// ─── 国外邮编策略 ───
+function genPostcodeNumeric(ctx) {
+  const len = COUNTRIES[ctx.country].postcodeLen;
+  const prefix = ctx.areaInfo.zip || '';
+  let body = prefix;
+  while (body.length < len) body += randInt(0, 9);
+  return body.slice(0, len);
+}
+function genPostcodeJP(ctx) {
+  const prefix = (ctx.areaInfo.zip || randDigits(3)).slice(0, 3);
+  return prefix.padStart(3, '0') + '-' + randDigits(4);
+}
+function genPostcodeGB(ctx) {
+  const prefix = ctx.areaInfo.zip || randUpper(2);
+  return prefix + randInt(1, 9) + ' ' + randInt(1, 9) + randUpper(2);
+}
+function genPostcodeCA() {
+  const A = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const c = () => A[randInt(0, 25)], n = () => randInt(1, 9);
+  return c() + n() + c() + ' ' + n() + c() + n();
+}
+
+// ─── 国外姓名策略 ───
+function genNameForeign(ctx, poolKey) {
+  const pool = NAME_POOLS[poolKey];
+  return pick(pool.first) + ' ' + pick(pool.last);
+}
+function genNameEN(ctx) { return genNameForeign(ctx, 'en'); }
+function genNameFR(ctx) { return genNameForeign(ctx, 'fr'); }
+function genNameDE(ctx) { return genNameForeign(ctx, 'de'); }
+function genNameJP(ctx) { return genNameForeign(ctx, 'jp'); }
+function genNameKR(ctx) { return genNameForeign(ctx, 'kr'); }
+function genNameRU(ctx) { return genNameForeign(ctx, 'ru'); }
+function genNameMY(ctx) { return genNameForeign(ctx, 'my'); }
+function genNameTH(ctx) { return genNameForeign(ctx, 'th'); }
+
+// ─── 国外电话策略 ───
+function genPhoneNANP(ctx) {
+  const npa = ctx.areaInfo.area || (randInt(2, 9) + randDigits(2));
+  const nxx = randInt(2, 9) + randDigits(2);
+  return npa + '-' + nxx + '-' + randDigits(4);
+}
+function genPhoneGB() { return '07' + randDigits(2) + ' ' + randDigits(3) + ' ' + randDigits(3); }
+function genPhoneJP() { return '0' + pick(['90','80','70']) + '-' + randDigits(4) + '-' + randDigits(4); }
+function genPhoneKR() { return '010-' + randDigits(4) + '-' + randDigits(4); }
+function genPhoneAU() { return '04' + randDigits(2) + ' ' + randDigits(3) + ' ' + randDigits(3); }
+function genPhoneDE() { return '015' + randInt(1, 9) + ' ' + randDigits(7); }
+function genPhoneFR() { return '0' + pick(['6','7']) + ' ' + randDigits(2) + ' ' + randDigits(2) + ' ' + randDigits(2) + ' ' + randDigits(2); }
+function genPhoneSG() { return pick(['8','9']) + randDigits(3) + ' ' + randDigits(4); }
+function genPhoneMY() { return '01' + pick(['1','2','3','6','7','8','9']) + '-' + randDigits(3) + ' ' + randDigits(4); }
+function genPhoneTH() { return '0' + pick(['8','9','6']) + randInt(1, 9) + '-' + randDigits(3) + '-' + randDigits(3); }
+function genPhoneRU() { return '9' + randDigits(2) + ' ' + randDigits(3) + '-' + randDigits(2) + '-' + randDigits(2); }
+
+// ─── 国外地址策略 ───
+function genAddressEN(ctx) {
+  const a = ctx.areaInfo, sp = STREET_POOLS.en, suf = pick(sp.suffixes);
+  const street = pick(sp.streets) + (suf ? ' ' + suf : '');
+  return `${randInt(1, 9999)} ${street}, ${a.l2}, ${a.iso} ${genPostcodeNumeric(ctx)}`;
+}
+function genAddressGB(ctx) {
+  const a = ctx.areaInfo, sp = STREET_POOLS.gb, suf = pick(sp.suffixes);
+  const street = pick(sp.streets) + (suf ? ' ' + suf : '');
+  return `${randInt(1, 200)} ${street}, ${a.l2} ${genPostcodeGB(ctx)}`;
+}
+function genAddressJP(ctx) {
+  const a = ctx.areaInfo, sp = STREET_POOLS.jp;
+  return `${randInt(1, 9)}-${randInt(1, 30)}-${randInt(1, 30)} ${pick(sp.streets)}, ${a.l2}, ${a.l1} ${genPostcodeJP(ctx)}`;
+}
+function genAddressKR(ctx) {
+  const a = ctx.areaInfo, sp = STREET_POOLS.kr;
+  return `${randInt(1, 999)} ${pick(sp.streets)}, ${a.l2}, ${a.l1} ${genPostcodeNumeric(ctx)}`;
+}
+function genAddressDE(ctx) {
+  const a = ctx.areaInfo, sp = STREET_POOLS.de;
+  return `${pick(sp.streets)} ${randInt(1, 200)}, ${genPostcodeNumeric(ctx)} ${a.l2}`;
+}
+function genAddressFR(ctx) {
+  const a = ctx.areaInfo, sp = STREET_POOLS.fr;
+  return `${randInt(1, 200)} ${pick(sp.streets)}, ${genPostcodeNumeric(ctx)} ${a.l2}`;
+}
+function genAddressSG(ctx) {
+  const a = ctx.areaInfo, sp = STREET_POOLS.sg;
+  return `${randInt(1, 999)} ${pick(sp.streets)}, ${a.l2}, Singapore ${genPostcodeNumeric(ctx)}`;
+}
+function genAddressMY(ctx) {
+  const a = ctx.areaInfo, sp = STREET_POOLS.my;
+  return `${randInt(1, 999)} ${pick(sp.streets)}, ${genPostcodeNumeric(ctx)} ${a.l2}, ${a.l1}`;
+}
+function genAddressTH(ctx) {
+  const a = ctx.areaInfo, sp = STREET_POOLS.th;
+  return `${randInt(1, 999)} ${pick(sp.streets)}, ${a.l2}, ${a.l1} ${genPostcodeNumeric(ctx)}`;
+}
+function genAddressRU(ctx) {
+  const a = ctx.areaInfo, sp = STREET_POOLS.ru;
+  return `${randInt(1, 200)} ${pick(sp.streets)}, ${a.l2}, ${genPostcodeNumeric(ctx)}`;
+}
+
+// ─── 国外通用公司 / 邮箱 ───
+function genCompanyForeign(ctx) {
+  const C = COUNTRIES[ctx.country];
+  return pick(EN_COMPANY_WORDS) + ' ' + pick(EN_COMPANY_WORDS) + ' ' + pick(C.companySuffix);
+}
+function genEmailForeign(ctx, name) {
+  const C = COUNTRIES[ctx.country];
+  const base = (name ? name.toLowerCase().replace(/[^a-z]/g, '') : pick(NAME_POOLS[C.namePool].first).toLowerCase()).slice(0, 10);
+  return base + randInt(10, 999) + '@' + pick(C.emailDomains);
+}
+
+// ─── 证件生成器（ID_TYPE_DEFS.gen 实现，含真实校验位）───
+function genCNResident(ctx) {
+  const code = ctx.areaInfo && ctx.areaInfo.code3;
+  if (code && ['81','82','71'].includes(code.slice(0, 2))) return '';  // 港澳台无大陆身份证
+  return genIdCardBody(ctx.gender, ctx.birthday, code);
+}
+function genCNPassport() { return 'E' + randDigits(8); }
+function genHKPermit() { return 'C' + randDigits(8); }
+function genTWPermit() { return 'L' + randDigits(8); }
+function genHKMainland() { return pick(['H', 'M']) + randDigits(8); }
+function genTWMainland() { return randDigits(8); }
+function genUSPassport() { return randDigits(9); }
+function genUSSSN() {
+  const a = randInt(1, 665), g = randInt(1, 99), s = randInt(1, 9999);
+  return String(a).padStart(3, '0') + '-' + String(g).padStart(2, '0') + '-' + String(s).padStart(4, '0');
+}
+function genGBPassport() { return randDigits(9); }
+function genGBNINO() {
+  const F = 'ABCEGHJKLMNPRSTWXYZ', L = 'ABCD';  // 首字母避开 D/F/I/Q/U/V/O
+  return pick(F) + pick(F) + ' ' + randDigits(2) + ' ' + randDigits(2) + ' ' + randDigits(2) + ' ' + pick(L);
+}
+function genJPPassport() { return 'M' + randDigits(8); }
+function genJPMyNumber() {
+  const body = randDigits(11), w = [6,5,4,3,2,7,6,5,4,3,2];
+  let sum = 0; for (let i = 0; i < 11; i++) sum += parseInt(body[i]) * w[i];
+  const r = sum % 11, c = r <= 1 ? 0 : (11 - r);
+  return body + String(c);
+}
+function genKRPassport() { return 'M' + randDigits(8); }
+function genKRRRN(ctx) {
+  const bd = ctx.birthday || genBirthday(null), [y, m, d] = bd.split('-');
+  const s = ctx.gender === '女' ? (parseInt(y) >= 2000 ? 4 : 2) : (parseInt(y) >= 2000 ? 3 : 1);
+  let body = y.slice(2) + m + d + String(s) + randDigits(6);
+  const w = [2,3,4,5,6,7,8,9,2,3,4,5];
+  let sum = 0; for (let i = 0; i < 12; i++) sum += parseInt(body[i]) * w[i];
+  return body + String((11 - (sum % 11)) % 10);
+}
+function genCAPassport() { return randUpper(2) + randDigits(6); }
+function genCASIN() { return luhnComplete('', 9); }
+function genAUPassport() { return randUpper(2) + randDigits(7); }
+function genDEPassport() { return pick(['C', 'L']) + randDigits(8); }
+function genFRPassport() { return randDigits(9); }
+function genFRINSEE(ctx) {
+  const bd = ctx.birthday || genBirthday(null), [y, m, d] = bd.split('-');
+  const sex = ctx.gender === '女' ? 2 : 1;
+  const num = String(sex) + y.slice(2) + m + d + String(randInt(1, 95)).padStart(2, '0') + String(randInt(1, 999)).padStart(3, '0');
+  const key = 97 - (parseInt(num) % 97);
+  return num + ' ' + String(key).padStart(2, '0');
+}
+function genSGNRIC() {
+  const prefix = pick(['S', 'T', 'F', 'G']), digits = randDigits(7), w = [2,7,6,5,4,3,2];
+  let sum = 0; for (let i = 0; i < 7; i++) sum += parseInt(digits[i]) * w[i];
+  if (prefix === 'T' || prefix === 'G') sum += 4;
+  const letters = (prefix === 'S' || prefix === 'T') ? ['J','Z','I','H','G','F','E','D','C','B','A'] : ['X','W','U','T','R','Q','P','N','M','L','K'];
+  return prefix + digits + letters[(11 - (sum % 11)) % 11];
+}
+function genSGPassport() { return 'E' + randDigits(7); }
+function genMYMyKad(ctx) {
+  const bd = ctx.birthday || genBirthday(null), [y, m, d] = bd.split('-');
+  const pb = pick(['01','02','03','04','05','06','07','08','09','10','11','12','13','14','15','16']);
+  const g = ctx.gender === '女' ? String(randInt(0, 4) * 2) : String(randInt(0, 4) * 2 + 1);
+  return y.slice(2) + m + d + '-' + pb + '-' + randDigits(3) + g;
+}
+function genMYPassport() { return pick(['A','B','C','D','E','F','G','H','K']) + randDigits(8); }
+function genTHID() {
+  const body = String(randInt(1, 8)) + randDigits(11), w = [13,12,11,10,9,8,7,6,5,4,3,2];
+  let sum = 0; for (let i = 0; i < 12; i++) sum += parseInt(body[i]) * w[i];
+  return body + String((11 - (sum % 11)) % 10);
+}
+function genTHPassport() { return pick(['A','B','C','D','E','F','G','H','J','K','L','M','N','P']) + randDigits(7); }
+function genRUPassport() { return randDigits(10); }
+function genRUINN() {
+  let d = randDigits(10);
+  const w1 = [7,2,4,10,3,5,9,4,6,8];
+  let s1 = 0; for (let i = 0; i < 10; i++) s1 += parseInt(d[i]) * w1[i];
+  d += String(s1 % 11 % 10);
+  const w2 = [3,7,2,4,10,3,5,9,4,6,8];
+  let s2 = 0; for (let i = 0; i < 11; i++) s2 += parseInt(d[i]) * w2[i];
+  return d + String(s2 % 11 % 10);
+}
+
+// ─── 生成一条记录（按国家派发）───
+let genWarnings = [];
+function genOne(settings) {
+  const country = settings.country || currentCountry;
+  const C = COUNTRIES[country];
+  const gender = settings.gender || genGender();
+  const birthday = genBirthday(settings.birthday);
+  const ctx = { country, gender, birthday, areaInfo: settings.areaInfo || randomAddrInfo() };
+  const a = ctx.areaInfo;
+
+  // 省市区 code：CN 为 GB/T 2260 六位码（省2位 / 市4位 / 区6位），国外为 ISO 3166-2（仅省级）
+  let provinceCode = '', cityCode = '', districtCode = '';
+  if (C.regionSystem === 'cn-gbt2260' && a.code3) {
+    provinceCode = a.code3.slice(0, 2) + '0000';
+    cityCode = a.code3.slice(0, 4) + '00';
+    districtCode = a.code3;
+  } else if (a.iso) {
+    provinceCode = a.iso;
+  }
+
+  const name = C.gen.name(ctx);
+  const rec = {
+    name,
+    gender,
+    birthday,
+    phone: C.gen.phone(ctx),
+    postcode: settings.postcode || C.gen.postcode(ctx),
+    provinceCode,
+    cityCode,
+    districtCode,
+    company: C.gen.company(ctx),
+    email: C.gen.email(ctx, name),
+    address: C.gen.address(ctx),
+  };
+
+  // 中国特有字段（受国家开关控制，国外不出列）
+  if (C.fields.ethnicity) rec.ethnicity = genEthnicity();
+  if (C.fields.landline)  rec.landline = genLandline(ctx);
+  if (C.fields.bank)      { const b = genBankCard(); rec.bankName = b.name; rec.bankCard = b.card; }
+  if (C.fields.creditCode) rec.creditCode = genCreditCode();
+
+  // 证件多列：遍历用户多选（港澳台身份证等返回空串则记录告警）
+  (settings.selectedIdTypes || []).forEach(k => {
+    const val = ID_TYPE_DEFS[k].gen(ctx);
+    rec['idcol_' + k] = val;
+    if (val === '') genWarnings.push(k);
+  });
+  return rec;
+}
+
+// ─── UI 逻辑 ───
+let results = [];
+
+// 按国家动态计算字段清单（共性字段 + 国家开关字段 + 证件列）
+// 默认勾选集合（中国默认国家下）：姓名 / 性别 / 手机号 / 身份证 / 护照 / 固定电话 / 省·州码 / 市级码 / 区·县码 / 统一信用代码 / 单位名称 / 邮箱 / 地址
+function computeFields(country) {
+  const C = COUNTRIES[country];
+  const out = [
+    { key: 'name', label: '姓名', default: true },
+    { key: 'gender', label: '性别', default: true },
+    { key: 'birthday', label: '生日', default: false },
+  ];
+  if (C.fields.ethnicity) out.push({ key: 'ethnicity', label: '民族', default: false });
+  out.push(
+    { key: 'phone', label: '手机号', default: true },
+    { key: 'postcode', label: C.locale.postcode, default: true }, // 邮政编码
+    { key: 'provinceCode', label: '省/州码', default: false },
+    { key: 'cityCode', label: '市级码', default: false },
+  );
+  if (C.regionSystem === 'cn-gbt2260') out.push({ key: 'districtCode', label: '区/县码', default: false });
+  C.idTypes.forEach(k => out.push({ key: 'idcol_' + k, label: ID_TYPE_DEFS[k].label, group: 'id', default: C.defaultIds.includes(k) }));
+  if (C.fields.landline) out.push({ key: 'landline', label: '固定电话', default: true });
+  if (C.fields.bank) out.push({ key: 'bankName', label: '银行名称', default: false }, { key: 'bankCard', label: '银行卡号', default: false });
+  if (C.fields.creditCode) out.push({ key: 'creditCode', label: '统一信用代码', default: true });
+  out.push(
+    { key: 'company', label: '单位名称', default: true },
+    { key: 'email', label: '邮箱', default: true },
+    { key: 'address', label: '详细地址', default: true },
+  );
+  return out;
+}
+
+function syncToggleAll() {
+  const cbs = document.querySelectorAll('#fieldChecks input[type=checkbox]:not(#toggleAll)');
+  const toggle = document.getElementById('toggleAll');
+  if (toggle) toggle.checked = cbs.length > 0 && [...cbs].every(cb => cb.checked);
+}
+
+// 渲染字段复选框：共性字段勾选跨国家保留；证件按当前国家 defaultIds 默认勾选
+function renderFieldCheckboxes(country) {
+  const wrap = document.getElementById('fieldChecks');
+  wrap.innerHTML = '';
+  const fields = computeFields(country);
+  let inIdGroup = false;
+  fields.forEach(f => {
+    if (f.group === 'id' && !inIdGroup) {
+      inIdGroup = true;
+      const sep = document.createElement('div');
+      sep.className = 'field-group-label';
+      sep.textContent = '证件类型（可多选，随国家变化）';
+      wrap.appendChild(sep);
+    }
+    const lbl = document.createElement('label');
+    const checked = userFieldPrefs[f.key] !== undefined ? userFieldPrefs[f.key] : (f.default !== false);
+    lbl.innerHTML = `<input type="checkbox" value="${f.key}" data-label="${f.label}" ${checked ? 'checked' : ''}> ${f.label}`;
+    const cb = lbl.querySelector('input');
+    cb.addEventListener('change', () => { userFieldPrefs[f.key] = cb.checked; syncToggleAll(); });
+    wrap.appendChild(lbl);
+  });
+  const all = document.createElement('label');
+  all.style.cssText = 'margin-left:auto;color:#4f46e5;font-weight:600';
+  all.innerHTML = `<input type="checkbox" id="toggleAll"> 全选`;
+  all.querySelector('input').addEventListener('change', e => {
+    wrap.querySelectorAll('input[type=checkbox]:not(#toggleAll)').forEach(cb => {
+      cb.checked = e.target.checked;
+      userFieldPrefs[cb.value] = cb.checked;
+    });
+  });
+  wrap.appendChild(all);
+  syncToggleAll();
+}
+
+function getSelectedFields() {
+  return [...document.querySelectorAll('#fieldChecks input:checked:not(#toggleAll)')]
+    .map(cb => ({ key: cb.value, label: cb.dataset.label }));
+}
+
+function getSelectedIdTypes() {
+  return [...document.querySelectorAll('#fieldChecks input:checked:not(#toggleAll)')]
+    .map(cb => cb.value)
+    .filter(v => v.startsWith('idcol_'))
+    .map(v => v.slice('idcol_'.length));
+}
+
+function generate() {
+  const count = parseInt(document.getElementById('batchCount').value);
+  const fields = getSelectedFields();
+  if (!fields.length) { showToast('请至少选择一个字段'); return; }
+  const settings = getCustomSettings();
+  settings.selectedIdTypes = getSelectedIdTypes();
+  genWarnings = [];
+  results = Array.from({ length: count }, () => genOne(settings));
+  renderTable(fields);
+  if (genWarnings.length) {
+    const types = [...new Set(genWarnings)];
+    showToast(`部分证件已留空：${types.map(k => ID_TYPE_DEFS[k].label).join('、')}（港澳台地区无大陆身份证，可用港澳/台胞证件）`);
+  }
+}
+
+function renderTable(fields) {
+  const area = document.getElementById('resultArea');
+  if (!results.length) { area.innerHTML = '<div class="empty">暂无数据</div>'; document.getElementById('resultCount').textContent = ''; return; }
+  const selFields = (fields && fields.length ? fields : getSelectedFields());
+  document.getElementById('resultCount').textContent = `共 ${results.length} 条`;
+  let html = '<div class="table-wrap"><table class="result-table"><thead><tr><th>#</th>';
+  selFields.forEach(f => { html += `<th>${f.label}</th>`; });
+  html += '</tr></thead><tbody>';
+  results.forEach((row, i) => {
+    html += `<tr><td>${i + 1}</td>`;
+    selFields.forEach(f => { const v = row[f.key]; html += `<td class="copy-cell" title="点击复制">${v == null ? '' : v}</td>`; });
+    html += '</tr>';
+  });
+  html += '</tbody></table></div>';
+  area.innerHTML = html;
+}
+
+function copyCell(td) {
+  var text = td.textContent;
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text)
+      .then(function () { showToast('已复制: ' + text); })
+      .catch(function () { legacyCopy(text); });
+  } else {
+    legacyCopy(text);
+  }
+}
+function legacyCopy(text) {
+  var ta = document.createElement('textarea');
+  ta.value = text; ta.style.cssText = 'position:fixed;opacity:0;left:-9999px';
+  document.body.appendChild(ta); ta.select();
+  var ok = false;
+  try { ok = document.execCommand('copy'); } catch (e) {}
+  document.body.removeChild(ta);
+  showToast(ok ? '已复制: ' + text : '复制失败，请手动选择复制');
+}
+
+function clearAll() {
+  results = [];
+  document.getElementById('resultArea').innerHTML = '<div class="empty">点击「生成数据」开始</div>';
+  document.getElementById('resultCount').textContent = '';
+}
+
+function exportCSV() {
+  if (!results.length) { showToast('请先生成数据'); return; }
+  const fields = getSelectedFields();
+  const headers = fields.map(f => f.label);
+  let csv = '﻿' + headers.join(',') + '\n';
+  results.forEach(row => {
+    csv += fields.map(f => `"${row[f.key] == null ? '' : row[f.key]}"`).join(',') + '\n';
+  });
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `测试数据_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click(); URL.revokeObjectURL(url);
+  showToast('CSV 已下载');
+}
+
+let toastTimer;
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 1800);
+}
+
+// ─── 初始化 ───
+function populateCountrySelect() {
+  const sel = document.getElementById('countrySelect');
+  Object.keys(COUNTRIES).forEach(k => {
+    const opt = document.createElement('option');
+    opt.value = k; opt.textContent = COUNTRIES[k].name;
+    sel.appendChild(opt);
+  });
+  sel.value = currentCountry;
+  sel.addEventListener('change', () => onCountryChange(sel.value));
+}
+
+function bindPostcodeInput() {
+  const input = document.getElementById('customPostcode');
+  input.addEventListener('input', () => {
+    const C = COUNTRIES[currentCountry];
+    if (C.postcodeStyle === 'numeric') {              // 仅纯数字邮编过滤非数字；GB/CA 字母邮编保留
+      input.value = input.value.replace(/\D/g, '').slice(0, C.postcodeLen);
+    }
+    postcodeEdited = input.value !== '';
+    updateAddrPreview();
+  });
+}
+
+function bindLocateInput() {
+  const input = document.getElementById('locateCode');
+  input.addEventListener('input', () => {
+    input.value = input.value.replace(/\D/g, '').slice(0, 6);
+    if (!/^\d{6}$/.test(input.value)) return;
+    const found = locateByCode(input.value);
+    showToast(found ? `已定位：${found.p} · ${found.c} · ${found.d}` : '未找到该区划码');
+  });
+}
+
+populateCountrySelect();
+renderFieldCheckboxes(currentCountry);
+buildAddrSelects();
+bindPostcodeInput();
+bindLocateInput();
+generate();
+
+/* ---- MV3 CSP-safe bindings (moved from inline handlers) ---- */
+document.getElementById('btnGenerate').addEventListener('click', generate);
+document.getElementById('btnExport').addEventListener('click', exportCSV);
+document.getElementById('btnClear').addEventListener('click', clearAll);
+document.getElementById('customBirthday').addEventListener('change', function(){ document.getElementById('customAge').value=''; });
+document.getElementById('customAge').addEventListener('change', function(){ document.getElementById('customBirthday').value=''; });
+document.getElementById('resultArea').addEventListener('click', function(e){
+  var td = e.target.closest ? e.target.closest('.copy-cell') : null;
+  if (td) copyCell(td);
+});
+
+/* ---- 下拉框组件（与 qr-toolbox 同款；触屏保留原生） ---- */
+(function () {
+  if (!window.matchMedia || !window.matchMedia('(pointer: fine)').matches) return;
+  function closeAll() { document.querySelectorAll('.dd-list.open').forEach(function (x) { x.classList.remove('open'); }); }
+  document.addEventListener('click', closeAll);
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeAll(); });
+  document.querySelectorAll('select').forEach(function (sel) {
+    var wrap = document.createElement('div'); wrap.className = 'dd';
+    sel.parentNode.insertBefore(wrap, sel); wrap.appendChild(sel);
+    var btn = document.createElement('button'); btn.type = 'button'; btn.className = 'dd-btn';
+    var list = document.createElement('div'); list.className = 'dd-list';
+    function sync() {
+      var opt = sel.options[sel.selectedIndex];
+      btn.textContent = (opt && opt.textContent) || '';
+      for (var i = 0; i < list.children.length; i++) list.children[i].classList.toggle('on', i === sel.selectedIndex);
+    }
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var isOpen = list.classList.contains('open');
+      closeAll();
+      if (isOpen) return;
+      list.innerHTML = '';
+      for (var i = 0; i < sel.options.length; i++) {
+        (function (o) {
+          var li = document.createElement('div');
+          li.className = 'dd-opt' + (o.selected ? ' on' : '');
+          li.textContent = o.textContent;
+          li.addEventListener('click', function (e2) {
+            e2.stopPropagation();
+            sel.value = o.value;
+            sel.dispatchEvent(new Event('change'));
+            sync(); closeAll();
+          });
+          list.appendChild(li);
+        })(sel.options[i]);
+      }
+      sync(); list.classList.add('open');
+    });
+    wrap.appendChild(btn); wrap.appendChild(list);
+    sel.style.display = 'none';
+    sel._ddSync = sync;
+    sync();
+  });
+})();

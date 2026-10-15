@@ -200,6 +200,7 @@
       grid.appendChild(w);
     });
     box.appendChild(grid);
+    enhanceAllSelects(box);
   }
 
   /* ================= 马卡龙配色 ================= */
@@ -870,6 +871,8 @@
     $('inpBcWidth').value = state.bc.width; $('valBcWidth').textContent = state.bc.width;
     $('inpBcHeight').value = state.bc.height; $('valBcHeight').textContent = state.bc.height;
     $('chkBcText').checked = state.bc.showText;
+    var sels = document.querySelectorAll('select');
+    for (var i = 0; i < sels.length; i++) if (sels[i]._ddSync) sels[i]._ddSync();
   }
 
   /* ================= 启动 ================= */
@@ -877,7 +880,67 @@
     renderTypeTabs(); renderForm(); renderMacarons(); renderLogoPicker();
     bindControls(); restoreUI(); updateLogoUI(); setModeUI();
     loadSharedLogos();
+    enhanceAllSelects(document);
   });
+
+  /* ================= 下拉框组件（桌面自绘弹层；触屏保留原生滚轮体验） ================= */
+  var ddFine = window.matchMedia && window.matchMedia('(pointer: fine)').matches;
+  function closeAllDd() {
+    var open = document.querySelectorAll('.dd-list.open');
+    for (var i = 0; i < open.length; i++) open[i].classList.remove('open');
+  }
+  function enhanceSelect(sel) {
+    if (!ddFine || !sel || sel.tagName !== 'SELECT' || sel.getAttribute('data-dd')) return;
+    sel.setAttribute('data-dd', '1');
+    var wrap = document.createElement('div');
+    wrap.className = 'dd';
+    sel.parentNode.insertBefore(wrap, sel);
+    wrap.appendChild(sel);
+    var btn = document.createElement('button');
+    btn.type = 'button'; btn.className = 'dd-btn';
+    var list = document.createElement('div');
+    list.className = 'dd-list';
+    function sync() {
+      var opt = sel.options[sel.selectedIndex];
+      btn.textContent = (opt && opt.textContent) || '';
+      var kids = list.children;
+      for (var i = 0; i < kids.length; i++) kids[i].classList.toggle('on', i === sel.selectedIndex);
+    }
+    function build() {
+      list.innerHTML = '';
+      for (var i = 0; i < sel.options.length; i++) {
+        (function (o) {
+          var li = document.createElement('div');
+          li.className = 'dd-opt' + (o.selected ? ' on' : '');
+          li.textContent = o.textContent;
+          li.addEventListener('click', function (e) {
+            e.stopPropagation();
+            sel.value = o.value;
+            sel.dispatchEvent(new Event('change'));
+            sync(); closeAllDd();
+          });
+          list.appendChild(li);
+        })(sel.options[i]);
+      }
+    }
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var isOpen = list.classList.contains('open');
+      closeAllDd();
+      if (!isOpen) { build(); sync(); list.classList.add('open'); }
+    });
+    wrap.appendChild(btn);
+    wrap.appendChild(list);
+    sel.style.display = 'none';
+    sel._ddSync = sync;
+    sync();
+  }
+  function enhanceAllSelects(root) {
+    var sels = (root || document).querySelectorAll('select');
+    for (var i = 0; i < sels.length; i++) enhanceSelect(sels[i]);
+  }
+  document.addEventListener('click', closeAllDd);
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeAllDd(); });
 
   /* 调试/自检句柄 */
   window.__qrtb = { state: state, buildContent: buildContent, render: render };
