@@ -76,3 +76,15 @@
   态+rawSvg 缓存+**滚动位置保持不重建**；马卡龙点击→logo 重染海盐蓝（PNG 本体 31432 像素）+ 白衬底 + jsQR
   回读成功；H5 fixed 顶栏滚动 800 后 top=0；Worker git 写链路（POST→仓库文件+index 出现→中文 UTF-8 往返→
   DELETE 清理）端到端通过。
+
+### 2026-10-14（晚四）：logo 在线搜图库接入（用户令「搜索logo直接接入iconfont，搜完直接选择用」）
+
+- **改了什么**：Logo 卡新增「在线搜」按钮（搜索框回车同效）——经 Worker `GET /iconsearch?q=` 代理 **Iconify
+  聚合 API**（200+ 图标集，无需登录），一次返回 40 个含完整 svg 的结果；点击即用（走既有 svg→染色→衬底→
+  rasterize 链路，自动染码色、可换色重染）；顶部提示条可一键返回本地 10000 库。
+- **为什么**：iconfont.cn 官方搜索接口实测 `LOGIN REQUIRED`（2026-10-14），网页端访客无法直连；改用等效的
+  开放聚合库，体验一致（关键词搜索→点击直接用），Worker 代理同时解决 CORS 与国内可达性。
+- **影响面**：worker/src/worker.js（+iconsearch 端点，公开只读）、index.html（按钮/提示条，v=1.4.0）、
+  app.js（onlineSearch/onlineClear/在线模式渲染）、style.css。Worker 已部署（版本 71d64137）。
+- **测试**：线上代理 curl（wifi→40 个带 svg）；本地回归：搜索 40 项 0 破图 → 点击应用（presetId=if:
+  material-symbols:wifi + rawSvg 缓存 + active 态）→ 马卡龙换色重染 → jsQR 解码成功 → 清除返回本地库（16 项）。

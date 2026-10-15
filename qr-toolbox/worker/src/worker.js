@@ -59,6 +59,31 @@ export default {
     if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS });
     if (url.pathname === '/' || url.pathname === '') return json({ service: 'qr-toolbox-logos(git)' });
 
+    // 公开只读：在线图标搜索代理（Iconify 聚合 API，无需登录；iconfont 本站接口需登录故不可用）
+    if (url.pathname === '/iconsearch' && request.method === 'GET') {
+      const q = (url.searchParams.get('q') || '').trim().slice(0, 40);
+      if (!q) return json([]);
+      const sr = await fetch('https://api.iconify.design/search?query=' + encodeURIComponent(q) + '&limit=40', {
+        headers: { 'User-Agent': 'qr-toolbox-logos' },
+      });
+      if (!sr.ok) return json({ error: 'iconify search failed' }, 502);
+      const j = await sr.json();
+      const icons = (j.icons || []).slice(0, 40);  // Worker 单请求子请求上限 50，留余量
+      const items = await Promise.all(icons.map(async (ic) => {
+        try {
+          const r2 = await fetch('https://api.iconify.design/' + ic + '.svg?height=64', {
+            headers: { 'User-Agent': 'qr-toolbox-logos' },
+          });
+          if (!r2.ok) return null;
+          const svg = await r2.text();
+          if (!svg || svg.length > 8000 || svg.indexOf('<svg') !== 0) return null;
+          const name = ic.split(':')[1] || ic;
+          return { id: ic, n: name, svg: svg };
+        } catch (e) { return null; }
+      }));
+      return json(items.filter(Boolean));
+    }
+
     const authed = env.SHARE_KEY && request.headers.get('X-Key') === env.SHARE_KEY;
     if (!authed) return json({ error: 'unauthorized' }, 401);
 

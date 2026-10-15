@@ -237,8 +237,13 @@
     rebuildLogoCats();
     drawLogoGrid();
     bindGridAutoLoad();
-    $('logoSearch').addEventListener('input', drawLogoGrid);
-    $('logoCat').addEventListener('change', drawLogoGrid);
+    $('logoSearch').addEventListener('input', function () { if (onlineMode) onlineClear(); drawLogoGrid(); });
+    $('logoCat').addEventListener('change', function () { if (onlineMode) onlineClear(); drawLogoGrid(); });
+    $('btnOnlineSearch').addEventListener('click', onlineSearch);
+    $('btnOnlineClear').addEventListener('click', onlineClear);
+    $('logoSearch').addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') { e.preventDefault(); onlineSearch(); }
+    });
   }
   /* 全量 logo 池：精选100（内嵌）+ 集合9900（文件化索引）+ 共享（git 库） */
   function logoPool() {
@@ -253,6 +258,40 @@
   }
   var GRID_BATCH = 120;
   var gridState = { list: [], drawn: 0 };
+  var onlineMode = false;
+
+  /* ================= 在线图标搜索（Iconify 经 Worker 代理；iconfont 本站需登录不可用） ================= */
+  function b64svg(svgText) {
+    return 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgText)));
+  }
+  function onlineSearch() {
+    var q = $('logoSearch').value.trim();
+    if (!q) { toast('先输入要搜索的关键词'); return; }
+    toast('在线搜索中…');
+    fetch(SHARE_API + '/iconsearch?q=' + encodeURIComponent(q))
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (items) {
+        if (!items) { toast('在线搜索失败，稍后再试'); return; }
+        if (!items.length) { toast('在线库没有找到「' + q + '」'); return; }
+        var pool = items.map(function (it) {
+          return { id: 'if:' + it.id, n: it.n, c: '在线', a: it.n + ',' + (it.id.split(':')[0]), d: b64svg(it.svg) };
+        });
+        gridState.list = pool; gridState.drawn = 0;
+        onlineMode = true;
+        $('onlineBar').classList.remove('hidden');
+        $('onlineInfo').textContent = '在线结果 ' + pool.length + ' 个（点击即用，自动染码色）';
+        var grid = $('logoGrid'); grid.innerHTML = '';
+        appendLogoBatch();
+        grid.scrollTop = 0;
+        toast('在线搜到 ' + pool.length + ' 个图标');
+      })
+      .catch(function () { toast('网络异常，在线搜索失败'); });
+  }
+  function onlineClear() {
+    onlineMode = false;
+    $('onlineBar').classList.add('hidden');
+    drawLogoGrid();
+  }
   function rebuildLogoCats() {
     var pool = logoPool();
     var cats = ['全部'];
@@ -268,6 +307,7 @@
     $('logoSub').textContent = shared ? (base.toLocaleString() + ' 款内置 + ' + shared + ' 款共享') : base.toLocaleString() + ' 款内置';
   }
   function drawLogoGrid() {
+    if (onlineMode) return;                     // 在线结果列表不被本地过滤覆盖，点「返回本地库」退出
     var q = $('logoSearch').value.trim().toLowerCase();
     var cat = $('logoCat').value;
     var pool = logoPool();
