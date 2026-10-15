@@ -57,7 +57,9 @@
       m === 'wxacode' ? '小程序码参数 ' : (m === 'scheme' ? 'URL Scheme 参数 ' : 'URL Link 参数 ');
     $('modeHint').textContent = HINTS[m];
     $('beauSub').textContent = m === 'wxacode' ? '海报合成' : '二维码样式';
-    $('poster').classList.toggle('hidden', m !== 'wxacode');
+    // 葵花码画布仅在已生成图片后显示；占位文字反之
+    $('poster').classList.toggle('hidden', m !== 'wxacode' || !codeImg);
+    $('ph').classList.toggle('hidden', m === 'wxacode' && !!codeImg);
     $('qrBox').classList.toggle('hidden', m === 'wxacode');
     if (m !== 'wxacode') renderLinkQr();
     else renderPoster();
@@ -114,6 +116,8 @@
     if (mode !== 'wxacode' || !codeImg) return;
     var W = parseInt($('b_size').value) || 960, H = Math.round(W * 1.25);
     var cv = $('poster'); cv.width = W; cv.height = H;
+    $('poster').classList.remove('hidden');
+    $('ph').classList.add('hidden');
     var ctx = cv.getContext('2d');
     // 背景
     if (bgImg) {
@@ -295,4 +299,10 @@
 
   /* ---------- 启动 ---------- */
   setMode('wxacode');
+
+  /* 调试句柄 */
+  window.__mpdbg = {
+    setCode: function (img) { codeImg = img; renderPoster(); },
+    get state() { return { mode: mode, hasCode: !!codeImg }; }
+  };
 })();

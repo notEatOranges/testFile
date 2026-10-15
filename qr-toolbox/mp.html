@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>小程序码工作台</title>
 <link rel="icon" type="image/png" href="icons/icon128.png?v=2">
-<link rel="stylesheet" href="css/mp.css?v=1.0.1">
+<link rel="stylesheet" href="css/mp.css?v=1.0.2">
 </head>
 <body>
 <header class="topbar">
@@ -65,8 +65,20 @@
     </div>
   </section>
 
-  <!-- 右列：美化 + 预览 -->
+  <!-- 右列：预览 + 美化 -->
   <section class="col-right">
+    <div class="card">
+      <div class="card-title">预览 <span class="err" id="err"></span></div>
+      <div class="preview-box">
+        <canvas id="poster" width="960" height="1200" class="hidden"></canvas>
+        <div id="qrBox"></div>
+        <div class="placeholder" id="ph">填好左侧参数后生成</div>
+      </div>
+      <div class="actions">
+        <button class="btn primary" id="btnDown" type="button">下载 PNG</button>
+      </div>
+    </div>
+
     <div class="card">
       <div class="card-title">美化 <span class="sub" id="beauSub">海报合成</span></div>
 
@@ -130,24 +142,12 @@
         <input type="file" id="q_logoFile" accept="image/*" hidden>
       </div>
     </div>
-
-    <div class="card">
-      <div class="card-title">预览 <span class="err" id="err"></span></div>
-      <div class="preview-box">
-        <canvas id="poster" width="960" height="1200" class="hidden"></canvas>
-        <div id="qrBox"></div>
-        <div class="placeholder" id="ph">填好左侧参数后生成</div>
-      </div>
-      <div class="actions">
-        <button class="btn primary" id="btnDown" type="button">下载 PNG</button>
-      </div>
-    </div>
   </section>
 </main>
 
 <div class="toast" id="toast"></div>
 
 <script src="vendor/qr-code-styling.js?v=1.8.0"></script>
-<script src="js/mp.js?v=1.0.0"></script>
+<script src="js/mp.js?v=1.0.1"></script>
 </body>
 </html>
