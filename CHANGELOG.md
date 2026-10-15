@@ -117,3 +117,9 @@
   css/js 外链 defer 拆分（重复访问走缓存）；js 加同款 Dropdown 组件（3 个下拉）。在线
   https://1996818.xyz/testFile/mock-data-pro/
 - 回归：qr 7 个下拉组件化+弹层交互+动态表单覆盖；mock-pro 30 条自动生成、下拉联动数量（5 条）、0 原生 select 可见。
+
+### 2026-10-15（五）：滚动条穿圆角 + 上传按钮偏矮（用户反馈两项）
+- 全部内圆角滚动容器（dd-list/logo-grid/左右栏/table-wrap/ss-dropdown/preview/decode-text）滚动条改
+  「内缩悬浮」样式：透明轨道 + thumb 透明边距（border+background-clip 技巧）+ 圆角，不再方角穿出容器圆角
+- 「本地上传/共享上传」按钮增高对齐下拉按钮（5.5px 上下 padding，28px 高）
+- qr v1.5.1 / mock-data-pro v1.0.1，两工程同步
