@@ -44,3 +44,35 @@
 - **踩坑**：无（本轮顺利）。回归覆盖：结构/识图tab/拖图自动出码/重生成按钮/白衬底四角像素检测/共享加载
   （100+1、用户共享分类）/H5 单列+横滑+触控，全部通过；API 写读删+401 鉴权 curl 实测通过。
 - **部署**：Worker 已上线（版本 e93c8d4c）；本页随 git push 经 Pages 发布。
+
+### 2026-10-14（晚三）：logo 库扩至 10000、染色联动、共享库改 git 存储、H5 顶栏固定（用户 4+4 项反馈）
+
+- **改了什么**：
+  1. **内置 logo 100 → 10000**：精选 100（中文标注，内嵌 base64）+ 集合图标 9900 文件化（Tabler 3.28.1 +
+     Bootstrap 1.11.3 + Lucide 1.57.0 + Material 0.48.0，logos/*.svg 逐文件 + js/logos-index.js 索引 1.1MB）；
+     网格分批渲染（初始 120）、**触底自动追加**、img loading=lazy 按需拉图、搜索全索引即时过滤；
+     分类下拉新增 Tabler/Bootstrap/Lucide/Material 四集合。构建=qr-toolbox/build/gen-logos.py（素材 _iconsrc/
+     已 .gitignore 排除）。
+  2. **预设 SVG logo 颜色跟随码颜色**：应用/换色时把 svg 的 currentColor/#111/#000 替换为 fg（渐变取起始色），
+     马卡龙/色板/hex/渐变开关变化**自动重染**已选 logo；rawSvg 缓存避免重复拉取。
+  3. **共享库从 KV 改为 git 存储**（用户令「我其实是想放在 git 里面的」）：Worker qr-logos 重写为 GitHub
+     Contents API 代理（POST 上传→commit shared-logos/<id>.<ext> + index.json；PUT 改名；DELETE 删除；
+     GITHUB_TOKEN/SHARE_KEY 走 Worker secret）；前端读取改 fetch 同源 shared-logos/index.json（纯静态）；
+     **上传必弹窗命名**；共享 logo **双击改名**。KV namespace 弃用。
+  4. **H5**：顶栏 fixed 固定（随页面滚动始终可见）+ 二维码/条码按钮 icon 化单行 + 标题砍后缀；预览区压缩
+     （min-height 168、码图 max-width 72%）给表单让位。
+  5. 右栏改 flex 满高：Logo 卡吃满窗口剩余高度（「按窗口高度计算」），grid 弹性 + 栏内滚动。
+  6. 资源引用版本参数 v=1.3.1（**内容变更必须 bump 版本号**，否则 CF/浏览器缓存旧 JS——本轮踩过：同版本号
+     参数下浏览器拿了旧 app.js 症状诡异）。
+- **为什么**：用户 8 项反馈（logo 扩容+懒加载 / 卡片高度随窗口 / 共享传 git+命名+改名 / H5 预览挡内容 /
+  顶栏竖排 icon 化 / 顶栏要固定 / 触底自动加载+批量加大 / 选后不回顶）。
+- **影响面**：qr-toolbox 全套（index/css/app/logos-index/9900 svg/worker/manifest host_permissions 加
+  1996818.xyz）；仓库体积 +25MB（图标文件）。
+- **踩坑**：① 同版本参数浏览器缓存旧 JS→回归假失败，bump 后复验通过；② sticky 顶栏在 body overflow:auto
+  下不吸附（barTop=-600），改 fixed+padding-top 一击必中；③ npmmirror 未同步 @tabler/icons-svg（NoSuchKey），
+  改走 GitHub release zip（v3.28.1，44MB）；④ 染色像素检测采样窗口太小会虚惊（±18px 落在线条稀疏区），
+  用 logo PNG 本体统计（tinted=31432）+ 画布大窗口复核（tinted=2239+解码成功）才是硬证据。
+- **测试**：初始 120/触底自动 240/无破图；wifi 搜索命中 16（精选中文+Tabler/Lucide）；集合 svg 应用→active
+  态+rawSvg 缓存+**滚动位置保持不重建**；马卡龙点击→logo 重染海盐蓝（PNG 本体 31432 像素）+ 白衬底 + jsQR
+  回读成功；H5 fixed 顶栏滚动 800 后 top=0；Worker git 写链路（POST→仓库文件+index 出现→中文 UTF-8 往返→
+  DELETE 清理）端到端通过。
