@@ -374,7 +374,7 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover { opacity:
 .quick-parse { display: flex; gap: 6px; margin-bottom: 8px; }
 .quick-parse textarea { flex: 1; min-width: 0; border: 1px solid var(--line); border-radius: 8px;
   padding: 6px 9px; font-size: 12.5px; font-family: inherit; outline: none; background: #fbfbfe; color: var(--ink);
-  resize: vertical; min-height: 30px; max-height: 110px; line-height: 1.5; }
+  resize: vertical; min-height: 54px; max-height: 110px; line-height: 1.5; }
 .quick-parse textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(91,95,239,.13); background: #fff; }
 
 /* ---------- 自定义日历/日期时间弹层 ---------- */
