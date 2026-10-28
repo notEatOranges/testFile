@@ -1,0 +1,180 @@
+// Orange 的 GKD 个人订阅
+// 托管: https://1996818.xyz/testFile/gkd/gkd.json5 (testFile 仓库 GitHub Pages, push 即生效)
+// 导入: 手机 GKD → 订阅 → 添加订阅,粘贴上面 URL;或电脑执行 docs 里的 adb 深链命令
+// 维护指南见同目录 README.md。改完规则记得 version += 1,GKD 才会提示更新
+{
+  id: 20261028,
+  name: 'Orange个人订阅',
+  version: 1,
+  author: 'notEatOranges',
+  categories: [
+    { key: 0, name: '开屏广告' },
+    { key: 1, name: '弹窗广告' },
+    { key: 2, name: '功能类' },
+  ],
+  globalGroups: [
+    {
+      key: 10,
+      name: '开屏广告-全局兜底',
+      desc: '官方订阅没覆盖到的应用也能自动点「跳过」。已排除银行/政务/支付/认证类应用。默认关闭,想开到 GKD 订阅页手动打开',
+      enable: false,
+      matchAnyApp: true,
+      excludeMatchedAppIds: [
+        // 银行/支付/认证类,误点风险高,一律排除
+        'com.bankcomm.Bankcomm',
+        'com.chinamworld.bocmbci',
+        'com.chinamworld.main',
+        'com.cmbchina.ccd.pluto.cmbActivity',
+        'com.unionpay',
+        'com.eg.android.AlipayGphone',
+        'com.hicorenational.antifraud',
+        'cn.cyberIdentity.certification',
+        'com.google.android.apps.authenticator2',
+        'io.enpass.app',
+        'com.hihonor.wallet',
+        // 政务/民生类
+        'com.cn.gov.tax.its',
+        'com.MobileTicket',
+        'com.sgcc.wsgw.cn',
+        'com.tmri.app.main',
+        'com.sinovatech.unicom.ui',
+        'com.greenpoint.android.mc10086.activity',
+      ],
+      rules: [
+        {
+          matches: '[text*="跳过"][text.length<=4][visibleToUser=true]',
+          action: 'click',
+          quickFind: true,
+          actionMaximum: 1,
+          resetMatch: 'app',
+        },
+        {
+          anyMatches: [
+            '[vid*="skip"][visibleToUser=true]',
+            '[id*="skip"][id.length<25][visibleToUser=true]',
+          ],
+          action: 'click',
+          quickFind: true,
+          actionMaximum: 1,
+          resetMatch: 'app',
+        },
+      ],
+    },
+  ],
+  apps: [
+    {
+      id: 'com.hihonor.appmarket',
+      name: '荣耀应用市场',
+      groups: [
+        {
+          key: 0,
+          name: '开屏广告',
+          desc: '自动点击跳过',
+          rules: [
+            {
+              matches: '[text*="跳过"][text.length<=4][visibleToUser=true]',
+              action: 'click',
+              quickFind: true,
+              actionMaximum: 1,
+              resetMatch: 'app',
+            },
+          ],
+        },
+        {
+          key: 1,
+          name: '首页活动弹窗',
+          desc: '文本兜底:点「关闭/以后再说」。想更稳就用 GKD 抓快照改成控件 id 匹配',
+          rules: [
+            {
+              matches: '[text="关闭" || text="以后再说"][visibleToUser=true]',
+              action: 'click',
+              quickFind: true,
+              actionMaximum: 2,
+              resetMatch: 'app',
+            },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'com.hihonor.android.totemweather',
+      name: '荣耀天气',
+      groups: [
+        {
+          key: 0,
+          name: '推广弹窗',
+          desc: '文本兜底:点「关闭/跳过/以后再说」',
+          rules: [
+            {
+              matches: '[text="关闭" || text="跳过" || text="以后再说"][visibleToUser=true]',
+              action: 'click',
+              quickFind: true,
+              actionMaximum: 2,
+              resetMatch: 'app',
+            },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'com.hihonor.photos',
+      name: '荣耀图库',
+      groups: [
+        {
+          key: 0,
+          name: '精选推荐弹窗',
+          desc: '文本兜底:点「关闭/以后再说」',
+          rules: [
+            {
+              matches: '[text="关闭" || text="以后再说"][visibleToUser=true]',
+              action: 'click',
+              quickFind: true,
+              actionMaximum: 2,
+              resetMatch: 'app',
+            },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'com.baidu.input_hihonor',
+      name: '百度输入法荣耀版',
+      groups: [
+        {
+          key: 0,
+          name: '活动推广弹窗',
+          desc: '文本兜底:点「关闭/以后再说/暂不」',
+          rules: [
+            {
+              matches: '[text="关闭" || text="以后再说" || text="暂不"][visibleToUser=true]',
+              action: 'click',
+              quickFind: true,
+              actionMaximum: 2,
+              resetMatch: 'app',
+            },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'com.max.xiaoheihe',
+      name: '小黑盒',
+      groups: [
+        {
+          key: 0,
+          name: '开屏广告',
+          desc: '自动点击跳过',
+          rules: [
+            {
+              matches: '[text*="跳过"][text.length<=4][visibleToUser=true]',
+              action: 'click',
+              quickFind: true,
+              actionMaximum: 1,
+              resetMatch: 'app',
+            },
+          ],
+        },
+      ],
+    },
+  ],
+}
