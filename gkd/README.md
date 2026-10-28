@@ -24,7 +24,7 @@
 2. 对照 `apps.json` 装机清单,找出「官方未覆盖 && 个人订阅没写 && auto==='stub'」的应用
 3. 自动补文本兜底规则（开屏跳过 + 弹窗关闭）,version+1,commit+push,手机端自动更新
 4. **银行政务认证类（auto==='never'，18 个）永远不会被自动加规则**;纯工具类（auto==='off'）也不会
-5. 日志: `~/gkd-cron/cron.log`（脚本报错会在这里）;重装 NEC8 时: git clone 本仓库到 `~/NEC8-testFile` + `npm install --prefix ~/gkd-cron json5` + 恢复 crontab
+5. 日志: `~/gkd-cron/cron.log`;重装 NEC8 时: git clone 本仓库到 `~/NEC8-testFile` + 恢复 crontab 即可（json5 已 vendor 在 `gkd/cron/vendor/`,零 npm 依赖）
 
 改规则正常流程仍是人工改 `gkd.json5`（version+1）push;cron 只负责补新装应用的兜底,补的都是保守文本规则,可在手机上再精修。
 

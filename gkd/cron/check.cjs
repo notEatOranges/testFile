@@ -13,7 +13,8 @@
 const fs = require('fs');
 const path = require('path');
 const cp = require('child_process');
-const Json5 = require('json5');
+// json5 已 vendor 进仓库(MIT), NEC8 上无需 npm 安装
+const Json5 = require(path.join(__dirname, 'vendor', 'json5'));
 
 const REPO = process.env.GKD_REPO || path.join(process.env.HOME, 'NEC8-testFile');
 const DIR = path.join(REPO, 'gkd');
