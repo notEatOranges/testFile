@@ -5,7 +5,7 @@
 {
   id: 20261028,
   name: 'Orange个人订阅',
-  version: 3,
+  version: 4,
   author: 'notEatOranges',
   categories: [
     {
@@ -530,6 +530,105 @@
           key: 1,
           name: '弹窗广告',
           desc: 'cron 自动补充(文本兜底,可在手机上精修)',
+          rules: [
+            {
+              matches: '[text="关闭" || text="以后再说" || text="暂不"][visibleToUser=true]',
+              action: 'click',
+              quickFind: true,
+              actionMaximum: 2,
+              resetMatch: 'app',
+            },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'com.midea.ai.appliances',
+      name: '美的美居',
+      groups: [
+        {
+          key: 0,
+          name: '开屏广告',
+          desc: '2026-10-28 人工复核补充',
+          rules: [
+            {
+              matches: '[text*="跳过"][text.length<=4][visibleToUser=true]',
+              action: 'click',
+              quickFind: true,
+              actionMaximum: 1,
+              resetMatch: 'app',
+            },
+          ],
+        },
+        {
+          key: 1,
+          name: '活动弹窗',
+          rules: [
+            {
+              matches: '[text="关闭" || text="以后再说" || text="暂不"][visibleToUser=true]',
+              action: 'click',
+              quickFind: true,
+              actionMaximum: 2,
+              resetMatch: 'app',
+            },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'com.gree.greesmarthome',
+      name: '格力+',
+      groups: [
+        {
+          key: 0,
+          name: '开屏广告',
+          desc: '2026-10-28 人工复核补充',
+          rules: [
+            {
+              matches: '[text*="跳过"][text.length<=4][visibleToUser=true]',
+              action: 'click',
+              quickFind: true,
+              actionMaximum: 1,
+              resetMatch: 'app',
+            },
+          ],
+        },
+        {
+          key: 1,
+          name: '活动弹窗',
+          rules: [
+            {
+              matches: '[text="关闭" || text="以后再说" || text="暂不"][visibleToUser=true]',
+              action: 'click',
+              quickFind: true,
+              actionMaximum: 2,
+              resetMatch: 'app',
+            },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'com.tuya.smartlifeiot',
+      name: '智能生活',
+      groups: [
+        {
+          key: 0,
+          name: '开屏广告',
+          desc: '2026-10-28 人工复核补充',
+          rules: [
+            {
+              matches: '[text*="跳过"][text.length<=4][visibleToUser=true]',
+              action: 'click',
+              quickFind: true,
+              actionMaximum: 1,
+              resetMatch: 'app',
+            },
+          ],
+        },
+        {
+          key: 1,
+          name: '活动弹窗',
           rules: [
             {
               matches: '[text="关闭" || text="以后再说" || text="暂不"][visibleToUser=true]',

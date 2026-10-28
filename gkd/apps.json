@@ -5,7 +5,7 @@
   "stats": {
     "total": 94,
     "officialCovered": 44,
-    "personal": 14,
+    "personal": 17,
     "never": 18
   },
   "apps": [
@@ -216,7 +216,7 @@
       "id": "com.gree.greesmarthome",
       "name": "格力+",
       "official": false,
-      "personal": false,
+      "personal": true,
       "auto": "off"
     },
     {
@@ -349,7 +349,7 @@
       "id": "com.midea.ai.appliances",
       "name": "美的美居",
       "official": false,
-      "personal": false,
+      "personal": true,
       "auto": "off"
     },
     {
@@ -531,7 +531,7 @@
       "id": "com.tuya.smartlifeiot",
       "name": "智能生活",
       "official": false,
-      "personal": false,
+      "personal": true,
       "auto": "off"
     },
     {
