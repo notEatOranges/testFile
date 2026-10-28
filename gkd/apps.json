@@ -1,0 +1,671 @@
+{
+  "updatedAt": "2026-10-28",
+  "source": "adb pm list packages -3 (Windows工作站拉取,aapt2提取应用名)",
+  "note": "auto=never 表示银行政务认证类严禁自动加规则; auto=off 为判定无广告的纯工具; auto=stub 表示官方未覆盖时 cron 可自动补文本兜底规则。荣耀系统应用(com.hihonor.*)另行人工维护。",
+  "stats": {
+    "total": 94,
+    "officialCovered": 44,
+    "personal": 10,
+    "never": 18
+  },
+  "apps": [
+    {
+      "id": "app.revanced.android.gms",
+      "name": "microG Services",
+      "official": false,
+      "personal": false,
+      "auto": "off"
+    },
+    {
+      "id": "app.revanced.android.youtube",
+      "name": "YouTube ReVanced",
+      "official": false,
+      "personal": false,
+      "auto": "off"
+    },
+    {
+      "id": "bin.mt.plus",
+      "name": "MT Manager",
+      "official": true,
+      "personal": false,
+      "auto": "off"
+    },
+    {
+      "id": "cn.cyberIdentity.certification",
+      "name": "国家网络身份认证",
+      "official": false,
+      "personal": false,
+      "auto": "never"
+    },
+    {
+      "id": "cn.gov.tax.its",
+      "name": "个人所得税",
+      "official": false,
+      "personal": false,
+      "auto": "never"
+    },
+    {
+      "id": "com.MobileTicket",
+      "name": "铁路12306",
+      "official": false,
+      "personal": false,
+      "auto": "never"
+    },
+    {
+      "id": "com.accessibilitymanager",
+      "name": "无障碍管理器",
+      "official": false,
+      "personal": false,
+      "auto": "off"
+    },
+    {
+      "id": "com.alibaba.android.rimet",
+      "name": "DingDing",
+      "official": true,
+      "personal": false,
+      "auto": "off"
+    },
+    {
+      "id": "com.alicloud.databox",
+      "name": "阿里云盘",
+      "official": true,
+      "personal": false,
+      "auto": "off"
+    },
+    {
+      "id": "com.assistant.ongoingclear",
+      "name": "固定通知隐藏",
+      "official": false,
+      "personal": false,
+      "auto": "off"
+    },
+    {
+      "id": "com.autonavi.minimap",
+      "name": "高德地图",
+      "official": true,
+      "personal": false,
+      "auto": "stub"
+    },
+    {
+      "id": "com.baidu.netdisk",
+      "name": "百度网盘",
+      "official": true,
+      "personal": false,
+      "auto": "stub"
+    },
+    {
+      "id": "com.bankcomm.Bankcomm",
+      "name": "交通银行",
+      "official": true,
+      "personal": false,
+      "auto": "never"
+    },
+    {
+      "id": "com.cainiao.wireless",
+      "name": "菜鸟",
+      "official": true,
+      "personal": false,
+      "auto": "stub"
+    },
+    {
+      "id": "com.chinamobile.mcloud",
+      "name": "中国移动云盘",
+      "official": true,
+      "personal": false,
+      "auto": "stub"
+    },
+    {
+      "id": "com.chinamworld.bocmbci",
+      "name": "中国银行",
+      "official": false,
+      "personal": false,
+      "auto": "never"
+    },
+    {
+      "id": "com.chinamworld.main",
+      "name": "中国建设银行",
+      "official": true,
+      "personal": false,
+      "auto": "never"
+    },
+    {
+      "id": "com.cmbchina.ccd.pluto.cmbActivity",
+      "name": "掌上生活",
+      "official": true,
+      "personal": false,
+      "auto": "never"
+    },
+    {
+      "id": "com.coolapk.market",
+      "name": "酷安",
+      "official": true,
+      "personal": false,
+      "auto": "stub"
+    },
+    {
+      "id": "com.ct.client",
+      "name": "中国电信",
+      "official": true,
+      "personal": false,
+      "auto": "never"
+    },
+    {
+      "id": "com.cxincx.xxjz",
+      "name": "小星记账",
+      "official": false,
+      "personal": false,
+      "auto": "off"
+    },
+    {
+      "id": "com.didjdk.adbhelper",
+      "name": "甲壳虫ADB助手",
+      "official": false,
+      "personal": false,
+      "auto": "off"
+    },
+    {
+      "id": "com.eg.android.AlipayGphone",
+      "name": "支付宝",
+      "official": true,
+      "personal": false,
+      "auto": "never"
+    },
+    {
+      "id": "com.ehai",
+      "name": "一嗨租车",
+      "official": false,
+      "personal": true,
+      "auto": "stub"
+    },
+    {
+      "id": "com.example.administrator.searchpicturetool",
+      "name": "搜图神器",
+      "official": false,
+      "personal": false,
+      "auto": "off"
+    },
+    {
+      "id": "com.follow.clash",
+      "name": "FlClash",
+      "official": false,
+      "personal": false,
+      "auto": "off"
+    },
+    {
+      "id": "com.github.metacubex.clash.meta",
+      "name": "Clash Meta for Android",
+      "official": false,
+      "personal": false,
+      "auto": "off"
+    },
+    {
+      "id": "com.google.android.apps.authenticator2",
+      "name": "Authenticator",
+      "official": false,
+      "personal": false,
+      "auto": "never"
+    },
+    {
+      "id": "com.google.android.gm",
+      "name": "Gmail",
+      "official": true,
+      "personal": false,
+      "auto": "off"
+    },
+    {
+      "id": "com.gree.greesmarthome",
+      "name": "格力+",
+      "official": false,
+      "personal": false,
+      "auto": "off"
+    },
+    {
+      "id": "com.greenpoint.android.mc10086.activity",
+      "name": "中国移动",
+      "official": true,
+      "personal": false,
+      "auto": "never"
+    },
+    {
+      "id": "com.haier.uhome.uplus",
+      "name": "海尔智家",
+      "official": true,
+      "personal": false,
+      "auto": "off"
+    },
+    {
+      "id": "com.hamibot.hamibot",
+      "name": "Hamibot",
+      "official": false,
+      "personal": false,
+      "auto": "off"
+    },
+    {
+      "id": "com.hicloud.android.clone",
+      "name": "HUAWEI Phone Clone",
+      "official": false,
+      "personal": false,
+      "auto": "off"
+    },
+    {
+      "id": "com.hicorenational.antifraud",
+      "name": "国家反诈中心",
+      "official": false,
+      "personal": false,
+      "auto": "never"
+    },
+    {
+      "id": "com.hihonor.android.honorsuite",
+      "name": "Honor Suite",
+      "official": false,
+      "personal": false,
+      "auto": "off"
+    },
+    {
+      "id": "com.hpbr.bosszhipin",
+      "name": "BOSS直聘",
+      "official": true,
+      "personal": false,
+      "auto": "stub"
+    },
+    {
+      "id": "com.htinns",
+      "name": "华住会",
+      "official": false,
+      "personal": true,
+      "auto": "stub"
+    },
+    {
+      "id": "com.huawei.appmarket",
+      "name": "AppGallery",
+      "official": true,
+      "personal": false,
+      "auto": "off"
+    },
+    {
+      "id": "com.huawei.health",
+      "name": "Huawei Health",
+      "official": true,
+      "personal": false,
+      "auto": "off"
+    },
+    {
+      "id": "com.huawei.hwid",
+      "name": "HMS Core",
+      "official": true,
+      "personal": false,
+      "auto": "off"
+    },
+    {
+      "id": "com.huawei.music",
+      "name": "HUAWEI MUSIC",
+      "official": true,
+      "personal": false,
+      "auto": "off"
+    },
+    {
+      "id": "com.jingdong.app.mall",
+      "name": "京东",
+      "official": true,
+      "personal": false,
+      "auto": "stub"
+    },
+    {
+      "id": "com.larus.nova",
+      "name": "豆包",
+      "official": false,
+      "personal": false,
+      "auto": "stub"
+    },
+    {
+      "id": "com.layaboxhmhz.gamehmhz.okys",
+      "name": "OKTV",
+      "official": false,
+      "personal": true,
+      "auto": "stub"
+    },
+    {
+      "id": "com.lolaage.tbulu.tools",
+      "name": "两步路",
+      "official": true,
+      "personal": false,
+      "auto": "stub"
+    },
+    {
+      "id": "com.luyuan.custom",
+      "name": "绿源智能",
+      "official": false,
+      "personal": false,
+      "auto": "off"
+    },
+    {
+      "id": "com.max.xiaoheihe",
+      "name": "小黑盒",
+      "official": true,
+      "personal": true,
+      "auto": "stub"
+    },
+    {
+      "id": "com.midea.ai.appliances",
+      "name": "美的美居",
+      "official": false,
+      "personal": false,
+      "auto": "off"
+    },
+    {
+      "id": "com.netease.cloudmusic",
+      "name": "网易云音乐",
+      "official": true,
+      "personal": false,
+      "auto": "stub"
+    },
+    {
+      "id": "com.netease.mail",
+      "name": "Mail Master",
+      "official": true,
+      "personal": false,
+      "auto": "stub"
+    },
+    {
+      "id": "com.nintendo.znca",
+      "name": "Nintendo Switch App",
+      "official": false,
+      "personal": false,
+      "auto": "off"
+    },
+    {
+      "id": "com.njh.biubiu",
+      "name": "biubiu加速器",
+      "official": false,
+      "personal": true,
+      "auto": "stub"
+    },
+    {
+      "id": "com.phoenix.read",
+      "name": "红果免费短剧",
+      "official": false,
+      "personal": true,
+      "auto": "stub"
+    },
+    {
+      "id": "com.quark.browser",
+      "name": "夸克",
+      "official": true,
+      "personal": false,
+      "auto": "stub"
+    },
+    {
+      "id": "com.revanced.net.revancedmanager",
+      "name": "ReVanced Manager Plus",
+      "official": false,
+      "personal": false,
+      "auto": "off"
+    },
+    {
+      "id": "com.rong862.fqywx",
+      "name": "企微小打手",
+      "official": false,
+      "personal": false,
+      "auto": "off"
+    },
+    {
+      "id": "com.sgcc.wsgw.cn",
+      "name": "网上国网",
+      "official": true,
+      "personal": false,
+      "auto": "never"
+    },
+    {
+      "id": "com.sinovatech.unicom.ui",
+      "name": "中国联通",
+      "official": true,
+      "personal": false,
+      "auto": "never"
+    },
+    {
+      "id": "com.ss.android.auto",
+      "name": "懂车帝",
+      "official": true,
+      "personal": false,
+      "auto": "stub"
+    },
+    {
+      "id": "com.ss.android.ugc.aweme",
+      "name": "抖音",
+      "official": true,
+      "personal": false,
+      "auto": "stub"
+    },
+    {
+      "id": "com.taobao.idlefish",
+      "name": "闲鱼",
+      "official": true,
+      "personal": false,
+      "auto": "stub"
+    },
+    {
+      "id": "com.taobao.taobao",
+      "name": "淘宝",
+      "official": true,
+      "personal": false,
+      "auto": "stub"
+    },
+    {
+      "id": "com.tencent.androidqqmail",
+      "name": "QQ邮箱",
+      "official": true,
+      "personal": false,
+      "auto": "stub"
+    },
+    {
+      "id": "com.tencent.gamehelper.pg",
+      "name": "和平营地",
+      "official": false,
+      "personal": true,
+      "auto": "stub"
+    },
+    {
+      "id": "com.tencent.gamehelper.smoba",
+      "name": "王者营地",
+      "official": false,
+      "personal": true,
+      "auto": "stub"
+    },
+    {
+      "id": "com.tencent.mm",
+      "name": "WeChat",
+      "official": true,
+      "personal": false,
+      "auto": "stub"
+    },
+    {
+      "id": "com.tencent.mobileqq",
+      "name": "QQ",
+      "official": true,
+      "personal": false,
+      "auto": "stub"
+    },
+    {
+      "id": "com.tencent.tmgp.pubgmhd",
+      "name": "和平精英",
+      "official": false,
+      "personal": false,
+      "auto": "stub"
+    },
+    {
+      "id": "com.tencent.tmgp.sgame",
+      "name": "王者荣耀",
+      "official": false,
+      "personal": false,
+      "auto": "stub"
+    },
+    {
+      "id": "com.tencent.wemeet.app",
+      "name": "Tencent Meeting",
+      "official": false,
+      "personal": false,
+      "auto": "off"
+    },
+    {
+      "id": "com.tencent.wetype",
+      "name": "微信输入法",
+      "official": false,
+      "personal": false,
+      "auto": "off"
+    },
+    {
+      "id": "com.tencent.wework",
+      "name": "WeCom",
+      "official": false,
+      "personal": false,
+      "auto": "off"
+    },
+    {
+      "id": "com.tmri.app.main",
+      "name": "交管12123",
+      "official": true,
+      "personal": false,
+      "auto": "never"
+    },
+    {
+      "id": "com.tuya.smartlifeiot",
+      "name": "智能生活",
+      "official": false,
+      "personal": false,
+      "auto": "off"
+    },
+    {
+      "id": "com.umetrip.android.msky.app",
+      "name": "航旅纵横",
+      "official": true,
+      "personal": false,
+      "auto": "stub"
+    },
+    {
+      "id": "com.unionpay",
+      "name": "UnionPay",
+      "official": true,
+      "personal": false,
+      "auto": "never"
+    },
+    {
+      "id": "com.xiaoji.egggame",
+      "name": "GameHub",
+      "official": false,
+      "personal": true,
+      "auto": "stub"
+    },
+    {
+      "id": "com.xiaomi.smarthome",
+      "name": "Xiaomi Home",
+      "official": true,
+      "personal": false,
+      "auto": "off"
+    },
+    {
+      "id": "com.xunlei.downloadprovider",
+      "name": "迅雷",
+      "official": true,
+      "personal": false,
+      "auto": "stub"
+    },
+    {
+      "id": "com.xunmeng.pinduoduo",
+      "name": "拼多多",
+      "official": true,
+      "personal": false,
+      "auto": "stub"
+    },
+    {
+      "id": "com.ylmf.androidclient",
+      "name": "115生活",
+      "official": false,
+      "personal": true,
+      "auto": "stub"
+    },
+    {
+      "id": "com.zte.smarthome",
+      "name": "ZTE SmartLife",
+      "official": false,
+      "personal": false,
+      "auto": "off"
+    },
+    {
+      "id": "info.muge.appshare",
+      "name": "AppShare",
+      "official": true,
+      "personal": false,
+      "auto": "stub"
+    },
+    {
+      "id": "io.enpass.app",
+      "name": "Enpass",
+      "official": false,
+      "personal": false,
+      "auto": "never"
+    },
+    {
+      "id": "li.songe.gkd",
+      "name": "GKD",
+      "official": false,
+      "personal": false,
+      "auto": "never"
+    },
+    {
+      "id": "mark.via.gp",
+      "name": "Via",
+      "official": false,
+      "personal": false,
+      "auto": "off"
+    },
+    {
+      "id": "moe.shizuku.privileged.api",
+      "name": "Shizuku",
+      "official": false,
+      "personal": false,
+      "auto": "off"
+    },
+    {
+      "id": "net.arraynetworks.isecsp.browser",
+      "name": "iSecSP",
+      "official": false,
+      "personal": false,
+      "auto": "stub"
+    },
+    {
+      "id": "net.openvpn.openvpn",
+      "name": "OpenVPN Connect",
+      "official": false,
+      "personal": false,
+      "auto": "off"
+    },
+    {
+      "id": "nutstore.android",
+      "name": "Nutstore",
+      "official": false,
+      "personal": false,
+      "auto": "off"
+    },
+    {
+      "id": "org.telegram.group",
+      "name": "Turrit",
+      "official": false,
+      "personal": false,
+      "auto": "off"
+    },
+    {
+      "id": "org.telegram.messenger",
+      "name": "Telegram",
+      "official": false,
+      "personal": false,
+      "auto": "off"
+    },
+    {
+      "id": "tv.danmaku.bili",
+      "name": "哔哩哔哩",
+      "official": true,
+      "personal": false,
+      "auto": "stub"
+    }
+  ]
+}

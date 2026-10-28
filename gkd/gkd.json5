@@ -2,10 +2,11 @@
 // 托管: https://1996818.xyz/testFile/gkd/gkd.json5 (testFile 仓库 GitHub Pages, push 即生效)
 // 导入: 手机 GKD → 订阅 → 添加订阅,粘贴上面 URL;或电脑执行 docs 里的 adb 深链命令
 // 维护指南见同目录 README.md。改完规则记得 version += 1,GKD 才会提示更新
+// 2026-10-28 v2: 全量盘点 94 个应用后人工补充 9 个缺口应用; 每日 9 点由 NEC8 定时任务自动检查补充(cron/)
 {
   id: 20261028,
   name: 'Orange个人订阅',
-  version: 1,
+  version: 2,
   author: 'notEatOranges',
   categories: [
     { key: 0, name: '开屏广告' },
@@ -164,6 +165,229 @@
           key: 0,
           name: '开屏广告',
           desc: '自动点击跳过',
+          rules: [
+            {
+              matches: '[text*="跳过"][text.length<=4][visibleToUser=true]',
+              action: 'click',
+              quickFind: true,
+              actionMaximum: 1,
+              resetMatch: 'app',
+            },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'com.tencent.gamehelper.smoba',
+      name: '王者营地',
+      groups: [
+        {
+          key: 0,
+          name: '开屏广告',
+          rules: [
+            {
+              matches: '[text*="跳过"][text.length<=4][visibleToUser=true]',
+              action: 'click',
+              quickFind: true,
+              actionMaximum: 1,
+              resetMatch: 'app',
+            },
+          ],
+        },
+        {
+          key: 1,
+          name: '活动弹窗',
+          rules: [
+            {
+              matches: '[text="关闭" || text="以后再说" || text="暂不"][visibleToUser=true]',
+              action: 'click',
+              quickFind: true,
+              actionMaximum: 2,
+              resetMatch: 'app',
+            },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'com.tencent.gamehelper.pg',
+      name: '和平营地',
+      groups: [
+        {
+          key: 0,
+          name: '开屏广告',
+          rules: [
+            {
+              matches: '[text*="跳过"][text.length<=4][visibleToUser=true]',
+              action: 'click',
+              quickFind: true,
+              actionMaximum: 1,
+              resetMatch: 'app',
+            },
+          ],
+        },
+        {
+          key: 1,
+          name: '活动弹窗',
+          rules: [
+            {
+              matches: '[text="关闭" || text="以后再说" || text="暂不"][visibleToUser=true]',
+              action: 'click',
+              quickFind: true,
+              actionMaximum: 2,
+              resetMatch: 'app',
+            },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'com.phoenix.read',
+      name: '红果免费短剧',
+      groups: [
+        {
+          key: 0,
+          name: '开屏广告',
+          rules: [
+            {
+              matches: '[text*="跳过"][text.length<=4][visibleToUser=true]',
+              action: 'click',
+              quickFind: true,
+              actionMaximum: 1,
+              resetMatch: 'app',
+            },
+          ],
+        },
+        {
+          key: 1,
+          name: '推广弹窗',
+          rules: [
+            {
+              matches: '[text="关闭" || text="以后再说" || text="暂不"][visibleToUser=true]',
+              action: 'click',
+              quickFind: true,
+              actionMaximum: 2,
+              resetMatch: 'app',
+            },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'com.njh.biubiu',
+      name: 'biubiu加速器',
+      groups: [
+        {
+          key: 0,
+          name: '开屏广告',
+          rules: [
+            {
+              matches: '[text*="跳过"][text.length<=4][visibleToUser=true]',
+              action: 'click',
+              quickFind: true,
+              actionMaximum: 1,
+              resetMatch: 'app',
+            },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'com.htinns',
+      name: '华住会',
+      groups: [
+        {
+          key: 0,
+          name: '开屏广告',
+          rules: [
+            {
+              matches: '[text*="跳过"][text.length<=4][visibleToUser=true]',
+              action: 'click',
+              quickFind: true,
+              actionMaximum: 1,
+              resetMatch: 'app',
+            },
+          ],
+        },
+        {
+          key: 1,
+          name: '推广弹窗',
+          rules: [
+            {
+              matches: '[text="关闭" || text="以后再说"][visibleToUser=true]',
+              action: 'click',
+              quickFind: true,
+              actionMaximum: 2,
+              resetMatch: 'app',
+            },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'com.ylmf.androidclient',
+      name: '115生活',
+      groups: [
+        {
+          key: 0,
+          name: '开屏广告',
+          rules: [
+            {
+              matches: '[text*="跳过"][text.length<=4][visibleToUser=true]',
+              action: 'click',
+              quickFind: true,
+              actionMaximum: 1,
+              resetMatch: 'app',
+            },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'com.layaboxhmhz.gamehmhz.okys',
+      name: 'OKTV',
+      groups: [
+        {
+          key: 0,
+          name: '开屏广告',
+          rules: [
+            {
+              matches: '[text*="跳过"][text.length<=4][visibleToUser=true]',
+              action: 'click',
+              quickFind: true,
+              actionMaximum: 1,
+              resetMatch: 'app',
+            },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'com.xiaoji.egggame',
+      name: 'GameHub',
+      groups: [
+        {
+          key: 0,
+          name: '开屏广告',
+          rules: [
+            {
+              matches: '[text*="跳过"][text.length<=4][visibleToUser=true]',
+              action: 'click',
+              quickFind: true,
+              actionMaximum: 1,
+              resetMatch: 'app',
+            },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'com.ehai',
+      name: '一嗨租车',
+      groups: [
+        {
+          key: 0,
+          name: '开屏广告',
           rules: [
             {
               matches: '[text*="跳过"][text.length<=4][visibleToUser=true]',
