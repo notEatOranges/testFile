@@ -5,7 +5,7 @@
   "stats": {
     "total": 94,
     "officialCovered": 44,
-    "personal": 10,
+    "personal": 14,
     "never": 18
   },
   "apps": [
@@ -314,7 +314,7 @@
       "id": "com.larus.nova",
       "name": "豆包",
       "official": false,
-      "personal": false,
+      "personal": true,
       "auto": "stub"
     },
     {
@@ -489,14 +489,14 @@
       "id": "com.tencent.tmgp.pubgmhd",
       "name": "和平精英",
       "official": false,
-      "personal": false,
+      "personal": true,
       "auto": "stub"
     },
     {
       "id": "com.tencent.tmgp.sgame",
       "name": "王者荣耀",
       "official": false,
-      "personal": false,
+      "personal": true,
       "auto": "stub"
     },
     {
@@ -629,7 +629,7 @@
       "id": "net.arraynetworks.isecsp.browser",
       "name": "iSecSP",
       "official": false,
-      "personal": false,
+      "personal": true,
       "auto": "stub"
     },
     {

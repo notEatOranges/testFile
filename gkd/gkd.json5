@@ -1,17 +1,25 @@
 // Orange 的 GKD 个人订阅
-// 托管: https://1996818.xyz/testFile/gkd/gkd.json5 (testFile 仓库 GitHub Pages, push 即生效)
-// 导入: 手机 GKD → 订阅 → 添加订阅,粘贴上面 URL;或电脑执行 docs 里的 adb 深链命令
-// 维护指南见同目录 README.md。改完规则记得 version += 1,GKD 才会提示更新
-// 2026-10-28 v2: 全量盘点 94 个应用后人工补充 9 个缺口应用; 每日 9 点由 NEC8 定时任务自动检查补充(cron/)
+// 由 NEC8(VM103) 每日定时任务与人工共同维护; 人工维护文档见同目录 README.md
+// 订阅 URL: https://1996818.xyz/testFile/gkd/gkd.json5
+// 注意: 机器生成时本文件头注释会被重写,规则改动请优先改 README 并走人工评审
 {
   id: 20261028,
   name: 'Orange个人订阅',
-  version: 2,
+  version: 3,
   author: 'notEatOranges',
   categories: [
-    { key: 0, name: '开屏广告' },
-    { key: 1, name: '弹窗广告' },
-    { key: 2, name: '功能类' },
+    {
+      key: 0,
+      name: '开屏广告',
+    },
+    {
+      key: 1,
+      name: '弹窗广告',
+    },
+    {
+      key: 2,
+      name: '功能类',
+    },
   ],
   globalGroups: [
     {
@@ -21,7 +29,6 @@
       enable: false,
       matchAnyApp: true,
       excludeMatchedAppIds: [
-        // 银行/支付/认证类,误点风险高,一律排除
         'com.bankcomm.Bankcomm',
         'com.chinamworld.bocmbci',
         'com.chinamworld.main',
@@ -33,7 +40,6 @@
         'com.google.android.apps.authenticator2',
         'io.enpass.app',
         'com.hihonor.wallet',
-        // 政务/民生类
         'com.cn.gov.tax.its',
         'com.MobileTicket',
         'com.sgcc.wsgw.cn',
@@ -394,6 +400,142 @@
               action: 'click',
               quickFind: true,
               actionMaximum: 1,
+              resetMatch: 'app',
+            },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'com.larus.nova',
+      name: '豆包',
+      groups: [
+        {
+          key: 0,
+          name: '开屏广告',
+          desc: 'cron 自动补充(文本兜底,可在手机上精修)',
+          rules: [
+            {
+              matches: '[text*="跳过"][text.length<=4][visibleToUser=true]',
+              action: 'click',
+              quickFind: true,
+              actionMaximum: 1,
+              resetMatch: 'app',
+            },
+          ],
+        },
+        {
+          key: 1,
+          name: '弹窗广告',
+          desc: 'cron 自动补充(文本兜底,可在手机上精修)',
+          rules: [
+            {
+              matches: '[text="关闭" || text="以后再说" || text="暂不"][visibleToUser=true]',
+              action: 'click',
+              quickFind: true,
+              actionMaximum: 2,
+              resetMatch: 'app',
+            },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'com.tencent.tmgp.pubgmhd',
+      name: '和平精英',
+      groups: [
+        {
+          key: 0,
+          name: '开屏广告',
+          desc: 'cron 自动补充(文本兜底,可在手机上精修)',
+          rules: [
+            {
+              matches: '[text*="跳过"][text.length<=4][visibleToUser=true]',
+              action: 'click',
+              quickFind: true,
+              actionMaximum: 1,
+              resetMatch: 'app',
+            },
+          ],
+        },
+        {
+          key: 1,
+          name: '弹窗广告',
+          desc: 'cron 自动补充(文本兜底,可在手机上精修)',
+          rules: [
+            {
+              matches: '[text="关闭" || text="以后再说" || text="暂不"][visibleToUser=true]',
+              action: 'click',
+              quickFind: true,
+              actionMaximum: 2,
+              resetMatch: 'app',
+            },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'com.tencent.tmgp.sgame',
+      name: '王者荣耀',
+      groups: [
+        {
+          key: 0,
+          name: '开屏广告',
+          desc: 'cron 自动补充(文本兜底,可在手机上精修)',
+          rules: [
+            {
+              matches: '[text*="跳过"][text.length<=4][visibleToUser=true]',
+              action: 'click',
+              quickFind: true,
+              actionMaximum: 1,
+              resetMatch: 'app',
+            },
+          ],
+        },
+        {
+          key: 1,
+          name: '弹窗广告',
+          desc: 'cron 自动补充(文本兜底,可在手机上精修)',
+          rules: [
+            {
+              matches: '[text="关闭" || text="以后再说" || text="暂不"][visibleToUser=true]',
+              action: 'click',
+              quickFind: true,
+              actionMaximum: 2,
+              resetMatch: 'app',
+            },
+          ],
+        },
+      ],
+    },
+    {
+      id: 'net.arraynetworks.isecsp.browser',
+      name: 'iSecSP',
+      groups: [
+        {
+          key: 0,
+          name: '开屏广告',
+          desc: 'cron 自动补充(文本兜底,可在手机上精修)',
+          rules: [
+            {
+              matches: '[text*="跳过"][text.length<=4][visibleToUser=true]',
+              action: 'click',
+              quickFind: true,
+              actionMaximum: 1,
+              resetMatch: 'app',
+            },
+          ],
+        },
+        {
+          key: 1,
+          name: '弹窗广告',
+          desc: 'cron 自动补充(文本兜底,可在手机上精修)',
+          rules: [
+            {
+              matches: '[text="关闭" || text="以后再说" || text="暂不"][visibleToUser=true]',
+              action: 'click',
+              quickFind: true,
+              actionMaximum: 2,
               resetMatch: 'app',
             },
           ],
