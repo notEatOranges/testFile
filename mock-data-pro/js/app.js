@@ -19,90 +19,91 @@ const BASE_FIELDS = [
 ];
 
 // ─── 国外地区数据（ISO 3166-2 + 城市 + 邮编前缀 zip + 电话区号 area）───
+// name=中文（下拉显示用）；local=当地语言名（生成地址/城市/州列用，缺失时回退 name）
 const FOREIGN_REGIONS = {
   US: [
-    {name:'加利福尼亚',iso:'US-CA',cities:[{name:'洛杉矶',zip:'900',area:'213'},{name:'旧金山',zip:'941',area:'415'},{name:'圣地亚哥',zip:'921',area:'619'},{name:'圣何塞',zip:'951',area:'408'}]},
-    {name:'纽约',iso:'US-NY',cities:[{name:'纽约市',zip:'100',area:'212'},{name:'布法罗',zip:'142',area:'716'},{name:'罗切斯特',zip:'146',area:'585'}]},
-    {name:'得克萨斯',iso:'US-TX',cities:[{name:'休斯顿',zip:'770',area:'713'},{name:'达拉斯',zip:'752',area:'214'},{name:'奥斯汀',zip:'787',area:'512'}]},
-    {name:'伊利诺伊',iso:'US-IL',cities:[{name:'芝加哥',zip:'606',area:'312'},{name:'奥罗拉',zip:'605',area:'630'}]},
-    {name:'佛罗里达',iso:'US-FL',cities:[{name:'迈阿密',zip:'331',area:'305'},{name:'奥兰多',zip:'328',area:'407'}]},
-    {name:'华盛顿',iso:'US-WA',cities:[{name:'西雅图',zip:'981',area:'206'},{name:'斯波坎',zip:'992',area:'509'}]},
-    {name:'马萨诸塞',iso:'US-MA',cities:[{name:'波士顿',zip:'021',area:'617'},{name:'剑桥',zip:'021',area:'617'}]},
+    {name:'加利福尼亚',local:'California',iso:'US-CA',cities:[{name:'洛杉矶',local:'Los Angeles',zip:'900',area:'213'},{name:'旧金山',local:'San Francisco',zip:'941',area:'415'},{name:'圣地亚哥',local:'San Diego',zip:'921',area:'619'},{name:'圣何塞',local:'San Jose',zip:'951',area:'408'}]},
+    {name:'纽约',local:'New York',iso:'US-NY',cities:[{name:'纽约市',local:'New York',zip:'100',area:'212'},{name:'布法罗',local:'Buffalo',zip:'142',area:'716'},{name:'罗切斯特',local:'Rochester',zip:'146',area:'585'}]},
+    {name:'得克萨斯',local:'Texas',iso:'US-TX',cities:[{name:'休斯顿',local:'Houston',zip:'770',area:'713'},{name:'达拉斯',local:'Dallas',zip:'752',area:'214'},{name:'奥斯汀',local:'Austin',zip:'787',area:'512'}]},
+    {name:'伊利诺伊',local:'Illinois',iso:'US-IL',cities:[{name:'芝加哥',local:'Chicago',zip:'606',area:'312'},{name:'奥罗拉',local:'Aurora',zip:'605',area:'630'}]},
+    {name:'佛罗里达',local:'Florida',iso:'US-FL',cities:[{name:'迈阿密',local:'Miami',zip:'331',area:'305'},{name:'奥兰多',local:'Orlando',zip:'328',area:'407'}]},
+    {name:'华盛顿',local:'Washington',iso:'US-WA',cities:[{name:'西雅图',local:'Seattle',zip:'981',area:'206'},{name:'斯波坎',local:'Spokane',zip:'992',area:'509'}]},
+    {name:'马萨诸塞',local:'Massachusetts',iso:'US-MA',cities:[{name:'波士顿',local:'Boston',zip:'021',area:'617'},{name:'剑桥',local:'Cambridge',zip:'021',area:'617'}]},
   ],
   GB: [
-    {name:'英格兰',iso:'GB-ENG',cities:[{name:'伦敦',zip:'SW',area:'020'},{name:'曼彻斯特',zip:'M',area:'0161'},{name:'伯明翰',zip:'B',area:'0121'},{name:'利物浦',zip:'L',area:'0151'},{name:'利兹',zip:'LS',area:'0113'}]},
-    {name:'苏格兰',iso:'GB-SCT',cities:[{name:'爱丁堡',zip:'EH',area:'0131'},{name:'格拉斯哥',zip:'G',area:'0141'}]},
-    {name:'威尔士',iso:'GB-WLS',cities:[{name:'加的夫',zip:'CF',area:'029'},{name:'斯旺西',zip:'SA',area:'1792'}]},
-    {name:'北爱尔兰',iso:'GB-NIR',cities:[{name:'贝尔法斯特',zip:'BT',area:'028'}]},
+    {name:'英格兰',local:'England',iso:'GB-ENG',cities:[{name:'伦敦',local:'London',zip:'SW',area:'020'},{name:'曼彻斯特',local:'Manchester',zip:'M',area:'0161'},{name:'伯明翰',local:'Birmingham',zip:'B',area:'0121'},{name:'利物浦',local:'Liverpool',zip:'L',area:'0151'},{name:'利兹',local:'Leeds',zip:'LS',area:'0113'}]},
+    {name:'苏格兰',local:'Scotland',iso:'GB-SCT',cities:[{name:'爱丁堡',local:'Edinburgh',zip:'EH',area:'0131'},{name:'格拉斯哥',local:'Glasgow',zip:'G',area:'0141'}]},
+    {name:'威尔士',local:'Wales',iso:'GB-WLS',cities:[{name:'加的夫',local:'Cardiff',zip:'CF',area:'029'},{name:'斯旺西',local:'Swansea',zip:'SA',area:'1792'}]},
+    {name:'北爱尔兰',local:'Northern Ireland',iso:'GB-NIR',cities:[{name:'贝尔法斯特',local:'Belfast',zip:'BT',area:'028'}]},
   ],
   JP: [
-    {name:'東京都',iso:'JP-13',cities:[{name:'千代田区',zip:'100',area:'03'},{name:'新宿区',zip:'160',area:'03'},{name:'渋谷区',zip:'150',area:'03'}]},
-    {name:'大阪府',iso:'JP-27',cities:[{name:'大阪市',zip:'530',area:'06'},{name:'堺市',zip:'590',area:'072'}]},
-    {name:'神奈川県',iso:'JP-14',cities:[{name:'横浜市',zip:'220',area:'045'},{name:'川崎市',zip:'210',area:'044'}]},
-    {name:'愛知県',iso:'JP-23',cities:[{name:'名古屋市',zip:'460',area:'052'}]},
-    {name:'北海道',iso:'JP-01',cities:[{name:'札幌市',zip:'060',area:'011'}]},
-    {name:'京都府',iso:'JP-26',cities:[{name:'京都市',zip:'600',area:'075'}]},
+    {name:'東京都',latin:'Tokyo',iso:'JP-13',cities:[{name:'千代田区',latin:'Chiyoda',zip:'100',area:'03'},{name:'新宿区',latin:'Shinjuku',zip:'160',area:'03'},{name:'渋谷区',latin:'Shibuya',zip:'150',area:'03'}]},
+    {name:'大阪府',latin:'Osaka',iso:'JP-27',cities:[{name:'大阪市',latin:'Osaka',zip:'530',area:'06'},{name:'堺市',latin:'Sakai',zip:'590',area:'072'}]},
+    {name:'神奈川県',latin:'Kanagawa',iso:'JP-14',cities:[{name:'横浜市',latin:'Yokohama',zip:'220',area:'045'},{name:'川崎市',latin:'Kawasaki',zip:'210',area:'044'}]},
+    {name:'愛知県',latin:'Aichi',iso:'JP-23',cities:[{name:'名古屋市',latin:'Nagoya',zip:'460',area:'052'}]},
+    {name:'北海道',latin:'Hokkaido',iso:'JP-01',cities:[{name:'札幌市',latin:'Sapporo',zip:'060',area:'011'}]},
+    {name:'京都府',latin:'Kyoto',iso:'JP-26',cities:[{name:'京都市',latin:'Kyoto',zip:'600',area:'075'}]},
   ],
   KR: [
-    {name:'首尔特别市',iso:'KR-11',cities:[{name:'江南区',zip:'062',area:'02'},{name:'中区',zip:'045',area:'02'},{name:'松坡区',zip:'055',area:'02'}]},
-    {name:'釜山广域市',iso:'KR-26',cities:[{name:'海云台区',zip:'480',area:'051'}]},
-    {name:'京畿道',iso:'KR-41',cities:[{name:'水原市',zip:'164',area:'031'},{name:'高阳市',zip:'104',area:'031'}]},
-    {name:'仁川广域市',iso:'KR-28',cities:[{name:'延寿区',zip:'220',area:'032'}]},
-    {name:'大邱广域市',iso:'KR-27',cities:[{name:'寿城区',zip:'421',area:'053'}]},
+    {name:'首尔特别市',local:'서울특별시',latin:'Seoul',iso:'KR-11',cities:[{name:'江南区',local:'강남구',latin:'Gangnam',zip:'062',area:'02'},{name:'中区',local:'중구',latin:'Jung',zip:'045',area:'02'},{name:'松坡区',local:'송파구',latin:'Songpa',zip:'055',area:'02'}]},
+    {name:'釜山广域市',local:'부산광역시',latin:'Busan',iso:'KR-26',cities:[{name:'海云台区',local:'해운대구',latin:'Haeundae',zip:'480',area:'051'}]},
+    {name:'京畿道',local:'경기도',latin:'Gyeonggi',iso:'KR-41',cities:[{name:'水原市',local:'수원시',latin:'Suwon',zip:'164',area:'031'},{name:'高阳市',local:'고양시',latin:'Goyang',zip:'104',area:'031'}]},
+    {name:'仁川广域市',local:'인천광역시',latin:'Incheon',iso:'KR-28',cities:[{name:'延寿区',local:'연수구',latin:'Yeonsu',zip:'220',area:'032'}]},
+    {name:'大邱广域市',local:'대구광역시',latin:'Daegu',iso:'KR-27',cities:[{name:'寿城区',local:'수성구',latin:'Suseong',zip:'421',area:'053'}]},
   ],
   CA: [
-    {name:'安大略',iso:'CA-ON',cities:[{name:'多伦多',zip:'M',area:'416'},{name:'渥太华',zip:'K',area:'613'},{name:'密西沙加',zip:'L',area:'905'}]},
-    {name:'魁北克',iso:'CA-QC',cities:[{name:'蒙特利尔',zip:'H',area:'514'},{name:'魁北克市',zip:'G',area:'418'}]},
-    {name:'不列颠哥伦比亚',iso:'CA-BC',cities:[{name:'温哥华',zip:'V',area:'604'},{name:'维多利亚',zip:'V',area:'250'}]},
-    {name:'阿尔伯塔',iso:'CA-AB',cities:[{name:'卡尔加里',zip:'T',area:'403'},{name:'埃德蒙顿',zip:'T',area:'780'}]},
+    {name:'安大略',local:'Ontario',iso:'CA-ON',cities:[{name:'多伦多',local:'Toronto',zip:'M',area:'416'},{name:'渥太华',local:'Ottawa',zip:'K',area:'613'},{name:'密西沙加',local:'Mississauga',zip:'L',area:'905'}]},
+    {name:'魁北克',local:'Quebec',iso:'CA-QC',cities:[{name:'蒙特利尔',local:'Montreal',zip:'H',area:'514'},{name:'魁北克市',local:'Quebec City',zip:'G',area:'418'}]},
+    {name:'不列颠哥伦比亚',local:'British Columbia',iso:'CA-BC',cities:[{name:'温哥华',local:'Vancouver',zip:'V',area:'604'},{name:'维多利亚',local:'Victoria',zip:'V',area:'250'}]},
+    {name:'阿尔伯塔',local:'Alberta',iso:'CA-AB',cities:[{name:'卡尔加里',local:'Calgary',zip:'T',area:'403'},{name:'埃德蒙顿',local:'Edmonton',zip:'T',area:'780'}]},
   ],
   AU: [
-    {name:'新南威尔士',iso:'AU-NSW',cities:[{name:'悉尼',zip:'200',area:'02'},{name:'纽卡斯尔',zip:'230',area:'02'}]},
-    {name:'维多利亚',iso:'AU-VIC',cities:[{name:'墨尔本',zip:'300',area:'03'},{name:'吉朗',zip:'322',area:'03'}]},
-    {name:'昆士兰',iso:'AU-QLD',cities:[{name:'布里斯班',zip:'400',area:'07'},{name:'黄金海岸',zip:'421',area:'07'}]},
-    {name:'西澳大利亚',iso:'AU-WA',cities:[{name:'珀斯',zip:'600',area:'08'}]},
-    {name:'南澳大利亚',iso:'AU-SA',cities:[{name:'阿德莱德',zip:'500',area:'08'}]},
+    {name:'新南威尔士',local:'New South Wales',iso:'AU-NSW',cities:[{name:'悉尼',local:'Sydney',zip:'200',area:'02'},{name:'纽卡斯尔',local:'Newcastle',zip:'230',area:'02'}]},
+    {name:'维多利亚',local:'Victoria',iso:'AU-VIC',cities:[{name:'墨尔本',local:'Melbourne',zip:'300',area:'03'},{name:'吉朗',local:'Geelong',zip:'322',area:'03'}]},
+    {name:'昆士兰',local:'Queensland',iso:'AU-QLD',cities:[{name:'布里斯班',local:'Brisbane',zip:'400',area:'07'},{name:'黄金海岸',local:'Gold Coast',zip:'421',area:'07'}]},
+    {name:'西澳大利亚',local:'Western Australia',iso:'AU-WA',cities:[{name:'珀斯',local:'Perth',zip:'600',area:'08'}]},
+    {name:'南澳大利亚',local:'South Australia',iso:'AU-SA',cities:[{name:'阿德莱德',local:'Adelaide',zip:'500',area:'08'}]},
   ],
   DE: [
-    {name:'柏林',iso:'DE-BE',cities:[{name:'柏林',zip:'101',area:'030'}]},
-    {name:'拜仁',iso:'DE-BY',cities:[{name:'慕尼黑',zip:'803',area:'089'},{name:'纽伦堡',zip:'904',area:'0911'}]},
-    {name:'黑森',iso:'DE-HE',cities:[{name:'法兰克福',zip:'603',area:'069'}]},
-    {name:'汉堡',iso:'DE-HH',cities:[{name:'汉堡',zip:'200',area:'040'}]},
-    {name:'北莱茵-威斯特法伦',iso:'DE-NW',cities:[{name:'科隆',zip:'506',area:'0221'},{name:'杜塞尔多夫',zip:'402',area:'0211'}]},
+    {name:'柏林',local:'Berlin',iso:'DE-BE',cities:[{name:'柏林',local:'Berlin',zip:'101',area:'030'}]},
+    {name:'拜仁',local:'Bayern',iso:'DE-BY',cities:[{name:'慕尼黑',local:'München',zip:'803',area:'089'},{name:'纽伦堡',local:'Nürnberg',zip:'904',area:'0911'}]},
+    {name:'黑森',local:'Hessen',iso:'DE-HE',cities:[{name:'法兰克福',local:'Frankfurt am Main',zip:'603',area:'069'}]},
+    {name:'汉堡',local:'Hamburg',iso:'DE-HH',cities:[{name:'汉堡',local:'Hamburg',zip:'200',area:'040'}]},
+    {name:'北莱茵-威斯特法伦',local:'Nordrhein-Westfalen',iso:'DE-NW',cities:[{name:'科隆',local:'Köln',zip:'506',area:'0221'},{name:'杜塞尔多夫',local:'Düsseldorf',zip:'402',area:'0211'}]},
   ],
   FR: [
-    {name:'法兰西岛',iso:'FR-IDF',cities:[{name:'巴黎',zip:'750',area:'1'},{name:'凡尔赛',zip:'780',area:'1'}]},
-    {name:'普罗旺斯-蓝色海岸',iso:'FR-PAC',cities:[{name:'马赛',zip:'130',area:'4'},{name:'尼斯',zip:'060',area:'4'}]},
-    {name:'奥弗涅-罗讷-阿尔卑斯',iso:'FR-ARA',cities:[{name:'里昂',zip:'690',area:'4'},{name:'格勒诺布尔',zip:'380',area:'4'}]},
-    {name:'新阿基坦',iso:'FR-NAQ',cities:[{name:'波尔多',zip:'330',area:'5'}]},
+    {name:'法兰西岛',local:'Île-de-France',iso:'FR-IDF',cities:[{name:'巴黎',local:'Paris',zip:'750',area:'1'},{name:'凡尔赛',local:'Versailles',zip:'780',area:'1'}]},
+    {name:'普罗旺斯-蓝色海岸',local:"Provence-Alpes-Côte d'Azur",iso:'FR-PAC',cities:[{name:'马赛',local:'Marseille',zip:'130',area:'4'},{name:'尼斯',local:'Nice',zip:'060',area:'4'}]},
+    {name:'奥弗涅-罗讷-阿尔卑斯',local:'Auvergne-Rhône-Alpes',iso:'FR-ARA',cities:[{name:'里昂',local:'Lyon',zip:'690',area:'4'},{name:'格勒诺布尔',local:'Grenoble',zip:'380',area:'4'}]},
+    {name:'新阿基坦',local:'Nouvelle-Aquitaine',iso:'FR-NAQ',cities:[{name:'波尔多',local:'Bordeaux',zip:'330',area:'5'}]},
   ],
   SG: [
-    {name:'中央区',iso:'SG-01',cities:[{name:'滨海湾',zip:'018',area:''},{name:'乌节路',zip:'228',area:''}]},
-    {name:'东陵区',iso:'SG-02',cities:[{name:'荷兰村',zip:'278',area:''}]},
-    {name:'西北区',iso:'SG-03',cities:[{name:'兀兰',zip:'730',area:''}]},
-    {name:'东北区',iso:'SG-04',cities:[{name:'实里达',zip:'790',area:''}]},
-    {name:'东南区',iso:'SG-05',cities:[{name:'马林百列',zip:'449',area:''}]},
+    {name:'中央区',local:'Central Region',iso:'SG-01',cities:[{name:'滨海湾',local:'Marina Bay',zip:'018',area:''},{name:'乌节路',local:'Orchard',zip:'228',area:''}]},
+    {name:'东陵区',local:'Tanglin',iso:'SG-02',cities:[{name:'荷兰村',local:'Holland Village',zip:'278',area:''}]},
+    {name:'西北区',local:'North West Region',iso:'SG-03',cities:[{name:'兀兰',local:'Woodlands',zip:'730',area:''}]},
+    {name:'东北区',local:'North East Region',iso:'SG-04',cities:[{name:'实里达',local:'Seletar',zip:'790',area:''}]},
+    {name:'东南区',local:'South East Region',iso:'SG-05',cities:[{name:'马林百列',local:'Marine Parade',zip:'449',area:''}]},
   ],
   MY: [
-    {name:'吉隆坡',iso:'MY-14',cities:[{name:'武吉免登',zip:'55',area:'03'},{name:'蒂蒂旺沙',zip:'50',area:'03'}]},
-    {name:'槟城',iso:'MY-09',cities:[{name:'乔治市',zip:'10',area:'04'},{name:'北海',zip:'12',area:'04'}]},
-    {name:'柔佛',iso:'MY-01',cities:[{name:'新山',zip:'80',area:'07'},{name:'峇株巴辖',zip:'83',area:'07'}]},
-    {name:'雪兰莪',iso:'MY-12',cities:[{name:'莎阿南',zip:'40',area:'03'},{name:'八打灵再也',zip:'46',area:'03'}]},
-    {name:'沙巴',iso:'MY-16',cities:[{name:'亚庇',zip:'88',area:'088'}]},
-    {name:'砂拉越',iso:'MY-13',cities:[{name:'古晋',zip:'93',area:'082'}]},
+    {name:'吉隆坡',local:'Kuala Lumpur',iso:'MY-14',cities:[{name:'武吉免登',local:'Bukit Bintang',zip:'55',area:'03'},{name:'蒂蒂旺沙',local:'Titiwangsa',zip:'50',area:'03'}]},
+    {name:'槟城',local:'Pulau Pinang',iso:'MY-09',cities:[{name:'乔治市',local:'George Town',zip:'10',area:'04'},{name:'北海',local:'Butterworth',zip:'12',area:'04'}]},
+    {name:'柔佛',local:'Johor',iso:'MY-01',cities:[{name:'新山',local:'Johor Bahru',zip:'80',area:'07'},{name:'峇株巴辖',local:'Batu Pahat',zip:'83',area:'07'}]},
+    {name:'雪兰莪',local:'Selangor',iso:'MY-12',cities:[{name:'莎阿南',local:'Shah Alam',zip:'40',area:'03'},{name:'八打灵再也',local:'Petaling Jaya',zip:'46',area:'03'}]},
+    {name:'沙巴',local:'Sabah',iso:'MY-16',cities:[{name:'亚庇',local:'Kota Kinabalu',zip:'88',area:'088'}]},
+    {name:'砂拉越',local:'Sarawak',iso:'MY-13',cities:[{name:'古晋',local:'Kuching',zip:'93',area:'082'}]},
   ],
   TH: [
-    {name:'曼谷',iso:'TH-10',cities:[{name:'挽凯',zip:'10',area:'02'},{name:'汇狂',zip:'10',area:'02'}]},
-    {name:'清迈',iso:'TH-50',cities:[{name:'清迈市',zip:'50',area:'053'}]},
-    {name:'普吉',iso:'TH-83',cities:[{name:'普吉市',zip:'83',area:'076'}]},
-    {name:'春武里',iso:'TH-20',cities:[{name:'芭提雅',zip:'20',area:'038'}]},
+    {name:'曼谷',local:'กรุงเทพมหานคร',latin:'Bangkok',iso:'TH-10',cities:[{name:'挽凯',local:'บางแค',latin:'Bang Khae',zip:'10',area:'02'},{name:'汇狂',local:'ห้วยขวาง',latin:'Huai Khwang',zip:'10',area:'02'}]},
+    {name:'清迈',local:'เชียงใหม่',latin:'Chiang Mai',iso:'TH-50',cities:[{name:'清迈市',local:'เมืองเชียงใหม่',latin:'Mueang Chiang Mai',zip:'50',area:'053'}]},
+    {name:'普吉',local:'ภูเก็ต',latin:'Phuket',iso:'TH-83',cities:[{name:'普吉市',local:'เมืองภูเก็ต',latin:'Phuket City',zip:'83',area:'076'}]},
+    {name:'春武里',local:'ชลบุรี',latin:'Chonburi',iso:'TH-20',cities:[{name:'芭提雅',local:'พัทยา',latin:'Pattaya',zip:'20',area:'038'}]},
   ],
   RU: [
-    {name:'莫斯科市',iso:'RU-MOW',cities:[{name:'莫斯科',zip:'101',area:'495'},{name:'泽列诺格勒',zip:'124',area:'495'}]},
-    {name:'圣彼得堡市',iso:'RU-SPE',cities:[{name:'圣彼得堡',zip:'190',area:'812'}]},
-    {name:'莫斯科州',iso:'RU-MOS',cities:[{name:'巴拉希哈',zip:'143',area:'496'}]},
-    {name:'列宁格勒州',iso:'RU-LEN',cities:[{name:'加特契纳',zip:'188',area:'813'}]},
-    {name:'克拉斯诺达尔边疆区',iso:'RU-KDA',cities:[{name:'克拉斯诺达尔',zip:'350',area:'861'}]},
+    {name:'莫斯科市',local:'Москва',latin:'Moscow',iso:'RU-MOW',cities:[{name:'莫斯科',local:'Москва',latin:'Moscow',zip:'101',area:'495'},{name:'泽列诺格勒',local:'Зеленоград',latin:'Zelenograd',zip:'124',area:'495'}]},
+    {name:'圣彼得堡市',local:'Санкт-Петербург',latin:'St. Petersburg',iso:'RU-SPE',cities:[{name:'圣彼得堡',local:'Санкт-Петербург',latin:'St. Petersburg',zip:'190',area:'812'}]},
+    {name:'莫斯科州',local:'Московская область',latin:'Moscow Oblast',iso:'RU-MOS',cities:[{name:'巴拉希哈',local:'Балашиха',latin:'Balashikha',zip:'143',area:'496'}]},
+    {name:'列宁格勒州',local:'Ленинградская область',latin:'Leningrad Oblast',iso:'RU-LEN',cities:[{name:'加特契纳',local:'Гатчина',latin:'Gatchina',zip:'188',area:'813'}]},
+    {name:'克拉斯诺达尔边疆区',local:'Краснодарский край',latin:'Krasnodar Krai',iso:'RU-KDA',cities:[{name:'克拉斯诺达尔',local:'Краснодар',latin:'Krasnodar',zip:'350',area:'861'}]},
   ],
 };
 
@@ -121,6 +122,32 @@ const NAME_POOLS = {
     last:['Müller','Schmidt','Schneider','Fischer','Weber','Meyer','Wagner','Becker','Schulz','Hoffmann','Schäfer','Koch','Bauer','Richter','Klein','Wolf','Schröder','Neumann','Schwarz','Zimmermann','Braun','Hofmann'],
   },
   jp: {
+    order:'last-first',
+    first:['太郎','悠真','陽翔','蓮','湊','樹','新','蒼','海翔','奏太','咲良','陽菜','結愛','杏','美咲','莉子','結衣','早紀','千尋','美月'],
+    last:['佐藤','鈴木','高橋','田中','渡辺','伊藤','山本','中村','小林','加藤','吉田','山田','佐々木','山口','松本','井上','木村','林','斎藤','清水'],
+  },
+  kr: {
+    order:'lastfirst',
+    first:['민준','서준','도윤','하준','시윤','지호','준영','서연','서윤','지우','수아','하윤','유나','민지','지연','은지'],
+    last:['김','이','박','최','정','강','조','윤','장','임','한','오','서','신','백','유'],
+  },
+  ru: {
+    first:['Иван','Павел','Дмитрий','Алексей','Сергей','Михаил','Андрей','Владимир','Николай','Юрий','Анастасия','Мария','Ольга','Екатерина','Наталья','Татьяна','Светлана','Анна','Дарья','Полина'],
+    last:['Иванов','Петров','Сидоров','Кузнецов','Смирнов','Попов','Васильев','Михайлов','Соколов','Новиков','Фёдоров','Морозов','Волков','Алексеев','Лебедев','Семёнов','Егоров','Павлов'],
+  },
+  my: {
+    first:['Ahmad','Muhammad','Siti','Nurul','Aishah','Hafiz','Khairul','Fatimah','Rahman','Abdul','Nur','Aminah','Mohd','Rosli','Zainab','Faridah'],
+    last:['bin Abdullah','binti Abdul','bin Rahman','binti Hassan','bin Omar','binti Salleh','bin Ibrahim','binti Amin','bin Yusof','binti Ismail','bin Ali','binti Wahab'],
+  },
+  th: {
+    first:['สมชาย','อภิชาติ','อนุชา','ประสิทธิ์','ชัย','อนงค์','สมใจ','มาลี','พลอย','นิรันดร์','สุดา','พิมพ์ชนก','วิชัย','บุญส่ง','มาลีรัตน์','ณัฐญา'],
+    last:['สุวรรณเกียรติ','ภาคี','บุญมี','เจริญพร','แสนตอง','ทองสุข','พรหมมา','รัตนากร','ศรีคำ','ชัยศรี'],
+  },
+};
+
+// ─── 非拉丁文字国家（jp/kr/ru/th）的拉丁转写池：生成邮箱用 ───
+const LATIN_NAME_POOLS = {
+  jp: {
     first:['Haruto','Yuto','Sota','Yuki','Hiroto','Riku','Ren','Aoi','Yamato','Kaito','Ryosuke','Yui','Hina','Yua','Sara','Yuna','Tsubasa','Hinata','Sakura','Sora'],
     last:['Sato','Suzuki','Takahashi','Tanaka','Watanabe','Ito','Yamamoto','Nakamura','Kobayashi','Saito','Kato','Yoshida','Yamada','Sasaki','Yamaguchi','Matsumoto','Inoue','Kimura','Hayashi','Shimizu'],
   },
@@ -132,28 +159,24 @@ const NAME_POOLS = {
     first:['Ivan','Pavel','Dmitri','Alexei','Sergei','Mikhail','Andrei','Vladimir','Nikolai','Yuri','Anastasia','Maria','Olga','Ekaterina','Natalia','Tatiana','Svetlana','Anna','Daria','Polina'],
     last:['Ivanov','Petrov','Sidorov','Kuznetsov','Smirnov','Popov','Vasiliev','Mikhailov','Sokolov','Novikov','Fedorov','Morozov','Volkov','Alekseev','Lebedev','Semyonov','Egorov','Pavlov'],
   },
-  my: {
-    first:['Ahmad','Muhammad','Siti','Nurul','Aishah','Hafiz','Khairul','Fatimah','Rahman','Abdul','Nur','Aminah','Mohd','Rosli','Zainab','Faridah'],
-    last:['bin Abdullah','binti Abdul','bin Rahman','binti Hassan','bin Omar','binti Salleh','bin Ibrahim','binti Amin','bin Yusof','binti Ismail','bin Ali','binti Wahab'],
-  },
   th: {
     first:['Somchai','Apichat','Anucha','Prasit','Chai','Anong','Som','Mali','Ploy','Niran','Suda','Pim','Wichai','Boonsong','Malee','Nattaya'],
     last:['Suwannakiat','Phakdee','Boonmee','Charoenporn','Saetang','Tansakul','Phromma','Rattanakorn','Srikam','Chaisri'],
   },
 };
 
-// ─── 各国街道词库 ───
+// ─── 各国街道词库（streets=当地文字；streetsLatin=拉丁转写，日/韩/俄/泰「拉丁转写」模式用）───
 const STREET_POOLS = {
   en: { streets:['Main','Oak','Pine','Maple','Cedar','Elm','Park','Washington','Lincoln','Jefferson','Madison','Highland','Sunset','Lake','Hill','Spring','River','Church','Broadway','Market'], suffixes:['St','Ave','Rd','Blvd','Dr','Ln','Way'] },
   gb: { streets:['High','King','Queen','Victoria','Park','Church','Mill','Station','Bridge','Manor','Abbey','Castle','Grove','Churchill'], suffixes:['Street','Road','Lane','Close','Avenue','Way','Grove','Terrace'] },
-  jp: { streets:['Sakura-dori','Chuo-dori','Honmachi','Aoba','Matsu','Take','Momiji','Ginza','Asakusa','Marunouchi'], suffixes:[''] },
-  kr: { streets:['Sejong-daero','Teheran-ro','Gangnam-daero','Itaewon','Myeongdong','Chungmuro','Euljiro','Jongno'], suffixes:[''] },
-  de: { streets:['Hauptstraße','Schlossstraße','Bahnhofstraße','Kirchstraße','Gartenstraße','Lindenstraße','Berliner','Münchner'], suffixes:[''] },
+  jp: { streets:['桜通り','中央通り','本町通り','青葉通り','銀座','浅草','丸の内','表参道','青山通り','目黒通り','新宿通り','日本橋'], streetsLatin:['Sakura-dori','Chuo-dori','Honmachi-dori','Aoba-dori','Ginza','Asakusa','Marunouchi','Omotesando','Aoyama-dori','Meguro-dori','Shinjuku-dori','Nihonbashi'], suffixes:[''] },
+  kr: { streets:['세종대로','테헤란로','강남대로','이태원로','명동길','충무로','을지로','종로','남대문로','압구정로'], streetsLatin:['Sejong-daero','Teheran-ro','Gangnam-daero','Itaewon-ro','Myeongdong-gil','Chungmuro','Euljiro','Jongno','Namdaemun-ro','Apgujeong-ro'], suffixes:[''] },
+  de: { streets:['Hauptstraße','Schlossstraße','Bahnhofstraße','Kirchstraße','Gartenstraße','Lindenstraße','Berliner Straße','Münchner Straße'], suffixes:[''] },
   fr: { streets:['Rue de la Paix','Avenue des Champs','Rue du Faubourg','Boulevard Saint','Rue de Rivoli','Avenue Montaigne','Rue Saint-Honoré'], suffixes:[''] },
   sg: { streets:['Raffles Place','Orchard Road','Marina Bay','Shenton Way','Sentosa','Holland Village','Bugis','Chinatown'], suffixes:[''] },
   my: { streets:['Jalan Bukit Bintang','Jalan Sultan','Jalan Imbi','Jalan Ampang','Jalan Tuanku','Jalan Bangsar','Jalan Klang Lama'], suffixes:[''] },
-  th: { streets:['Sukhumvit Road','Silom Road','Sathon Road','Rama IX','Siam','Phayathai','Phetchaburi','Wireless Road'], suffixes:[''] },
-  ru: { streets:['Tverskaya Street','Arbat Street','Nevsky Prospect','Leninsky Avenue','Kutuzovsky Prospekt','Bolshaya','Myasnitskaya'], suffixes:[''] },
+  th: { streets:['ถนนสุขุมวิท','ถนนสีลม','ถนนสาทร','ถนนพระราม 9','ถนนพญาไท','ถนนเพชรบุรี','ถนนวิทยุ','ถนนลาดพร้าว'], streetsLatin:['Sukhumvit Road','Silom Road','Sathon Road','Rama IX Road','Phaya Thai Road','Phetchaburi Road','Wireless Road','Lat Phrao Road'], suffixes:[''] },
+  ru: { streets:['Тверская улица','Арбат','Невский проспект','Ленинский проспект','Кутузовский проспект','Мясницкая улица','Садовая улица','Петровка'], streetsLatin:['Tverskaya Street','Arbat','Nevsky Prospect','Leninsky Avenue','Kutuzovsky Prospect','Myasnitskaya Street','Sadovaya Street','Petrovka'], suffixes:[''] },
 };
 
 // ─── 数据源 ───
@@ -387,7 +410,7 @@ const ADDR_DATA = [
   { p:'台湾省', cities:[
     {c:'台北市',ds:[{n:'中正区',code:'710101'},{n:'大同区',code:'710102'},{n:'中山区',code:'710103'},{n:'松山区',code:'710104'},{n:'大安区',code:'710105'},{n:'万华区',code:'710106'},{n:'信义区',code:'710107'},{n:'士林区',code:'710108'},{n:'北投区',code:'710109'},{n:'内湖区',code:'710110'},{n:'南港区',code:'710111'},{n:'文山区',code:'710112'}]},
     {c:'新北市',ds:[{n:'板桥区',code:'710201'},{n:'三重区',code:'710202'},{n:'中和区',code:'710203'},{n:'永和区',code:'710204'},{n:'新庄区',code:'710205'},{n:'新店区',code:'710206'},{n:'树林区',code:'710207'},{n:'莺歌区',code:'710208'},{n:'三峡区',code:'710209'},{n:'淡水区',code:'710210'},{n:'瑞芳区',code:'710211'},{n:'土城区',code:'710212'},{n:'芦洲区',code:'710213'},{n:'五股区',code:'710214'},{n:'泰山区',code:'710215'},{n:'林口区',code:'710216'}]},
-    {c:'桃园市',ds:[{n:'桃园区',code:'710301'},{n:'中�的区',code:'710302'},{n:'平镇区',code:'710303'},{n:'八德区',code:'710304'},{n:'杨梅区',code:'710305'},{n:'芦竹区',code:'710306'},{n:'大�里区',code:'710307'},{n:'龟山区',code:'710308'}]},
+    {c:'桃园市',ds:[{n:'桃园区',code:'710301'},{n:'中坜区',code:'710302'},{n:'平镇区',code:'710303'},{n:'八德区',code:'710304'},{n:'杨梅区',code:'710305'},{n:'芦竹区',code:'710306'},{n:'大里区',code:'710307'},{n:'龟山区',code:'710308'}]},
     {c:'台中市',ds:[{n:'中区',code:'710401'},{n:'东区',code:'710402'},{n:'南区',code:'710403'},{n:'西区',code:'710404'},{n:'北区',code:'710405'},{n:'西屯区',code:'710406'},{n:'南屯区',code:'710407'},{n:'北屯区',code:'710408'},{n:'丰原区',code:'710409'},{n:'大里区',code:'710410'},{n:'太平区',code:'710411'}]},
     {c:'台南市',ds:[{n:'中西区',code:'710501'},{n:'东区',code:'710502'},{n:'南区',code:'710503'},{n:'北区',code:'710504'},{n:'安平区',code:'710505'},{n:'安南区',code:'710506'},{n:'永康区',code:'710507'}]},
     {c:'高雄市',ds:[{n:'盐埕区',code:'710601'},{n:'鼓山区',code:'710602'},{n:'左营区',code:'710603'},{n:'楠梓区',code:'710604'},{n:'三民区',code:'710605'},{n:'新兴区',code:'710606'},{n:'前金区',code:'710607'},{n:'苓雅区',code:'710608'},{n:'前镇区',code:'710609'},{n:'小港区',code:'710610'},{n:'凤山区',code:'710611'}]},
@@ -476,7 +499,7 @@ const COUNTRIES = {
     gen:{ name:genNameEN, phone:genPhoneGB, postcode:genPostcodeGB, address:genAddressGB, company:genCompanyForeign, email:genEmailForeign },
   },
   JP: {
-    name:'日本', callingCode:'81', regionSystem:'iso3166-2', regions: FOREIGN_REGIONS.JP,
+    name:'日本', callingCode:'81', regionSystem:'iso3166-2', regions: FOREIGN_REGIONS.JP, latinVariant:true,
     locale:{ l1:'都道府县', l2:'市区', l3:null, postcode:'邮编' },
     postcodeStyle:'numeric', postcodeLen:7,
     fields:{ ethnicity:false, landline:false, bank:false, creditCode:false },
@@ -487,7 +510,7 @@ const COUNTRIES = {
     gen:{ name:genNameJP, phone:genPhoneJP, postcode:genPostcodeJP, address:genAddressJP, company:genCompanyForeign, email:genEmailForeign },
   },
   KR: {
-    name:'韩国', callingCode:'82', regionSystem:'iso3166-2', regions: FOREIGN_REGIONS.KR,
+    name:'韩国', callingCode:'82', regionSystem:'iso3166-2', regions: FOREIGN_REGIONS.KR, latinVariant:true,
     locale:{ l1:'广域市/道', l2:'区/市', l3:null, postcode:'邮编' },
     postcodeStyle:'numeric', postcodeLen:5,
     fields:{ ethnicity:false, landline:false, bank:false, creditCode:false },
@@ -564,7 +587,7 @@ const COUNTRIES = {
     gen:{ name:genNameMY, phone:genPhoneMY, postcode:genPostcodeNumeric, address:genAddressMY, company:genCompanyForeign, email:genEmailForeign },
   },
   TH: {
-    name:'泰国', callingCode:'66', regionSystem:'iso3166-2', regions: FOREIGN_REGIONS.TH,
+    name:'泰国', callingCode:'66', regionSystem:'iso3166-2', regions: FOREIGN_REGIONS.TH, latinVariant:true,
     locale:{ l1:'府', l2:'县/区', l3:null, postcode:'Postcode' },
     postcodeStyle:'numeric', postcodeLen:5,
     fields:{ ethnicity:false, landline:false, bank:false, creditCode:false },
@@ -575,7 +598,7 @@ const COUNTRIES = {
     gen:{ name:genNameTH, phone:genPhoneTH, postcode:genPostcodeNumeric, address:genAddressTH, company:genCompanyForeign, email:genEmailForeign },
   },
   RU: {
-    name:'俄罗斯', callingCode:'7', regionSystem:'iso3166-2', regions: FOREIGN_REGIONS.RU,
+    name:'俄罗斯', callingCode:'7', regionSystem:'iso3166-2', regions: FOREIGN_REGIONS.RU, latinVariant:true,
     locale:{ l1:'联邦主体', l2:'城市', l3:null, postcode:'Postal Code' },
     postcodeStyle:'numeric', postcodeLen:6,
     fields:{ ethnicity:false, landline:false, bank:false, creditCode:false },
@@ -623,8 +646,9 @@ const ID_TYPE_DEFS = {
 let ssProvince, ssCity, ssDistrict;
 const RANDOM_ITEM = { value: '', label: '随机' };
 
-// ─── 模块状态：当前国家 / 当前地区树 / 共性字段勾选记忆 ───
+// ─── 模块状态：当前国家 / 输出文字 / 当前地区树 / 共性字段勾选记忆 ───
 let currentCountry = 'CN';
+let outputScript = 'local';        // 'local'=当地语言 | 'latin'=拉丁转写（仅日/韩/俄/泰有意义）
 let currentAddrModel = ADDR_DATA;   // CN 指向 ADDR_DATA；国外指向 COUNTRIES[country].regions
 let userFieldPrefs = {};            // 共性字段勾选跨国家保留
 
@@ -711,16 +735,20 @@ class SearchSelect {
 }
 
 // ─── 地址层级 items（按 regionSystem 分支：CN 三级 / 国外二级）───
+// 国外选项显示「中文 当地名」（两者相同则只显示一个，如日本），方便按当地语言搜索
+function regionLabel(x) {
+  return x.local && x.local !== x.name ? `${x.name} ${x.local}` : x.name;
+}
 function addrL1Items() {
   const C = COUNTRIES[currentCountry];
-  const label = x => C.regionSystem === 'cn-gbt2260' ? x.p : x.name;
+  const label = x => C.regionSystem === 'cn-gbt2260' ? x.p : regionLabel(x);
   return [RANDOM_ITEM, ...currentAddrModel.map((x, i) => ({ value: String(i), label: label(x) }))];
 }
 function addrL2Items(l1i) {
   if (l1i === '') return [RANDOM_ITEM];
   const C = COUNTRIES[currentCountry];
   const l1 = currentAddrModel[l1i];
-  const label = c => C.regionSystem === 'cn-gbt2260' ? c.c : c.name;
+  const label = c => C.regionSystem === 'cn-gbt2260' ? c.c : regionLabel(c);
   return [RANDOM_ITEM, ...l1.cities.map((c, i) => ({ value: String(i), label: label(c) }))];
 }
 function addrL3Items(l1i, l2i) {
@@ -780,7 +808,8 @@ function currentAreaInfoFromSelection() {
     return { l1: l1.p, l2: city.c, l3: null, code3: city.ds[0].code, iso: null, zip: null, area: null };
   }
   const city = l2i !== '' ? l1.cities[l2i] : l1.cities[0];
-  return { l1: l1.name, l2: city.name, l3: null, code3: null, iso: l1.iso, zip: city.zip, area: city.area };
+  const l1Local = l1.local || l1.name, l2Local = city.local || city.name;
+  return { l1: l1.name, l2: city.name, l1Local, l2Local, l1Latin: l1.latin || l1Local, l2Latin: city.latin || l2Local, l3: null, code3: null, iso: l1.iso, zip: city.zip, area: city.area };
 }
 
 // 根据所选地区自动填充邮政编码（用户手动编辑过则保留原值）
@@ -828,8 +857,8 @@ function updateAddrPreview() {
       if (l3i !== '') text += ` · ${city.ds[l3i].n}（${codes.districtCode}）`;
     }
   } else {
-    text = `${l1.name}（${codes.provinceCode}）`;
-    if (l2i !== '') text += ` · ${l1.cities[l2i].name}`;
+    text = `${l1.name}${l1.local && l1.local !== l1.name ? ' ' + l1.local : ''}（${codes.provinceCode}）`;
+    if (l2i !== '') text += ` · ${regionLabel(l1.cities[l2i])}`;
   }
   const zip = document.getElementById('customPostcode').value;
   text += zip ? `，邮编 ${zip}` : '，邮编随机';
@@ -863,6 +892,8 @@ function rebuildAddressForCountry(country) {
   currentCountry = country;
   const C = COUNTRIES[country];
   currentAddrModel = C.regions;
+  // 输出文字切换只对非拉丁文字国家（日/韩/俄/泰）有意义，其余隐藏
+  document.getElementById('scriptRow').style.display = C.latinVariant ? '' : 'none';
   document.getElementById('lblL1').textContent = C.locale.l1;
   document.getElementById('lblL2').textContent = C.locale.l2;
   document.getElementById('lblL3').textContent = C.locale.l3 || '';
@@ -905,7 +936,8 @@ function getAddressInfo() {
     return { l1: l1.p, l2: city.c, l3: dist.n, code3: dist.code, iso: null, zip: null, area: null };
   }
   const city = l2i !== '' ? l1.cities[l2i] : pick(l1.cities);
-  return { l1: l1.name, l2: city.name, l3: null, code3: null, iso: l1.iso, zip: city.zip, area: city.area };
+  const l1Local = l1.local || l1.name, l2Local = city.local || city.name;
+  return { l1: l1.name, l2: city.name, l1Local, l2Local, l1Latin: l1.latin || l1Local, l2Latin: city.latin || l2Local, l3: null, code3: null, iso: l1.iso, zip: city.zip, area: city.area };
 }
 
 function randomAddrInfo() {
@@ -920,7 +952,8 @@ function randomAddrInfo() {
   }
   const state = pick(C.regions);
   const city = pick(state.cities);
-  return { l1: state.name, l2: city.name, l3: null, code3: null, iso: state.iso, zip: city.zip, area: city.area };
+  const l1Local = state.local || state.name, l2Local = city.local || city.name;
+  return { l1: state.name, l2: city.name, l1Local, l2Local, l1Latin: state.latin || l1Local, l2Latin: city.latin || l2Local, l3: null, code3: null, iso: state.iso, zip: city.zip, area: city.area };
 }
 
 // 读取自定义设置，返回 { birthday:'YYYY-MM-DD'|null, areaCode:'123456'|null, areaInfo:{p,c,d,code}|null, postcode:'123456'|null }
@@ -1092,10 +1125,17 @@ function genPostcodeCA() {
   return c() + n() + c() + ' ' + n() + c() + n();
 }
 
-// ─── 国外姓名策略 ───
+// ─── 国外姓名策略（名/姓拆开存 ctx，供名/姓两列出值；日=姓 名、韩=姓+名，其余 名 姓；拉丁转写=西式 名 姓）───
 function genNameForeign(ctx, poolKey) {
-  const pool = NAME_POOLS[poolKey];
-  return pick(pool.first) + ' ' + pick(pool.last);
+  const native = NAME_POOLS[poolKey];
+  const latin = ctx.script === 'latin' ? LATIN_NAME_POOLS[poolKey] : null;
+  const pool = latin || native;
+  ctx.nameFirst = pick(pool.first);
+  ctx.nameLast = pick(pool.last);
+  if (latin) return ctx.nameFirst + ' ' + ctx.nameLast;                        // 英文表单：Haruto Sato
+  if (native.order === 'lastfirst') return ctx.nameLast + ctx.nameFirst;       // 韩：김민준
+  if (native.order === 'last-first') return ctx.nameLast + ' ' + ctx.nameFirst; // 日：田中 太郎
+  return ctx.nameFirst + ' ' + ctx.nameLast;
 }
 function genNameEN(ctx) { return genNameForeign(ctx, 'en'); }
 function genNameFR(ctx) { return genNameForeign(ctx, 'fr'); }
@@ -1123,48 +1163,45 @@ function genPhoneMY() { return '01' + pick(['1','2','3','6','7','8','9']) + '-' 
 function genPhoneTH() { return '0' + pick(['8','9','6']) + randInt(1, 9) + '-' + randDigits(3) + '-' + randDigits(3); }
 function genPhoneRU() { return '9' + randDigits(2) + ' ' + randDigits(3) + '-' + randDigits(2) + '-' + randDigits(2); }
 
-// ─── 国外地址策略 ───
-function genAddressEN(ctx) {
-  const a = ctx.areaInfo, sp = STREET_POOLS.en, suf = pick(sp.suffixes);
+// ─── 国外地址策略：只生成街道行（Address Line 1），城市/州/邮编各自出列不拼进来 ───
+function genAddressEN() {
+  const sp = STREET_POOLS.en, suf = pick(sp.suffixes);
   const street = pick(sp.streets) + (suf ? ' ' + suf : '');
-  return `${randInt(1, 9999)} ${street}, ${a.l2}, ${a.iso} ${genPostcodeNumeric(ctx)}`;
+  return `${randInt(1, 9999)} ${street}`;
 }
-function genAddressGB(ctx) {
-  const a = ctx.areaInfo, sp = STREET_POOLS.gb, suf = pick(sp.suffixes);
+function genAddressGB() {
+  const sp = STREET_POOLS.gb, suf = pick(sp.suffixes);
   const street = pick(sp.streets) + (suf ? ' ' + suf : '');
-  return `${randInt(1, 200)} ${street}, ${a.l2} ${genPostcodeGB(ctx)}`;
+  return `${randInt(1, 200)} ${street}`;
 }
 function genAddressJP(ctx) {
-  const a = ctx.areaInfo, sp = STREET_POOLS.jp;
-  return `${randInt(1, 9)}-${randInt(1, 30)}-${randInt(1, 30)} ${pick(sp.streets)}, ${a.l2}, ${a.l1} ${genPostcodeJP(ctx)}`;
+  const sp = STREET_POOLS.jp;
+  if (ctx.script === 'latin' && sp.streetsLatin) return `${randInt(1, 9)}-${randInt(1, 30)}-${randInt(1, 30)} ${pick(sp.streetsLatin)}`;
+  return `${pick(sp.streets)}${randInt(1, 9)}-${randInt(1, 30)}-${randInt(1, 30)}`;
 }
 function genAddressKR(ctx) {
-  const a = ctx.areaInfo, sp = STREET_POOLS.kr;
-  return `${randInt(1, 999)} ${pick(sp.streets)}, ${a.l2}, ${a.l1} ${genPostcodeNumeric(ctx)}`;
+  const sp = STREET_POOLS.kr;
+  return `${pick((ctx.script === 'latin' && sp.streetsLatin) ? sp.streetsLatin : sp.streets)} ${randInt(1, 999)}`;
 }
-function genAddressDE(ctx) {
-  const a = ctx.areaInfo, sp = STREET_POOLS.de;
-  return `${pick(sp.streets)} ${randInt(1, 200)}, ${genPostcodeNumeric(ctx)} ${a.l2}`;
+function genAddressDE() {
+  return `${pick(STREET_POOLS.de.streets)} ${randInt(1, 200)}`;
 }
-function genAddressFR(ctx) {
-  const a = ctx.areaInfo, sp = STREET_POOLS.fr;
-  return `${randInt(1, 200)} ${pick(sp.streets)}, ${genPostcodeNumeric(ctx)} ${a.l2}`;
+function genAddressFR() {
+  return `${randInt(1, 200)} ${pick(STREET_POOLS.fr.streets)}`;
 }
-function genAddressSG(ctx) {
-  const a = ctx.areaInfo, sp = STREET_POOLS.sg;
-  return `${randInt(1, 999)} ${pick(sp.streets)}, ${a.l2}, Singapore ${genPostcodeNumeric(ctx)}`;
+function genAddressSG() {
+  return `${randInt(1, 999)} ${pick(STREET_POOLS.sg.streets)}`;
 }
-function genAddressMY(ctx) {
-  const a = ctx.areaInfo, sp = STREET_POOLS.my;
-  return `${randInt(1, 999)} ${pick(sp.streets)}, ${genPostcodeNumeric(ctx)} ${a.l2}, ${a.l1}`;
+function genAddressMY() {
+  return `${randInt(1, 999)} ${pick(STREET_POOLS.my.streets)}`;
 }
 function genAddressTH(ctx) {
-  const a = ctx.areaInfo, sp = STREET_POOLS.th;
-  return `${randInt(1, 999)} ${pick(sp.streets)}, ${a.l2}, ${a.l1} ${genPostcodeNumeric(ctx)}`;
+  const sp = STREET_POOLS.th;
+  return `${randInt(1, 999)}/${randInt(1, 99)} ${pick((ctx.script === 'latin' && sp.streetsLatin) ? sp.streetsLatin : sp.streets)}`;
 }
 function genAddressRU(ctx) {
-  const a = ctx.areaInfo, sp = STREET_POOLS.ru;
-  return `${randInt(1, 200)} ${pick(sp.streets)}, ${a.l2}, ${genPostcodeNumeric(ctx)}`;
+  const sp = STREET_POOLS.ru;
+  return `${pick((ctx.script === 'latin' && sp.streetsLatin) ? sp.streetsLatin : sp.streets)}, ${randInt(1, 200)}`;
 }
 
 // ─── 国外通用公司 / 邮箱 ───
@@ -1174,8 +1211,11 @@ function genCompanyForeign(ctx) {
 }
 function genEmailForeign(ctx, name) {
   const C = COUNTRIES[ctx.country];
-  const base = (name ? name.toLowerCase().replace(/[^a-z]/g, '') : pick(NAME_POOLS[C.namePool].first).toLowerCase()).slice(0, 10);
-  return base + randInt(10, 999) + '@' + pick(C.emailDomains);
+  // 非拉丁文字姓名（日/韩/俄/泰）提不出字母时，用拉丁转写池兜底
+  const lat = LATIN_NAME_POOLS[C.namePool] || NAME_POOLS[C.namePool];
+  let base = name ? name.toLowerCase().replace(/[^a-z]/g, '') : '';
+  if (!base) base = (pick(lat.last) + pick(lat.first)).toLowerCase().replace(/[^a-z]/g, '');
+  return base.slice(0, 14) + randInt(10, 999) + '@' + pick(C.emailDomains);
 }
 
 // ─── 证件生成器（ID_TYPE_DEFS.gen 实现，含真实校验位）───
@@ -1266,7 +1306,7 @@ function genOne(settings) {
   const C = COUNTRIES[country];
   const gender = settings.gender || genGender();
   const birthday = genBirthday(settings.birthday);
-  const ctx = { country, gender, birthday, areaInfo: settings.areaInfo || randomAddrInfo() };
+  const ctx = { country, gender, birthday, script: outputScript, areaInfo: settings.areaInfo || randomAddrInfo() };
   const a = ctx.areaInfo;
 
   // 省市区 code：CN 为 GB/T 2260 六位码（省2位 / 市4位 / 区6位），国外为 ISO 3166-2（仅省级）
@@ -1294,6 +1334,14 @@ function genOne(settings) {
     address: C.gen.address(ctx),
   };
 
+  // 国外：名/姓拆列 + 城市/州（按输出文字：当地语言 / 拉丁转写）
+  if (ctx.nameFirst) { rec.firstName = ctx.nameFirst; rec.lastName = ctx.nameLast; }
+  if (a.l1Local) {
+    const latin = ctx.script === 'latin';
+    rec.stateLocal = latin ? (a.l1Latin || a.l1Local) : a.l1Local;
+    rec.cityLocal = latin ? (a.l2Latin || a.l2Local) : a.l2Local;
+  }
+
   // 中国特有字段（受国家开关控制，国外不出列）
   if (C.fields.ethnicity) rec.ethnicity = genEthnicity();
   if (C.fields.landline)  rec.landline = genLandline(ctx);
@@ -1316,15 +1364,26 @@ let results = [];
 // 默认勾选集合（中国默认国家下）：姓名 / 性别 / 手机号 / 身份证 / 护照 / 固定电话 / 省·州码 / 市级码 / 区·县码 / 统一信用代码 / 单位名称 / 邮箱 / 地址
 function computeFields(country) {
   const C = COUNTRIES[country];
+  const foreign = C.regionSystem !== 'cn-gbt2260';
   const out = [
     { key: 'name', label: '姓名', default: true },
     { key: 'gender', label: '性别', default: true },
     { key: 'birthday', label: '生日', default: false },
   ];
+  if (foreign) out.splice(1, 0,
+    { key: 'firstName', label: '名(First)', default: true },
+    { key: 'lastName', label: '姓(Last)', default: true },
+  );
   if (C.fields.ethnicity) out.push({ key: 'ethnicity', label: '民族', default: false });
   out.push(
     { key: 'phone', label: '手机号', default: true },
     { key: 'postcode', label: C.locale.postcode, default: true }, // 邮政编码
+  );
+  if (foreign) out.push(
+    { key: 'cityLocal', label: '城市', default: true },
+    { key: 'stateLocal', label: '州/省', default: true },
+  );
+  out.push(
     { key: 'provinceCode', label: '省/州码', default: false },
     { key: 'cityCode', label: '市级码', default: false },
   );
@@ -1336,7 +1395,7 @@ function computeFields(country) {
   out.push(
     { key: 'company', label: '单位名称', default: true },
     { key: 'email', label: '邮箱', default: true },
-    { key: 'address', label: '详细地址', default: true },
+    { key: 'address', label: foreign ? '地址(街道)' : '详细地址', default: true },
   );
   return out;
 }
@@ -1500,6 +1559,19 @@ function bindPostcodeInput() {
   });
 }
 
+// 输出文字（当地语言/拉丁转写），选择记忆到 localStorage
+function bindScriptSelect() {
+  const sel = document.getElementById('scriptSelect');
+  try {
+    const saved = localStorage.getItem('mdp_script');
+    if (saved === 'latin') { outputScript = 'latin'; sel.value = 'latin'; }
+  } catch (e) { /* 隐私模式等 localStorage 不可用时静默跳过 */ }
+  sel.addEventListener('change', () => {
+    outputScript = sel.value;
+    try { localStorage.setItem('mdp_script', outputScript); } catch (e) {}
+  });
+}
+
 function bindLocateInput() {
   const input = document.getElementById('locateCode');
   input.addEventListener('input', () => {
@@ -1515,6 +1587,7 @@ renderFieldCheckboxes(currentCountry);
 buildAddrSelects();
 bindPostcodeInput();
 bindLocateInput();
+bindScriptSelect();
 generate();
 
 /* ---- MV3 CSP-safe bindings (moved from inline handlers) ---- */
